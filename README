@@ -1,0 +1,31 @@
+# This file is part of tryton-corseg project for Tryton.
+# The COPYRIGHT file at the top level of this repository contains 
+# the full copyright notices and license terms.
+
+Modulo corseg
+=============
+
+corseg es un modulo basico que define diferentes caracteristicas del modelo de negocios del corretaje de seguros.
+
+    - Compañias de seguros
+    - Ramos
+    - Polizas
+    - Emisiones
+    - Certificados
+    - Asegurados
+    - Beneficiarios / Dependientes
+
+License
+-------
+
+See LICENSE
+
+Copyright
+---------
+
+See COPYRIGHT
+
+
+For more information please visit the Tryton web site:
+
+  http://www.tryton.org/
