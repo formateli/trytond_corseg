@@ -1,0 +1,276 @@
+<?xml version="1.0"?>
+<!-- This file is part of trytond-corseg module. 
+The COPYRIGHT file at the top level of this repository 
+contains the full copyright notices and license terms. -->
+<tryton>
+    <data>
+        <record model="res.group" id="group_corseg_admin">
+            <field name="name">Administrador de Corretaje</field>
+        </record>
+        <record model="res.group" id="group_corseg">
+            <field name="name">Corretaje</field>
+        </record>
+        <record model="res.user-res.group"
+                id="user_admin_group_corseg_admin">
+            <field name="user" ref="res.user_admin"/>
+            <field name="group" ref="group_corseg_admin"/>
+        </record>
+        <record model="res.user-res.group"
+                id="user_admin_group_corseg">
+            <field name="user" ref="res.user_admin"/>
+            <field name="group" ref="group_corseg"/>
+        </record>
+
+        <menuitem name="Corretaje" sequence="30" 
+            id="menu_corseg"/>
+        <record model="ir.ui.menu-res.group"
+                id="menu_corseg_group_corseg">
+            <field name="menu" ref="menu_corseg"/>
+            <field name="group" ref="group_corseg"/>
+        </record>
+
+        <menuitem name="Configuracion" parent="menu_corseg"
+            id="menu_corseg_configuration" sequence="10"
+            icon="tryton-preferences"/>
+        <record model="ir.ui.menu-res.group"
+                id="menu_corseg_configuration_group_corseg_admin">
+            <field name="menu" ref="menu_corseg_configuration"/>
+            <field name="group" ref="group_corseg_admin"/>
+        </record>
+
+        <!-- Ramo -->
+        <record model="ir.ui.view" id="ramo_view_form">
+            <field name="model">corseg.ramo</field>
+            <field name="type">form</field>
+            <field name="name">ramo_form</field>
+        </record>
+        <record model="ir.ui.view" id="ramo_view_tree">
+            <field name="model">corseg.ramo</field>
+            <field name="type">tree</field>
+            <field name="name">ramo_tree</field>
+        </record>
+        <record model="ir.action.act_window" id="act_ramo_form">
+            <field name="name">Ramos</field>
+            <field name="res_model">corseg.ramo</field>
+        </record>
+        <record model="ir.action.act_window.view" id="act_ramo_form_view1">
+            <field name="sequence" eval="10"/>
+            <field name="view" ref="ramo_view_tree"/>
+            <field name="act_window" ref="act_ramo_form"/>
+        </record>
+        <record model="ir.action.act_window.view" id="act_ramo_form_view2">
+            <field name="sequence" eval="20"/>
+            <field name="view" ref="ramo_view_form"/>
+            <field name="act_window" ref="act_ramo_form"/>
+        </record>
+
+        <menuitem parent="menu_corseg_configuration" sequence="20"
+            action="act_ramo_form" id="menu_ramo_tree"/>
+
+        <record model="ir.model.access" id="access_ramo">
+            <field name="model" search="[('model', '=', 'corseg.ramo')]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_delete" eval="False"/>
+        </record>
+        <record model="ir.model.access" id="access_ramo_admin">
+            <field name="model" search="[('model', '=', 'corseg.ramo')]"/>
+            <field name="group" ref="group_corseg_admin"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_delete" eval="True"/>
+        </record>
+
+        <!-- Cia -->
+        <record model="ir.ui.view" id="cia_view_form">
+            <field name="model">corseg.cia</field>
+            <field name="type">form</field>
+            <field name="name">cia_form</field>
+        </record>
+        <record model="ir.ui.view" id="cia_view_tree">
+            <field name="model">corseg.cia</field>
+            <field name="type">tree</field>
+            <field name="name">cia_tree</field>
+        </record>
+        <record model="ir.action.act_window" id="act_cia_form">
+            <field name="name">Cia. de Seguros</field>
+            <field name="res_model">corseg.cia</field>
+        </record>
+        <record model="ir.action.act_window.view" id="act_cia_form_view1">
+            <field name="sequence" eval="10"/>
+            <field name="view" ref="cia_view_tree"/>
+            <field name="act_window" ref="act_cia_form"/>
+        </record>
+        <record model="ir.action.act_window.view" id="act_cia_form_view2">
+            <field name="sequence" eval="20"/>
+            <field name="view" ref="cia_view_form"/>
+            <field name="act_window" ref="act_cia_form"/>
+        </record>
+
+        <menuitem parent="menu_corseg_configuration" sequence="30"
+            action="act_cia_form" id="menu_cia_tree"/>
+
+        <record model="ir.model.access" id="access_cia">
+            <field name="model" search="[('model', '=', 'corseg.cia')]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_delete" eval="False"/>
+        </record>
+        <record model="ir.model.access" id="access_cia_admin">
+            <field name="model" search="[('model', '=', 'corseg.cia')]"/>
+            <field name="group" ref="group_corseg_admin"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_delete" eval="True"/>
+        </record>
+
+        <!-- Cia Poliza -->
+        <record model="ir.ui.view" id="cia_poliza_view_form">
+            <field name="model">corseg.cia.poliza</field>
+            <field name="type">form</field>
+            <field name="name">cia_poliza_form</field>
+        </record>
+        <record model="ir.ui.view" id="cia_poliza_view_tree">
+            <field name="model">corseg.cia.poliza</field>
+            <field name="type">tree</field>
+            <field name="name">cia_poliza_tree</field>
+        </record>
+        <record model="ir.model.access" id="access_cia_poliza">
+            <field name="model" search="[('model', '=', 'corseg.cia.poliza')]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_delete" eval="False"/>
+        </record>
+        <record model="ir.model.access" id="access_cia_poliza_admin">
+            <field name="model" search="[('model', '=', 'corseg.cia.poliza')]"/>
+            <field name="group" ref="group_corseg_admin"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_delete" eval="True"/>
+        </record>
+
+        <!-- Tipo Comision -->
+        <record model="ir.ui.view" id="tipo_comision_view_form">
+            <field name="model">corseg.tipo_comision</field>
+            <field name="type">form</field>
+            <field name="name">tipo_comision_form</field>
+        </record>
+        <record model="ir.ui.view" id="tipo_comision_view_tree">
+            <field name="model">corseg.tipo_comision</field>
+            <field name="type">tree</field>
+            <field name="name">tipo_comision_tree</field>
+        </record>
+        <record model="ir.action.act_window" id="act_tipo_comision_form">
+            <field name="name">Tipo Comision</field>
+            <field name="res_model">corseg.tipo_comision</field>
+        </record>
+        <record model="ir.action.act_window.view" id="act_tipo_comision_form_view1">
+            <field name="sequence" eval="10"/>
+            <field name="view" ref="tipo_comision_view_tree"/>
+            <field name="act_window" ref="act_tipo_comision_form"/>
+        </record>
+        <record model="ir.action.act_window.view" id="act_tipo_comision_form_view2">
+            <field name="sequence" eval="20"/>
+            <field name="view" ref="tipo_comision_view_form"/>
+            <field name="act_window" ref="act_tipo_comision_form"/>
+        </record>
+
+        <menuitem parent="menu_corseg_configuration" sequence="40"
+            action="act_tipo_comision_form" id="menu_tipo_comision_tree"/>
+
+        <record model="ir.model.access" id="access_tipo_comision">
+            <field name="model" search="[('model', '=', 'corseg.tipo_comision')]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_delete" eval="False"/>
+        </record>
+        <record model="ir.model.access" id="access_tipo_comision_admin">
+            <field name="model" search="[('model', '=', 'corseg.tipo_comision')]"/>
+            <field name="group" ref="group_corseg_admin"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_delete" eval="True"/>
+        </record>
+
+        <!-- Vendedor -->
+        <record model="ir.ui.view" id="vendedor_view_form">
+            <field name="model">corseg.vendedor</field>
+            <field name="type">form</field>
+            <field name="name">vendedor_form</field>
+        </record>
+        <record model="ir.ui.view" id="vendedor_view_tree">
+            <field name="model">corseg.vendedor</field>
+            <field name="type">tree</field>
+            <field name="name">vendedor_tree</field>
+        </record>
+        <record model="ir.action.act_window" id="act_vendedor_form">
+            <field name="name">Vendedores</field>
+            <field name="res_model">corseg.vendedor</field>
+        </record>
+        <record model="ir.action.act_window.view" id="act_vendedor_form_view1">
+            <field name="sequence" eval="10"/>
+            <field name="view" ref="vendedor_view_tree"/>
+            <field name="act_window" ref="act_vendedor_form"/>
+        </record>
+        <record model="ir.action.act_window.view" id="act_vendedor_form_view2">
+            <field name="sequence" eval="20"/>
+            <field name="view" ref="vendedor_view_form"/>
+            <field name="act_window" ref="act_vendedor_form"/>
+        </record>
+
+        <menuitem parent="menu_corseg_configuration" sequence="50"
+            action="act_vendedor_form" id="menu_vendedor_tree"/>
+
+        <record model="ir.model.access" id="access_vendedor">
+            <field name="model" search="[('model', '=', 'corseg.vendedor')]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_delete" eval="False"/>
+        </record>
+        <record model="ir.model.access" id="access_vendedor_admin">
+            <field name="model" search="[('model', '=', 'corseg.vendedor')]"/>
+            <field name="group" ref="group_corseg_admin"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_delete" eval="True"/>
+        </record>
+
+        <!-- Comision Vendedor -->
+        <record model="ir.ui.view" id="comision_vendedor_view_form">
+            <field name="model">corseg.comision.vendedor</field>
+            <field name="type">form</field>
+            <field name="name">comision_vendedor_form</field>
+        </record>
+        <record model="ir.ui.view" id="comision_vendedor_view_tree">
+            <field name="model">corseg.comision.vendedor</field>
+            <field name="type">tree</field>
+            <field name="name">comision_vendedor_tree</field>
+        </record>
+        <record model="ir.model.access" id="access_comision_vendedor">
+            <field name="model" search="[('model', '=', 'corseg.comision.vendedor')]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_delete" eval="False"/>
+        </record>
+        <record model="ir.model.access" id="access_comision_vendedor_admin">
+            <field name="model" search="[('model', '=', 'corseg.comision.vendedor')]"/>
+            <field name="group" ref="group_corseg_admin"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_delete" eval="True"/>
+        </record>
+
+    </data>
+</tryton>

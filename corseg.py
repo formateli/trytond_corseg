@@ -26,7 +26,7 @@ STATES = [
 class CiaSeguros(ModelSQL, ModelView):
     'Compania de Seguros'
     __name__ = 'corseg.cia'
-    party = fields.Many2One('party.party', 'Party', required=True,
+    party = fields.Many2One('party.party', 'Entidad', required=True,
             ondelete='CASCADE')
     polizas = fields.One2Many('corseg.cia.poliza',
         'cia', 'Polizas')
@@ -90,6 +90,8 @@ class Vendedor(ModelSQL, ModelView):
     __name__ = 'corseg.vendedor'
     party = fields.Many2One('party.party', 'Party', required=True,
             ondelete='CASCADE')
+    tabla_comision = fields.One2Many('corseg.comision.vendedor',
+        'vendedor', 'Tabla Comision')
     emisiones = fields.One2Many('corseg.emision',
         'vendedor', 'Polizas', readonly=True)
     active = fields.Boolean('Activo')
@@ -121,7 +123,7 @@ class TablaComisionVendedor(ModelSQL, ModelView):
     __name__ = 'corseg.comision.vendedor'
     vendedor = fields.Many2One('corseg.vendedor', 'Vendedor',
         required=True, ondelete='CASCADE')
-    poliza = fields.Many2One('corseg.poliza',
+    poliza = fields.Many2One('corseg.cia.poliza',
         'Poliza', required=True)
     tipo_comision = fields.Many2One('corseg.tipo_comision',
         'Tipo Comision', required=True)
@@ -132,7 +134,7 @@ class TablaComisionVendedor(ModelSQL, ModelView):
 class TablaComisionEmpresa(ModelSQL, ModelView):
     'Tabla Comision Empresa'
     __name__ = 'corseg.comision.empresa'
-    poliza = fields.Many2One('corseg.poliza',
+    poliza = fields.Many2One('corseg.cia.poliza',
         'Poliza', required=True)
     tipo_comision = fields.Many2One('corseg.tipo_comision',
         'Tipo Comision', required=True)
