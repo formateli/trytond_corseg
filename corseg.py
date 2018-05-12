@@ -51,7 +51,7 @@ class CiaPoliza(ModelSQL, ModelView):
     ramo = fields.Many2One(
             'corseg.ramo', 'Ramo', required=True)
     tipo_comision = fields.Many2One('corseg.tipo_comision',
-        'Tipo Comision', required=True)
+        'Tipo Comision', required=True)  # TODO MultiValue
     active = fields.Boolean('Activo')
 
     @staticmethod
