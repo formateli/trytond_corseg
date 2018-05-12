@@ -8,6 +8,8 @@ this repository contains the full copyright notices and license terms. -->
     <field name="name"/>
     <label name="ramo"/>
     <field name="ramo"/>
+    <label name="tipo_comision"/>
+    <field name="tipo_comision"/>
     <label name="active"/>
     <field name="active"/>
 </form>

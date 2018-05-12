@@ -64,7 +64,7 @@ contains the full copyright notices and license terms. -->
             <field name="act_window" ref="act_ramo_form"/>
         </record>
 
-        <menuitem parent="menu_corseg_configuration" sequence="20"
+        <menuitem parent="menu_corseg_configuration" sequence="10"
             action="act_ramo_form" id="menu_ramo_tree"/>
 
         <record model="ir.model.access" id="access_ramo">
@@ -82,6 +82,97 @@ contains the full copyright notices and license terms. -->
             <field name="perm_create" eval="True"/>
             <field name="perm_delete" eval="True"/>
         </record>
+
+        <!-- Forma Pago -->
+        <record model="ir.ui.view" id="forma_pago_view_form">
+            <field name="model">corseg.forma_pago</field>
+            <field name="type">form</field>
+            <field name="name">forma_pago_form</field>
+        </record>
+        <record model="ir.ui.view" id="forma_pago_view_tree">
+            <field name="model">corseg.forma_pago</field>
+            <field name="type">tree</field>
+            <field name="name">forma_pago_tree</field>
+        </record>
+        <record model="ir.action.act_window" id="act_forma_pago_form">
+            <field name="name">Forma Pago</field>
+            <field name="res_model">corseg.forma_pago</field>
+        </record>
+        <record model="ir.action.act_window.view" id="act_forma_pago_form_view1">
+            <field name="sequence" eval="10"/>
+            <field name="view" ref="forma_pago_view_tree"/>
+            <field name="act_window" ref="act_forma_pago_form"/>
+        </record>
+        <record model="ir.action.act_window.view" id="act_forma_pago_form_view2">
+            <field name="sequence" eval="20"/>
+            <field name="view" ref="forma_pago_view_form"/>
+            <field name="act_window" ref="act_forma_pago_form"/>
+        </record>
+
+        <menuitem parent="menu_corseg_configuration" sequence="15"
+            action="act_forma_pago_form" id="menu_forma_pago_tree"/>
+
+        <record model="ir.model.access" id="access_forma_pago">
+            <field name="model" search="[('model', '=', 'corseg.forma_pago')]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_delete" eval="False"/>
+        </record>
+        <record model="ir.model.access" id="access_forma_pago_admin">
+            <field name="model" search="[('model', '=', 'corseg.forma_pago')]"/>
+            <field name="group" ref="group_corseg_admin"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_delete" eval="True"/>
+        </record>
+
+        <!-- Frecuencia Pago -->
+        <record model="ir.ui.view" id="frecuencia_pago_view_form">
+            <field name="model">corseg.frecuencia_pago</field>
+            <field name="type">form</field>
+            <field name="name">frecuencia_pago_form</field>
+        </record>
+        <record model="ir.ui.view" id="frecuencia_pago_view_tree">
+            <field name="model">corseg.frecuencia_pago</field>
+            <field name="type">tree</field>
+            <field name="name">frecuencia_pago_tree</field>
+        </record>
+        <record model="ir.action.act_window" id="act_frecuencia_pago_form">
+            <field name="name">Frecuencia Pago</field>
+            <field name="res_model">corseg.frecuencia_pago</field>
+        </record>
+        <record model="ir.action.act_window.view" id="act_frecuencia_pago_form_view1">
+            <field name="sequence" eval="10"/>
+            <field name="view" ref="frecuencia_pago_view_tree"/>
+            <field name="act_window" ref="act_frecuencia_pago_form"/>
+        </record>
+        <record model="ir.action.act_window.view" id="act_frecuencia_pago_form_view2">
+            <field name="sequence" eval="20"/>
+            <field name="view" ref="frecuencia_pago_view_form"/>
+            <field name="act_window" ref="act_frecuencia_pago_form"/>
+        </record>
+
+        <menuitem parent="menu_corseg_configuration" sequence="20"
+            action="act_frecuencia_pago_form" id="menu_frecuencia_pago_tree"/>
+
+        <record model="ir.model.access" id="access_frecuencia_pago">
+            <field name="model" search="[('model', '=', 'corseg.frecuencia_pago')]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_delete" eval="False"/>
+        </record>
+        <record model="ir.model.access" id="access_frecuencia_pago_admin">
+            <field name="model" search="[('model', '=', 'corseg.frecuencia_pago')]"/>
+            <field name="group" ref="group_corseg_admin"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_delete" eval="True"/>
+        </record>
+
 
         <!-- Cia -->
         <record model="ir.ui.view" id="cia_view_form">
@@ -181,7 +272,7 @@ contains the full copyright notices and license terms. -->
             <field name="act_window" ref="act_tipo_comision_form"/>
         </record>
 
-        <menuitem parent="menu_corseg_configuration" sequence="40"
+        <menuitem parent="menu_corseg_configuration" sequence="25"
             action="act_tipo_comision_form" id="menu_tipo_comision_tree"/>
 
         <record model="ir.model.access" id="access_tipo_comision">
@@ -226,7 +317,7 @@ contains the full copyright notices and license terms. -->
             <field name="act_window" ref="act_vendedor_form"/>
         </record>
 
-        <menuitem parent="menu_corseg_configuration" sequence="50"
+        <menuitem parent="menu_corseg_configuration" sequence="40"
             action="act_vendedor_form" id="menu_vendedor_tree"/>
 
         <record model="ir.model.access" id="access_vendedor">

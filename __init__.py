@@ -15,7 +15,6 @@ def register():
         Vendedor,
         TipoComision,
         TablaComisionVendedor,
-        TablaComisionEmpresa,
         FormaPago,
         FrecuenciaPago,
         Emision,
