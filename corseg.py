@@ -8,7 +8,8 @@ from trytond.pyson import Eval, If
 __all__ = [
         'CiaSeguros', 'Ramo', 'CiaPoliza', 'Poliza',
         'Vendedor', 'TipoComision', 'TablaComisionVendedor',
-        'FormaPago', 'FrecuenciaPago', 'Emision'
+        'FormaPago', 'FrecuenciaPago', 'Emision',
+        'VehiculoMarca', 'VehiculoModelo',
     ]
 
 STATES = [
@@ -177,3 +178,26 @@ class Emision(ModelSQL, ModelView):
         'Frecuencia pago', required=True)
     no_cuotas = fields.Integer('Cant. cuotas')
     state = fields.Selection(STATES, 'Estado', readonly=True, required=True)
+
+
+class VehiculoMarca(ModelSQL, ModelView):
+    'Ramo'
+    __name__ = 'corseg.vehiculo.marca'
+    name = fields.Char('Nombre', required=True)
+    active = fields.Boolean('Activo')
+
+    @staticmethod
+    def default_active():
+        return True
+
+
+class VehiculoModelo(ModelSQL, ModelView):
+    'Ramo'
+    __name__ = 'corseg.vehiculo.modelo'
+    name = fields.Char('Nombre', required=True)
+    marca = fields.Many2One('corseg.vehiculo.marca', 'Marca', required=True)
+    active = fields.Boolean('Activo')
+
+    @staticmethod
+    def default_active():
+        return True

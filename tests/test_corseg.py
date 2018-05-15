@@ -21,10 +21,11 @@ class CorsegTestCase(ModuleTestCase):
         Vendedor = pool.get('corseg.vendedor')
         TipoComision = pool.get('corseg.tipo_comision')
         TablaComisionVendedor = pool.get('corseg.comision.vendedor')
-        TablaComisionEmpresa = pool.get('corseg.comision.empresa')
         FormaPago = pool.get('corseg.forma_pago')
         FrecuenciaPago = pool.get('corseg.frecuencia_pago')
         Emision = pool.get('corseg.emision')
+        VehiculoMarca = pool.get('corseg.vehiculo.marca')
+        VehiculoModelo = pool.get('corseg.vehiculo.modelo')
 
 
 def suite():

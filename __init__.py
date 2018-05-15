@@ -18,4 +18,6 @@ def register():
         FormaPago,
         FrecuenciaPago,
         Emision,
+        VehiculoMarca,
+        VehiculoModelo,
         module='corseg', type_='model')
