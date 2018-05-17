@@ -52,7 +52,7 @@ class CiaPoliza(ModelSQL, ModelView):
     ramo = fields.Many2One(
             'corseg.ramo', 'Ramo', required=True)
     tipo_comision = fields.Many2One('corseg.tipo_comision',
-        'Tipo Comision', required=True)  # TODO MultiValue
+        'Tipo Comision', required=True)  # TODO MultiValue - Depende de la company
     active = fields.Boolean('Activo')
 
     @staticmethod
@@ -113,8 +113,8 @@ class TipoComision(ModelSQL, ModelView):
             ('fijo', 'Monto Fijo'),
             ('porcentaje', 'Porcentaje'),
         ], 'Tipo', required=True)
-    monto = fields.Numeric('Monto',
-        digits=(16, Eval('_parent_receipt', {}).get('currency_digits', 2)))
+    monto = fields.Numeric('Monto', digits=(16, 2))
+    pago_unico = fields.Boolean('Pago unico')
     active = fields.Boolean('Activo')
 
     @staticmethod
@@ -130,7 +130,7 @@ class TablaComisionVendedor(ModelSQL, ModelView):
     poliza = fields.Many2One('corseg.cia.poliza',
         'Poliza', required=True)
     tipo_comision = fields.Many2One('corseg.tipo_comision',
-        'Tipo Comision', required=True)
+        'Tipo Comision', required=True) # TODO MultiValue
 
     #TODO unique(vendedor, poliza)
 

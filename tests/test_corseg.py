@@ -27,6 +27,8 @@ class CorsegTestCase(ModuleTestCase):
         VehiculoMarca = pool.get('corseg.vehiculo.marca')
         VehiculoModelo = pool.get('corseg.vehiculo.modelo')
 
+        # TODO Multivalue para tipo comision en corseg.cia.poliza
+
 
 def suite():
     suite = trytond.tests.test_tryton.suite()
