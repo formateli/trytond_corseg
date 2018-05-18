@@ -10,7 +10,7 @@ def register():
     Pool.register(
         CiaSeguros,
         Ramo,
-        CiaPoliza,
+        CiaProducto,
         Poliza,
         Vendedor,
         TipoComision,

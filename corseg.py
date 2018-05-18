@@ -6,7 +6,7 @@ from trytond.model import ModelView, ModelSQL, fields
 from trytond.pyson import Eval, If
 
 __all__ = [
-        'CiaSeguros', 'Ramo', 'CiaPoliza', 'Poliza',
+        'CiaSeguros', 'Ramo', 'CiaProducto', 'Poliza',
         'Vendedor', 'TipoComision', 'TablaComisionVendedor',
         'FormaPago', 'FrecuenciaPago', 'Emision',
         'VehiculoMarca', 'VehiculoModelo',
@@ -28,8 +28,8 @@ class CiaSeguros(ModelSQL, ModelView):
     __name__ = 'corseg.cia'
     party = fields.Many2One('party.party', 'Entidad', required=True,
             ondelete='CASCADE')
-    polizas = fields.One2Many('corseg.cia.poliza',
-        'cia', 'Polizas')
+    productos = fields.One2Many('corseg.cia.producto',
+        'cia', 'Productos')
 
 
 class Ramo(ModelSQL, ModelView):
@@ -43,9 +43,9 @@ class Ramo(ModelSQL, ModelView):
         return True
 
 
-class CiaPoliza(ModelSQL, ModelView):
-    'Poliza Compania de Seguros'
-    __name__ = 'corseg.cia.poliza'
+class CiaProducto(ModelSQL, ModelView):
+    'Producto Compania de Seguros'
+    __name__ = 'corseg.cia.producto'
     name = fields.Char('Nombre', required=True)
     cia = fields.Many2One(
             'corseg.cia', 'Compania de Seguros', required=True)
@@ -54,6 +54,8 @@ class CiaPoliza(ModelSQL, ModelView):
     tipo_comision = fields.Many2One('corseg.tipo_comision',
         'Tipo Comision', required=False)  # TODO MultiValue - Depende de la company - Debe ser requerido
     active = fields.Boolean('Activo')
+
+    # TODO variacion de la comision en subsiguientes renovaciones
 
     @staticmethod
     def default_active():
@@ -74,7 +76,7 @@ class Poliza(ModelSQL, ModelView):
     cia = fields.Many2One(
             'corseg.cia', 'Compania de Seguros', required=True)
     cia_poliza = fields.Many2One(
-            'corseg.cia.poliza', 'Poliza de la Compania', required=True)
+            'corseg.cia.producto', 'Producto Cia Seguro', required=True)
     numero = fields.Char('Numero de Poliza', required=True)
     titular = fields.Many2One('party.party', 'Titular', required=True)
     emsiones = fields.One2Many('corseg.emision',
@@ -128,7 +130,7 @@ class TablaComisionVendedor(ModelSQL, ModelView):
     __name__ = 'corseg.comision.vendedor'
     vendedor = fields.Many2One('corseg.vendedor', 'Vendedor',
         required=True, ondelete='CASCADE')
-    poliza = fields.Many2One('corseg.cia.poliza',
+    poliza = fields.Many2One('corseg.cia.producto',
         'Poliza', required=True)
     tipo_comision = fields.Many2One('corseg.tipo_comision',
         'Tipo Comision', required=True) # TODO MultiValue
