@@ -52,7 +52,7 @@ class CiaPoliza(ModelSQL, ModelView):
     ramo = fields.Many2One(
             'corseg.ramo', 'Ramo', required=True)
     tipo_comision = fields.Many2One('corseg.tipo_comision',
-        'Tipo Comision', required=True)  # TODO MultiValue - Depende de la company
+        'Tipo Comision', required=False)  # TODO MultiValue - Depende de la company - Debe ser requerido
     active = fields.Boolean('Activo')
 
     @staticmethod
@@ -94,6 +94,7 @@ class Vendedor(ModelSQL, ModelView):
     __name__ = 'corseg.vendedor'
     party = fields.Many2One('party.party', 'Party', required=True,
             ondelete='CASCADE')
+    # TODO alias - Caso Dafne
     tabla_comision = fields.One2Many('corseg.comision.vendedor',
         'vendedor', 'Tabla Comision')
     emisiones = fields.One2Many('corseg.emision',

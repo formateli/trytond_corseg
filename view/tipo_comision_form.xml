@@ -8,6 +8,8 @@ this repository contains the full copyright notices and license terms. -->
     <field name="tipo"/>
     <label name="monto"/>
     <field name="monto"/>
+    <label name="pago_unico"/>
+    <field name="pago_unico"/>
     <label name="active"/>
     <field name="active"/>
 </form>

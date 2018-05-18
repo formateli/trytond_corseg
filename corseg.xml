@@ -173,6 +173,10 @@ contains the full copyright notices and license terms. -->
             <field name="perm_delete" eval="True"/>
         </record>
 
+        <!-- Vehiculos -->
+        <menuitem name="Vehiculos" parent="menu_corseg_configuration"
+            id="menu_corseg_vehiculos" sequence="22"/>
+
         <!-- Vehiculo Marca -->
         <record model="ir.ui.view" id="vehiculo_marca_view_form">
             <field name="model">corseg.vehiculo.marca</field>
@@ -199,7 +203,7 @@ contains the full copyright notices and license terms. -->
             <field name="act_window" ref="act_vehiculo_marca_form"/>
         </record>
 
-        <menuitem parent="menu_corseg_configuration" sequence="22"
+        <menuitem parent="menu_corseg_vehiculos" sequence="10"
             action="act_vehiculo_marca_form" id="menu_vehiculo_marca_tree"/>
 
         <record model="ir.model.access" id="access_vehiculo_marca">
@@ -244,7 +248,7 @@ contains the full copyright notices and license terms. -->
             <field name="act_window" ref="act_vehiculo_modelo_form"/>
         </record>
 
-        <menuitem parent="menu_corseg_configuration" sequence="23"
+        <menuitem parent="menu_corseg_vehiculos" sequence="20"
             action="act_vehiculo_modelo_form" id="menu_vehiculo_modelo_tree"/>
 
         <record model="ir.model.access" id="access_vehiculo_modelo">
@@ -451,6 +455,24 @@ contains the full copyright notices and license terms. -->
             <field name="perm_create" eval="True"/>
             <field name="perm_delete" eval="True"/>
         </record>
+
+        <menuitem name="Cotizaciones" parent="menu_corseg"
+            id="menu_corseg_cotizacion" sequence="20"/>
+
+        <menuitem name="Polizas" parent="menu_corseg"
+            id="menu_corseg_poliza" sequence="30"/>
+
+        <menuitem name="Polizas" parent="menu_corseg_poliza"
+            id="menu_corseg_poliza_tree" sequence="10"/>
+        <menuitem name="Pagos" parent="menu_corseg_poliza"
+            id="menu_corseg_poliza_pago_tree" sequence="20"/>
+
+        <menuitem name="Liquidacion Comisiones" parent="menu_corseg"
+            id="menu_liq_comision" sequence="40"/>
+        <menuitem name="Cia de Seguros" parent="menu_liq_comision"
+            id="menu_liq_comision_cia" sequence="10"/>
+        <menuitem name="Vendedores" parent="menu_liq_comision"
+            id="menu_liq_comision_vendedor" sequence="20"/>
 
     </data>
 </tryton>
