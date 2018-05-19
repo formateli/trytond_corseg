@@ -43,6 +43,22 @@ class Ramo(ModelSQL, ModelView):
         return True
 
 
+class TipoComision(ModelSQL, ModelView):
+    'Tipo Comision'
+    __name__ = 'corseg.tipo_comision'
+    name = fields.Char('Nombre', required=True)
+    tipo = fields.Selection([
+            ('fijo', 'Monto Fijo'),
+            ('porcentaje', 'Porcentaje'),
+        ], 'Tipo', required=True)
+    monto = fields.Numeric('Monto', digits=(16, 2))
+    active = fields.Boolean('Activo')
+
+    @staticmethod
+    def default_active():
+        return True
+
+
 class CiaProducto(ModelSQL, ModelView):
     'Producto Compania de Seguros'
     __name__ = 'corseg.cia.producto'
@@ -51,11 +67,86 @@ class CiaProducto(ModelSQL, ModelView):
             'corseg.cia', 'Compania de Seguros', required=True)
     ramo = fields.Many2One(
             'corseg.ramo', 'Ramo', required=True)
-    tipo_comision = fields.Many2One('corseg.tipo_comision',
-        'Tipo Comision', required=False)  # TODO MultiValue - Depende de la company - Debe ser requerido
+    comision_cia = fields.One2Many('corseg.comision.cia',
+        'producto', 'Tabla Comision')
+    comision_vendedor = fields.One2Many('corseg.comision.vendedor',
+        'producto', 'Tabla Comision Vendedor')
+    es_colectiva = fields.Boolean('Colectiva')
     active = fields.Boolean('Activo')
 
-    # TODO variacion de la comision en subsiguientes renovaciones
+    @staticmethod
+    def default_active():
+        return True
+
+
+class ComisionCia(ModelSQL, ModelView):
+    'Tabla Comision Cia'
+    __name__ = 'corseg.comision.cia'
+    producto = fields.Many2One('corseg.cia.producto',
+        'Producto', required=True)
+    comisiones = fields.One2Many('corseg.comision.cia.detalle',
+        'tabla', 'Comisiones')
+
+
+class ComisionCiaDetalle(ModelSQL, ModelView):
+    'Comision Cia Detalle'
+    __name__ = 'corseg.comision.cia.detalle'
+    tabla = fields.Many2One('corseg.comision.cia',
+        'Tabla', required=True)
+    # TODO tipo_comision - MultiValue
+    renovacion = fields.Integer('Renovacion', required=True)
+    re_renovacion = fields.Boolean('Recurrente en renovacion',
+        help="Hacer esta comision recurrente en las proximas renovaciones.")
+    re_cuota = fields.Boolean('Recurrente en cuotas',
+        help="Hacer esta comision recurrente en todas las cuotas.")
+
+    # TODO order by renovacion
+
+
+class ComisionVendedor(ModelSQL, ModelView):
+    'Tabla Comision Vendedor'
+    __name__ = 'corseg.comision.vendedor'
+    producto = fields.Many2One('corseg.cia.producto',
+        'Producto', required=True)
+    vendedor = fields.Many2One('corseg.vendedor', 'Vendedor',
+        required=True, ondelete='CASCADE')
+    comisiones = fields.One2Many('corseg.comision.vendedor.detalle',
+        'tabla', 'Comisiones')
+
+
+class ComisionVendedorDetalle(ModelSQL, ModelView):
+    'Comision Vendedor Detalle'
+    __name__ = 'corseg.comision.vendedor.detalle'
+    tabla = fields.Many2One('corseg.comision.vendedor',
+        'Tabla', required=True)
+    # TODO tipo_comision - MultiValue
+    renovacion = fields.Integer('Renovacion', required=True)
+    re_renovacion = fields.Boolean('Recurrente en renovacion',
+        help="Hacer esta comision recurrente en las proximas renovaciones.")
+    re_cuota = fields.Boolean('Recurrente en cuotas',
+        help="Hacer esta comision recurrente en todas las cuotas.")
+
+    # TODO order by renovacion
+
+
+class GrupoPoliza(ModelSQL, ModelView):
+    'Grupo de Polizas'
+    __name__ = 'corseg.poliza.grupo'
+    company = fields.Many2One('company.company', 'Company', required=True,
+        states={
+            'readonly': True,
+            },
+        domain=[
+            ('id', If(Eval('context', {}).contains('company'), '=', '!='),
+                Eval('context', {}).get('company', -1)),
+            ], select=True)
+    name = fields.Char('Nombre', required=True)
+    polizas = fields.One2Many('corseg.poliza',
+        'grupo', 'Polizas',
+        domain=[
+            ('company', '=', Eval('company'))
+        ], depends=['company'])
+    active = fields.Boolean('Activo')
 
     @staticmethod
     def default_active():
@@ -73,22 +164,73 @@ class Poliza(ModelSQL, ModelView):
             ('id', If(Eval('context', {}).contains('company'), '=', '!='),
                 Eval('context', {}).get('company', -1)),
             ], select=True)
+    grupo = fields.Many2One(
+            'corseg.poliza.grupo', 'Grupo',
+            domain=[('company', '=', Eval('company'))],
+            depends=['company'] 
+        )
     cia = fields.Many2One(
             'corseg.cia', 'Compania de Seguros', required=True)
-    cia_poliza = fields.Many2One(
+    cia_producto = fields.Many2One(
             'corseg.cia.producto', 'Producto Cia Seguro', required=True)
     numero = fields.Char('Numero de Poliza', required=True)
-    titular = fields.Many2One('party.party', 'Titular', required=True)
+    contratante = fields.Many2One('party.party', 'Contratante', required=True)
+    f_emision = fields.Date('Emitida el', required=True)
+    f_desde = fields.Date('Desde', required=True)
+    f_hasta = fields.Date('Hasta', required=True)
+    suma_asegurada = fields.Numeric('Suma Asegurada', digits=(16, 2))
+    prima = fields.Numeric('Prima', digits=(16, 2))
+    tipo_comision = fields.Many2One('corseg.tipo_comision',
+        'Tipo Comision')
+    vendedor = fields.Many2One('corseg.vendedor', 'Vendedor', required=True)
+    tipo_comision_vendedor = fields.Many2One('corseg.tipo_comision',
+        'Tipo Comision Vendedor')
+    forma_pago = fields.Many2One('corseg.forma_pago', 'Forma pago', required=True)
+    frecuencia_pago = fields.Many2One('corseg.frecuencia_pago',
+        'Frecuencia pago', required=True)
+    no_cuotas = fields.Integer('Cant. cuotas')
     emsiones = fields.One2Many('corseg.emision',
         'poliza', 'Emisiones')
-    is_colectiva = fields.Boolean('Colectiva')
+    certificados = fields.One2Many('corseg.poliza.certificado',
+        'certificado', 'Certificados')
+
+    # TODO certificados
+    # TODO renovacion - function field, empieza en 0 para polizas nuevas
+    
+    # cancelada, suspendida, morosa, activa, renovada, reactivada
     state = fields.Selection(STATES, 'Estado', readonly=True, required=True)
 
-    #TODO unique(cia_poliza, numero)
+    #TODO unique(cia_producto, numero)
 
     @staticmethod
     def default_company():
         return Transaction().context.get('company')
+
+
+class Certificado(ModelSQL, ModelView):
+    'Certificado'
+    __name__ = 'corseg.poliza.certificado'
+    poliza = fields.Many2One(
+            'corseg.poliza', 'Poliza', required=True)
+    numero = fields.Char('Numero de Certificado', required=True)
+    asegurado = fields.Many2One('party.party', 'Asegurado', required=True,
+            ondelete='CASCADE')
+    beneficiarios = fields.One2Many('corseg.poliza.beneficiario',
+        'certificado', 'Beneficiarios')
+    # TODO datos tecnicos
+    # TODO inclusion, exclusion ? seria el id del movimiento
+    # TODO state : activo, excluido
+
+
+class Beneficiario(ModelSQL, ModelView):
+    'Beneficiario'
+    __name__ = 'corseg.poliza.beneficiario'
+    party = fields.Many2One('party.party', 'Party', required=True,
+            ondelete='CASCADE')
+    certificado = fields.Many2One(
+            'corseg.poliza.certificado', 'Certificado', required=True)
+    # TODO inclusion, exclusion ? seria el id del movimiento
+    # TODO state : activo, excluido
 
 
 class Vendedor(ModelSQL, ModelView):
@@ -106,36 +248,6 @@ class Vendedor(ModelSQL, ModelView):
     @staticmethod
     def default_active():
         return True
-
-
-class TipoComision(ModelSQL, ModelView):
-    'Tipo Comision'
-    __name__ = 'corseg.tipo_comision'
-    name = fields.Char('Nombre', required=True)
-    tipo = fields.Selection([
-            ('fijo', 'Monto Fijo'),
-            ('porcentaje', 'Porcentaje'),
-        ], 'Tipo', required=True)
-    monto = fields.Numeric('Monto', digits=(16, 2))
-    pago_unico = fields.Boolean('Pago unico')
-    active = fields.Boolean('Activo')
-
-    @staticmethod
-    def default_active():
-        return True
-
-
-class TablaComisionVendedor(ModelSQL, ModelView):
-    'Tabla Comision Vendedor'
-    __name__ = 'corseg.comision.vendedor'
-    vendedor = fields.Many2One('corseg.vendedor', 'Vendedor',
-        required=True, ondelete='CASCADE')
-    poliza = fields.Many2One('corseg.cia.producto',
-        'Poliza', required=True)
-    tipo_comision = fields.Many2One('corseg.tipo_comision',
-        'Tipo Comision', required=True) # TODO MultiValue
-
-    #TODO unique(vendedor, poliza)
 
 
 class FormaPago(ModelSQL, ModelView):
