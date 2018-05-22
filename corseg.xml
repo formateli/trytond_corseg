@@ -160,6 +160,33 @@ contains the full copyright notices and license terms. -->
             <field name="perm_delete" eval="True"/>
         </record>
 
+        <!-- Comision Cia -->
+        <record model="ir.ui.view" id="comision_cia_view_form">
+            <field name="model">corseg.comision.cia</field>
+            <field name="type">form</field>
+            <field name="name">comision_cia_form</field>
+        </record>
+        <record model="ir.ui.view" id="comision_cia_view_tree">
+            <field name="model">corseg.comision.cia</field>
+            <field name="type">tree</field>
+            <field name="name">comision_cia_tree</field>
+        </record>
+        <record model="ir.model.access" id="access_comision_cia">
+            <field name="model" search="[('model', '=', 'corseg.comision.cia')]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_delete" eval="False"/>
+        </record>
+        <record model="ir.model.access" id="access_comision_cia_admin">
+            <field name="model" search="[('model', '=', 'corseg.comision.cia')]"/>
+            <field name="group" ref="group_corseg_admin"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_delete" eval="True"/>
+        </record>
+
 
         <!-- Pagos -->
         <menuitem name="Pagos" parent="menu_corseg_configuration"

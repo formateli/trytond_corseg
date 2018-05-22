@@ -1,15 +1,9 @@
 <?xml version="1.0"?>
 <!-- This file is part of trytond-corseg module. The COPYRIGHT file at the top level of
 this repository contains the full copyright notices and license terms. -->
-<form>
-    <label name="producto"/>
-    <field name="producto" colspan="3"/>
-    <label name="vendedor"/>
-    <field name="vendedor"/>
-    <label name="renovacion"/>
+<tree>
+    <field name="producto"/>
     <field name="renovacion"/>
-    <label name="re_renovacion"/>
     <field name="re_renovacion"/>
-    <label name="re_cuota"/>
     <field name="re_cuota"/>
-</form>
+</tree>

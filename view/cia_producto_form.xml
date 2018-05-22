@@ -12,6 +12,16 @@ this repository contains the full copyright notices and license terms. -->
     <field name="es_colectiva"/>
     <label name="active"/>
     <field name="active"/>
-    <label name="description"/>
-    <field name="description"/>
+    <notebook colspan="4">
+        <page string="Descripcion" id="descripcion">
+            <separator name="description" colspan="4"/>
+            <field name="description" colspan="4"/>
+        </page>
+        <page string="Comision Cia." id="comision_cia">
+            <field name="comision_cia" colspan="4"/>
+        </page>
+        <page string="Comision Vendedor" id="comision_vendedor">
+            <field name="comision_vendedor" colspan="4"/>
+        </page>
+    </notebook>
 </form>

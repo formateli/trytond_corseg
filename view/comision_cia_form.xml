@@ -4,8 +4,6 @@ this repository contains the full copyright notices and license terms. -->
 <form>
     <label name="producto"/>
     <field name="producto" colspan="3"/>
-    <label name="vendedor"/>
-    <field name="vendedor"/>
     <label name="renovacion"/>
     <field name="renovacion"/>
     <label name="re_renovacion"/>

@@ -8,11 +8,10 @@ from trytond.pyson import Eval, If
 __all__ = [
         'Asegurado', 'Beneficiario', 'Certificado',
         'CiaProducto', 'CiaSeguros', 'ComisionCia',
-        'ComisionCiaDetalle', 'ComisionVendedor',
-        'ComisionVendedorDetalle', 'FormaPago',
-        'FrecuenciaPago', 'GrupoPoliza', 'Movimiento',
-        'Poliza', 'Ramo', 'TipoComision', 'VehiculoMarca',
-        'VehiculoModelo', 'Vendedor',
+        'ComisionVendedor', 'FormaPago', 'FrecuenciaPago',
+        'GrupoPoliza', 'Movimiento', 'Poliza', 'Ramo',
+        'TipoComision', 'VehiculoMarca', 'VehiculoModelo',
+        'Vendedor',
     ]
 
 STATES = [
@@ -81,7 +80,7 @@ class CiaProducto(ModelSQL, ModelView):
     comision_vendedor = fields.One2Many('corseg.comision.vendedor',
         'producto', 'Tabla Comision Vendedor')
     es_colectiva = fields.Boolean('Colectiva')
-    description = fields.Char('Descripcion', size=None)
+    description = fields.Text('Descripcion', size=None)
     active = fields.Boolean('Activo')
 
     @staticmethod
@@ -94,23 +93,15 @@ class ComisionCia(ModelSQL, ModelView):
     __name__ = 'corseg.comision.cia'
     producto = fields.Many2One('corseg.cia.producto',
         'Producto', required=True)
-    comisiones = fields.One2Many('corseg.comision.cia.detalle',
-        'tabla', 'Comisiones')
-
-
-class ComisionCiaDetalle(ModelSQL, ModelView):
-    'Comision Cia Detalle'
-    __name__ = 'corseg.comision.cia.detalle'
-    tabla = fields.Many2One('corseg.comision.cia',
-        'Tabla', required=True)
-    # TODO tipo_comision - MultiValue
     renovacion = fields.Integer('Renovacion', required=True)
+    # TODO tipo_comision - MultiValue
     re_renovacion = fields.Boolean('Recurrente en renovacion',
         help="Hacer esta comision recurrente en las proximas renovaciones.")
     re_cuota = fields.Boolean('Recurrente en cuotas',
         help="Hacer esta comision recurrente en todas las cuotas.")
 
     # TODO order by renovacion
+    # TODO defualt recurrente = True
 
 
 class ComisionVendedor(ModelSQL, ModelView):
@@ -120,23 +111,14 @@ class ComisionVendedor(ModelSQL, ModelView):
         'Producto', required=True)
     vendedor = fields.Many2One('corseg.vendedor', 'Vendedor',
         required=True, ondelete='CASCADE')
-    comisiones = fields.One2Many('corseg.comision.vendedor.detalle',
-        'tabla', 'Comisiones')
-
-
-class ComisionVendedorDetalle(ModelSQL, ModelView):
-    'Comision Vendedor Detalle'
-    __name__ = 'corseg.comision.vendedor.detalle'
-    tabla = fields.Many2One('corseg.comision.vendedor',
-        'Tabla', required=True)
-    # TODO tipo_comision - MultiValue
     renovacion = fields.Integer('Renovacion', required=True)
+    # TODO tipo_comision - MultiValue
     re_renovacion = fields.Boolean('Recurrente en renovacion',
         help="Hacer esta comision recurrente en las proximas renovaciones.")
     re_cuota = fields.Boolean('Recurrente en cuotas',
         help="Hacer esta comision recurrente en todas las cuotas.")
 
-    # TODO order by renovacion
+    # TODO order by vendedor, renovacion
 
 
 class GrupoPoliza(ModelSQL, ModelView):
@@ -262,8 +244,8 @@ class Vendedor(ModelSQL, ModelView):
     party = fields.Many2One('party.party', 'Party', required=True,
             ondelete='CASCADE')
     # TODO alias - Caso Dafne
-    tabla_comision = fields.One2Many('corseg.comision.vendedor',
-        'vendedor', 'Tabla Comision')
+    comision = fields.One2Many('corseg.comision.vendedor',
+        'vendedor', 'Tabla Comision', readonly=True)
     emisiones = fields.One2Many('corseg.emision',
         'vendedor', 'Polizas', readonly=True)
     active = fields.Boolean('Activo')
