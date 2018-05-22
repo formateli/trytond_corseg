@@ -6,10 +6,13 @@ from trytond.model import ModelView, ModelSQL, fields
 from trytond.pyson import Eval, If
 
 __all__ = [
-        'CiaSeguros', 'Ramo', 'CiaProducto', 'Poliza',
-        'Vendedor', 'TipoComision', 'TablaComisionVendedor',
-        'FormaPago', 'FrecuenciaPago', 'Emision',
-        'VehiculoMarca', 'VehiculoModelo',
+        'Asegurado', 'Beneficiario', 'Certificado',
+        'CiaProducto', 'CiaSeguros', 'ComisionCia',
+        'ComisionCiaDetalle', 'ComisionVendedor',
+        'ComisionVendedorDetalle', 'FormaPago',
+        'FrecuenciaPago', 'GrupoPoliza', 'Movimiento',
+        'Poliza', 'Ramo', 'TipoComision', 'VehiculoMarca',
+        'VehiculoModelo', 'Vendedor',
     ]
 
 STATES = [
@@ -30,6 +33,11 @@ class CiaSeguros(ModelSQL, ModelView):
             ondelete='CASCADE')
     productos = fields.One2Many('corseg.cia.producto',
         'cia', 'Productos')
+    active = fields.Boolean('Activo')
+
+    @staticmethod
+    def default_active():
+        return True
 
 
 class Ramo(ModelSQL, ModelView):
@@ -289,7 +297,7 @@ class FrecuenciaPago(ModelSQL, ModelView):
 
 
 class Movimiento(ModelSQL, ModelView):
-    'Historia de Poliza'
+    'Movimiento de Poliza'
     __name__ = 'corseg.poliza.movimiento'
     poliza = fields.Many2One(
             'corseg.poliza', 'Poliza', required=True)

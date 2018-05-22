@@ -5,6 +5,5 @@ this repository contains the full copyright notices and license terms. -->
     <field name="cia"/>
     <field name="name"/>
     <field name="ramo"/>
-    <field name="tipo_comision"/>
     <field name="active"/>
 </tree>

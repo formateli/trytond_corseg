@@ -14,18 +14,26 @@ class CorsegTestCase(ModuleTestCase):
     @with_transaction()
     def test_corseg(self):
         pool = Pool()
+        
+        Asegurado = pool.get('corseg.poliza.asegurado')
+        Beneficiario = pool.get('corseg.poliza.beneficiario')
+        Certificado = pool.get('corseg.poliza.certificado')
+        CiaProducto = pool.get('corseg.cia.producto')
         CiaSeguros = pool.get('corseg.cia')
-        Ramo = pool.get('corseg.ramo')
-        CiaPoliza = pool.get('corseg.cia.poliza')
-        Poliza = pool.get('corseg.poliza')
-        Vendedor = pool.get('corseg.vendedor')
-        TipoComision = pool.get('corseg.tipo_comision')
-        TablaComisionVendedor = pool.get('corseg.comision.vendedor')
+        ComisionCia = pool.get('corseg.comision.cia')
+        ComisionCiaDetalle = pool.get('corseg.comision.cia.detalle')
+        ComisionVendedor = pool.get('corseg.comision.vendedor')
+        ComisionVendedorDetalle = pool.get('corseg.comision.vendedor.detalle')
         FormaPago = pool.get('corseg.forma_pago')
         FrecuenciaPago = pool.get('corseg.frecuencia_pago')
-        Emision = pool.get('corseg.emision')
+        GrupoPoliza = pool.get('corseg.poliza.grupo')
+        Movimiento = pool.get('corseg.poliza.movimiento')
+        Poliza = pool.get('corseg.poliza')
+        Ramo = pool.get('corseg.ramo')
+        TipoComision = pool.get('corseg.tipo_comision')
         VehiculoMarca = pool.get('corseg.vehiculo.marca')
         VehiculoModelo = pool.get('corseg.vehiculo.modelo')
+        Vendedor = pool.get('corseg.vendedor')
 
         # TODO Multivalue para tipo comision en corseg.cia.poliza
 

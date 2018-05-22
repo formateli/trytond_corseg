@@ -4,8 +4,6 @@ this repository contains the full copyright notices and license terms. -->
 <form>
     <label name="vendedor"/>
     <field name="vendedor" colspan="3"/>
-    <label name="poliza"/>
-    <field name="poliza"/>
-    <label name="tipo_comision"/>
-    <field name="tipo_comision"/>
+    <label name="producto"/>
+    <field name="producto"/>
 </form>

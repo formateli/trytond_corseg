@@ -10,8 +10,8 @@ this repository contains the full copyright notices and license terms. -->
     <field name="ramo"/>
     <label name="es_colectiva"/>
     <field name="es_colectiva"/>
-    <label name="tipo_comision"/>
-    <field name="tipo_comision"/>
     <label name="active"/>
     <field name="active"/>
+    <label name="description"/>
+    <field name="description"/>
 </form>

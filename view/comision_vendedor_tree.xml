@@ -3,6 +3,5 @@
 this repository contains the full copyright notices and license terms. -->
 <tree>
     <field name="vendedor"/>
-    <field name="poliza"/>
-    <field name="tipo_comision"/>
+    <field name="producto"/>
 </tree>
