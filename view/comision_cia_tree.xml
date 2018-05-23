@@ -4,6 +4,7 @@ this repository contains the full copyright notices and license terms. -->
 <tree>
     <field name="producto"/>
     <field name="renovacion"/>
+    <field name="tipo_comision"/>
     <field name="re_renovacion"/>
     <field name="re_cuota"/>
 </tree>

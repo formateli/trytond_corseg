@@ -8,6 +8,9 @@ this repository contains the full copyright notices and license terms. -->
     <field name="vendedor"/>
     <label name="renovacion"/>
     <field name="renovacion"/>
+    <label name="tipo_comision"/>
+    <field name="tipo_comision"/>
+    <newline/>
     <label name="re_renovacion"/>
     <field name="re_renovacion"/>
     <label name="re_cuota"/>

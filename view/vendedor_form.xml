@@ -4,13 +4,15 @@ this repository contains the full copyright notices and license terms. -->
 <form>
     <label name="party"/>
     <field name="party"/>
+    <label name="alias"/>
+    <field name="alias"/>
     <label name="active"/>
     <field name="active"/>
     <newline />
     <notebook colspan="4">
         <page string="Tabla Comision" id="comision">
-            <field name="tabla_comision" colspan="4"
-                view_ids="corseg.comision_vendedor_view_tree"/>
+            <field name="comision" colspan="4"
+                view_ids="corseg.comision_vendedor2_view_tree,corseg.comision_vendedor2_view_form"/>
         </page>
     </notebook>
 </form>

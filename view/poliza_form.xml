@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<!-- This file is part of trytond-corseg module. The COPYRIGHT file at the top level of
+this repository contains the full copyright notices and license terms. -->
+<form>
+    <label name="company"/>
+    <field name="company"/>
+    <label name="grupo"/>
+    <field name="grupo"/>
+    <label name="cia"/>
+    <field name="cia"/>
+    <label name="cia_producto"/>
+    <field name="cia_producto"/>
+    <label name="numero"/>
+    <field name="numero"/>
+    <label name="contratante"/>
+    <field name="contratante"/>
+    <newline />
+    <notebook colspan="4">
+        <page string="Informacion" id="informacion">
+            <label name="f_emision"/>
+            <field name="f_emision"/>
+        </page>
+        <page string="Certificados" id="certificados">
+            <field name="certificados" colspan="4"/>
+        </page>
+        <page string="Pagos" id="pagos">
+            <field name="pagos" colspan="4"/>
+        </page>
+    </notebook>
+</form>

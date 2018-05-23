@@ -3,5 +3,6 @@
 this repository contains the full copyright notices and license terms. -->
 <tree>
     <field name="party"/>
+    <field name="alias"/>
     <field name="active"/>
 </tree>

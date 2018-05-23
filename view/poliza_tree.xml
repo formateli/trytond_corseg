@@ -2,10 +2,10 @@
 <!-- This file is part of trytond-corseg module. The COPYRIGHT file at the top level of
 this repository contains the full copyright notices and license terms. -->
 <tree>
-    <field name="producto"/>
-    <field name="vendedor"/>
-    <field name="renovacion"/>
-    <field name="tipo_comision"/>
-    <field name="re_renovacion"/>
-    <field name="re_cuota"/>
+    <field name="cia"/>
+    <field name="cia_producto"/>
+    <field name="numero"/>
+    <field name="contratante"/>
+    <field name="state"/>
+    <field name="company"/>
 </tree>

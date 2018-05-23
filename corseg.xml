@@ -468,15 +468,26 @@ contains the full copyright notices and license terms. -->
         </record>
 
         <!-- Comision Vendedor -->
+
         <record model="ir.ui.view" id="comision_vendedor_view_form">
             <field name="model">corseg.comision.vendedor</field>
             <field name="type">form</field>
             <field name="name">comision_vendedor_form</field>
         </record>
+        <record model="ir.ui.view" id="comision_vendedor2_view_form">
+            <field name="model">corseg.comision.vendedor</field>
+            <field name="type">form</field>
+            <field name="name">comision_vendedor2_form</field>
+        </record>
         <record model="ir.ui.view" id="comision_vendedor_view_tree">
             <field name="model">corseg.comision.vendedor</field>
             <field name="type">tree</field>
             <field name="name">comision_vendedor_tree</field>
+        </record>
+        <record model="ir.ui.view" id="comision_vendedor2_view_tree">
+            <field name="model">corseg.comision.vendedor</field>
+            <field name="type">tree</field>
+            <field name="name">comision_vendedor2_tree</field>
         </record>
         <record model="ir.model.access" id="access_comision_vendedor">
             <field name="model" search="[('model', '=', 'corseg.comision.vendedor')]"/>

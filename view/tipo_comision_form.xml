@@ -11,5 +11,5 @@ this repository contains the full copyright notices and license terms. -->
     <label name="active"/>
     <field name="active"/>
     <label name="description"/>
-    <field name="description"/>
+    <field name="description" colspan="3"/>
 </form>
