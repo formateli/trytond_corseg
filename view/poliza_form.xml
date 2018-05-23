@@ -19,12 +19,18 @@ this repository contains the full copyright notices and license terms. -->
         <page string="Informacion" id="informacion">
             <label name="f_emision"/>
             <field name="f_emision"/>
-        </page>
-        <page string="Certificados" id="certificados">
-            <field name="certificados" colspan="4"/>
-        </page>
-        <page string="Pagos" id="pagos">
-            <field name="pagos" colspan="4"/>
+            <label name="f_desde"/>
+            <field name="f_desde"/>
+            <label name="f_hasta"/>
+            <field name="f_hasta"/>
+            <label name="f_desde"/>
+            <field name="f_desde"/>
+            <label name="suma_asegurada"/>
+            <field name="suma_asegurada"/>
+            <label name="prima"/>
+            <field name="prima"/>
+            <label name="vendedor"/>
+            <field name="vendedor"/>
         </page>
     </notebook>
 </form>
