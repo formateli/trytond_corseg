@@ -4,7 +4,7 @@
 from trytond.transaction import Transaction
 from trytond.pool import Pool
 from trytond.model import ModelView, ModelSQL, fields
-from trytond.pyson import Eval, If
+from trytond.pyson import Eval, If, Bool
 from trytond.modules.company.model import (
         CompanyMultiValueMixin, CompanyValueMixin)
 
@@ -181,7 +181,7 @@ class VendedorTipoComision(ModelSQL, CompanyValueMixin):
 class GrupoPoliza(ModelSQL, ModelView):
     'Grupo de Polizas'
     __name__ = 'corseg.poliza.grupo'
-    company = fields.Many2One('company.company', 'Company', required=True,
+    company = fields.Many2One('company.company', 'Company', required=False, # TODO required=True
         states={
             'readonly': True,
             },
@@ -190,17 +190,26 @@ class GrupoPoliza(ModelSQL, ModelView):
                 Eval('context', {}).get('company', -1)),
             ], select=True)
     name = fields.Char('Nombre', required=True)
+    parent = fields.Many2One('corseg.poliza.grupo', 'Parent', select=True)
+    childs = fields.One2Many('corseg.poliza.grupo',
+        'parent', 'Children', readonly=True)
     polizas = fields.One2Many('corseg.poliza',
-        'grupo', 'Polizas',
-        domain=[
-            ('company', '=', Eval('company'))
-        ], depends=['company'])
+        'grupo', 'Polizas', readonly=True)
     description = fields.Char('Descripcion', size=None)
     active = fields.Boolean('Activo')
 
     @staticmethod
     def default_active():
         return True
+
+    @staticmethod
+    def default_company():
+        return Transaction().context.get('company')
+
+    def get_rec_name(self, name):
+        if self.parent:
+            return self.parent.get_rec_name(name) + '/' + self.name
+        return self.name
 
 
 class Poliza(ModelSQL, ModelView):
@@ -221,16 +230,29 @@ class Poliza(ModelSQL, ModelView):
         )
     cia = fields.Many2One(
             'corseg.cia', 'Compania de Seguros', required=True)
-    cia_producto = fields.Many2One(
-            'corseg.cia.producto', 'Producto Cia Seguro', required=True)
+    cia_producto = fields.Many2One('corseg.cia.producto',
+        'Producto', required=True,
+        domain=[
+            If(
+                Bool(Eval('cia')),
+                [('cia', '=', Eval('cia'))], []
+            )
+        ],
+        depends=['cia'])
     numero = fields.Char('Numero de Poliza', required=True)
     contratante = fields.Many2One('party.party', 'Contratante', required=True)
 
     f_emision = fields.Date('Emitida el', required=True)
     f_desde = fields.Date('Desde', required=True)
     f_hasta = fields.Date('Hasta', required=True)
-    suma_asegurada = fields.Numeric('Suma Asegurada', digits=(16, 2))
-    prima = fields.Numeric('Prima', digits=(16, 2))
+    suma_asegurada = fields.Numeric('Suma Asegurada',
+        digits=(16, 2), required=True)
+    prima = fields.Numeric('Prima',
+        digits=(16, 2), required=True)
+    notas = fields.Text('Notas', size=None)
+
+    # TODO currency
+
     pagos = fields.Numeric('Pagos', digits=(16, 2))
     # TODO function -> saldo = fields.Numeric('Saldo', digits=(16, 2))
     forma_pago = fields.Many2One('corseg.forma_pago', 'Forma pago', required=True)
@@ -249,7 +271,6 @@ class Poliza(ModelSQL, ModelView):
     movimientos = fields.One2Many('corseg.poliza.movimiento',
         'poliza', 'Historia')
     # TODO pagos
-    notas = fields.Char('Notas', size=None)
 
     # TODO renovacion - function field, empieza en 0 para polizas nuevas
     
@@ -261,6 +282,20 @@ class Poliza(ModelSQL, ModelView):
     @staticmethod
     def default_company():
         return Transaction().context.get('company')
+
+    @fields.depends('company', 'cia', 'cia_producto')
+    def on_change_company(self):
+        self.cia = None
+        self.cia_producto = None
+
+    @fields.depends('cia_producto')
+    def on_change_cia(self):
+        self.cia_producto = None
+
+    @fields.depends('cia', 'cia_producto')
+    def on_change_cia_producto(self):
+        if self.cia_producto:
+            self.cia = self.cia_producto.cia
 
 
 class Certificado(ModelSQL, ModelView):
@@ -371,13 +406,16 @@ class Movimiento(ModelSQL, ModelView):
     poliza = fields.Many2One(
             'corseg.poliza', 'Poliza', required=True)
     fecha = fields.Date('Fecha', required=True)
-    # TODO tipo: nueva, renovacion, finiquito, endoso, ajuste_prima_suma_asegurada
+    # TODO tipo: nueva, renovacion, finiquito, endoso,
+    #            ajuste_prima_suma_asegurada, cambio_vendedor,
+    #            cambio_contratante, comentario
     suma_asegurada = fields.Numeric('Suma Asegurada', digits=(16, 2))
     prima = fields.Numeric('Prima', digits=(16, 2))
     # TODO inclusion
     # TODO exclusion
 
     # TODO order by fecha
+    #   advertir si una historia tiene fecha menor a la ultima.
 
 
 class VehiculoMarca(ModelSQL, ModelView):

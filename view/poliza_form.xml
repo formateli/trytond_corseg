@@ -14,23 +14,25 @@ this repository contains the full copyright notices and license terms. -->
     <field name="numero"/>
     <label name="contratante"/>
     <field name="contratante"/>
+    <label name="vendedor"/>
+    <field name="vendedor"/>
     <newline />
     <notebook colspan="4">
         <page string="Informacion" id="informacion">
             <label name="f_emision"/>
             <field name="f_emision"/>
+            <newline/>
             <label name="f_desde"/>
             <field name="f_desde"/>
             <label name="f_hasta"/>
             <field name="f_hasta"/>
-            <label name="f_desde"/>
-            <field name="f_desde"/>
             <label name="suma_asegurada"/>
             <field name="suma_asegurada"/>
             <label name="prima"/>
             <field name="prima"/>
-            <label name="vendedor"/>
-            <field name="vendedor"/>
+            <newline/>
+            <separator name="notas" colspan="4"/>
+            <field name="notas" colspan="4"/>
         </page>
     </notebook>
 </form>
