@@ -2,26 +2,27 @@
 <!-- This file is part of trytond-corseg module. The COPYRIGHT file at the top level of
 this repository contains the full copyright notices and license terms. -->
 <form>
-    <label name="company"/>
-    <field name="company"/>
-    <label name="grupo"/>
-    <field name="grupo"/>
-    <label name="cia"/>
-    <field name="cia"/>
-    <label name="cia_producto"/>
-    <field name="cia_producto"/>
-    <label name="numero"/>
-    <field name="numero"/>
-    <label name="contratante"/>
-    <field name="contratante"/>
+    <label name="poliza"/>
+    <field name="poliza" colspan="3"/>
+    <label name="fecha"/>
+    <field name="fecha"/>
+    <label name="descripcion"/>
+    <field name="descripcion"/>
+    <label name="tipo"/>
+    <field name="tipo"/>
     <label name="vendedor"/>
     <field name="vendedor"/>
     <newline />
     <notebook colspan="4">
-        <page string="Informacion" id="informacion">
+        <page string="Endoso" id="endoso">
+            <label name="renovacion"/>
+            <field name="renovacion"/>
+            <label name="finiquito"/>
+            <field name="finiquito"/>
             <label name="f_emision"/>
             <field name="f_emision"/>
-            <newline/>
+            <label name="contratante"/>
+            <field name="contratante"/>
             <label name="f_desde"/>
             <field name="f_desde"/>
             <label name="f_hasta"/>
@@ -30,26 +31,20 @@ this repository contains the full copyright notices and license terms. -->
             <field name="suma_asegurada"/>
             <label name="prima"/>
             <field name="prima"/>
-            <newline/>
-            <separator name="notas" colspan="4"/>
-            <field name="notas" colspan="4"/>
-        </page>
-        <page string="Certificados" id="certificados">
-            <field name="certificados"/>
-        </page>
-        <page string="Movimientos" id="movimientos">
-            <field name="movimientos"/>
-        </page>
-        <page string="Comentarios" id="comentarios">
-            <field name="comentarios"/>
-        </page>
-        <page string="Pagos" id="pagos">
+            <separator string="Pago" colspan="4"/>
             <label name="forma_pago"/>
             <field name="forma_pago"/>
             <label name="frecuencia_pago"/>
             <field name="frecuencia_pago"/>
             <label name="no_cuotas"/>
             <field name="no_cuotas"/>
+            <newline/>
+            <separator string="Inclusiones / Exclusiones" colspan="4"/>
+            <field name="inclusion" colspan="2"/>
+            <field name="exclusion" colspan="2"/>
+        </page>
+        <page string="Comentarios" id="comentario">
+            <field name="comentario" colspan="4"/>
         </page>
     </notebook>
 </form>

@@ -6,9 +6,9 @@ this repository contains the full copyright notices and license terms. -->
     <field name="name"/>
     <label name="company"/>
     <field name="company"/>
-    <label name="active"/>
-    <field name="active"/>
     <label name="parent"/>
     <field name="parent"/>
+    <label name="active"/>
+    <field name="active"/>
     <field name="childs" colspan="4"/>
 </form>

@@ -16,6 +16,7 @@ __all__ = [
         'FormaPago', 'FrecuenciaPago', 'GrupoPoliza',
         'Movimiento', 'Poliza', 'Ramo', 'TipoComision',
         'VehiculoMarca', 'VehiculoModelo', 'Vendedor',
+        'Comentario', 'Inclusion', 'Exclusion'
     ]
 
 STATES = [
@@ -181,7 +182,7 @@ class VendedorTipoComision(ModelSQL, CompanyValueMixin):
 class GrupoPoliza(ModelSQL, ModelView):
     'Grupo de Polizas'
     __name__ = 'corseg.poliza.grupo'
-    company = fields.Many2One('company.company', 'Company', required=False, # TODO required=True
+    company = fields.Many2One('company.company', 'Company', required=True,
         states={
             'readonly': True,
             },
@@ -228,10 +229,12 @@ class Poliza(ModelSQL, ModelView):
             domain=[('company', '=', Eval('company'))],
             depends=['company']
         )
+
+    # TODO readonly: If(Eval('state'), True, False) 
     cia = fields.Many2One(
-            'corseg.cia', 'Compania de Seguros', required=True)
+            'corseg.cia', 'Compania de Seguros', required=True, readonly=True)
     cia_producto = fields.Many2One('corseg.cia.producto',
-        'Producto', required=True,
+        'Producto', required=True, readonly=True,
         domain=[
             If(
                 Bool(Eval('cia')),
@@ -239,6 +242,7 @@ class Poliza(ModelSQL, ModelView):
             )
         ],
         depends=['cia'])
+    # TODO ramo -> function
     numero = fields.Char('Numero de Poliza', required=True)
     contratante = fields.Many2One('party.party', 'Contratante', required=True)
 
@@ -249,33 +253,35 @@ class Poliza(ModelSQL, ModelView):
         digits=(16, 2), required=True)
     prima = fields.Numeric('Prima',
         digits=(16, 2), required=True)
+    vendedor = fields.Many2One('corseg.vendedor', 'Vendedor', required=True)
     notas = fields.Text('Notas', size=None)
-
-    # TODO currency
-
-    pagos = fields.Numeric('Pagos', digits=(16, 2))
-    # TODO function -> saldo = fields.Numeric('Saldo', digits=(16, 2))
     forma_pago = fields.Many2One('corseg.forma_pago', 'Forma pago', required=True)
     frecuencia_pago = fields.Many2One('corseg.frecuencia_pago',
         'Frecuencia pago', required=True)
     no_cuotas = fields.Integer('Cant. cuotas')
 
-    tipo_comision = fields.Many2One('corseg.tipo_comision',
-        'Tipo Comision')
-    vendedor = fields.Many2One('corseg.vendedor', 'Vendedor', required=True)
-    tipo_comision_vendedor = fields.Many2One('corseg.tipo_comision',
-        'Tipo Comision Vendedor')
+#    TODO pagos = function
+#    TODO pagos_cache = fields.Numeric('Pagos', digits=(16, 2))
+#    # TODO function -> saldo = fields.Numeric('Saldo', digits=(16, 2))
+
+#   TODO comision_cia
+#   TODO comision_vendedor
+
 
     certificados = fields.One2Many('corseg.poliza.certificado',
         'certificado', 'Certificados')
     movimientos = fields.One2Many('corseg.poliza.movimiento',
-        'poliza', 'Historia')
-    # TODO pagos
+        'poliza', 'Movimientos')
+    comentarios = fields.One2Many('corseg.poliza.comentario',
+        'poliza', 'Comentarios')
 
-    # TODO renovacion - function field, empieza en 0 para polizas nuevas
+    # TODO pagos
+    # TODO comentarios
+
+    # TODO renovacion - readonly, empieza en 0 para polizas nuevas
     
-    # cancelada, suspendida, morosa, activa, renovada, reactivada
-    state = fields.Selection(STATES, 'Estado', readonly=True, required=True)
+    # activa, finiquito
+    state = fields.Selection([('activa', 'Activa'), ('finiquito', 'Finiquito')], 'Estado', readonly=True, required=True)
 
     #TODO unique(cia_producto, numero)
 
@@ -377,45 +383,72 @@ class Vendedor(ModelSQL, ModelView):
         return domain
 
 
-class FormaPago(ModelSQL, ModelView):
-    'Tipo Pago'
-    __name__ = 'corseg.forma_pago'
-    name = fields.Char('Nombre', required=True)
-    active = fields.Boolean('Activo')
-
-    @staticmethod
-    def default_active():
-        return True
-
-
-class FrecuenciaPago(ModelSQL, ModelView):
-    'Frecuencia Pago'
-    __name__ = 'corseg.frecuencia_pago'
-    name = fields.Char('Nombre', required=True)
-    meses = fields.Integer('Meses', required=True)
-    active = fields.Boolean('Activo')
-
-    @staticmethod
-    def default_active():
-        return True
-
-
 class Movimiento(ModelSQL, ModelView):
     'Movimiento de Poliza'
     __name__ = 'corseg.poliza.movimiento'
     poliza = fields.Many2One(
             'corseg.poliza', 'Poliza', required=True)
     fecha = fields.Date('Fecha', required=True)
-    # TODO tipo: nueva, renovacion, finiquito, endoso,
-    #            ajuste_prima_suma_asegurada, cambio_vendedor,
-    #            cambio_contratante, comentario
-    suma_asegurada = fields.Numeric('Suma Asegurada', digits=(16, 2))
-    prima = fields.Numeric('Prima', digits=(16, 2))
+    descripcion = fields.Char('Descripcion', required=True)
+    tipo = fields.Selection([('normal', 'Normal'), ('endoso', 'Endoso')], 'Tipo', required=True)
+
+    contratante = fields.Many2One('party.party', 'Contratante')
+    f_emision = fields.Date('Emitida el')
+    f_desde = fields.Date('Desde')
+    f_hasta = fields.Date('Hasta')
+    suma_asegurada = fields.Numeric('Suma Asegurada',
+        digits=(16, 2), required=True)
+    prima = fields.Numeric('Prima',
+        digits=(16, 2), required=True)
+    vendedor = fields.Many2One('corseg.vendedor', 'Vendedor', required=True)
+    forma_pago = fields.Many2One('corseg.forma_pago', 'Forma pago', required=True)
+    frecuencia_pago = fields.Many2One('corseg.frecuencia_pago',
+        'Frecuencia pago', required=True)
+    no_cuotas = fields.Integer('Cant. cuotas')
+
+    renovacion = fields.Boolean('Renovacion')
+    finiquito = fields.Boolean('Finiquito')
+
+    inclusion = fields.One2Many('corseg.poliza.inclusion',
+        'movimiento', 'Inclusion')
+    exclusion = fields.One2Many('corseg.poliza.exclusion',
+        'movimiento', 'Exclusion')
+
+    comentario = fields.Text('Comentarios', size=None)
+
+    # TODO renovacion - correlativo de renovaciones
     # TODO inclusion
     # TODO exclusion
 
     # TODO order by fecha
     #   advertir si una historia tiene fecha menor a la ultima.
+
+
+class Inclusion(ModelSQL, ModelView):
+    'Inclusion'
+    __name__ = 'corseg.poliza.inclusion'
+    movimiento = fields.Many2One(
+            'corseg.poliza.movimiento', 'Movimiento', required=True)
+    certificado = fields.Many2One(
+            'corseg.poliza.certificado', 'Certificado', required=True)
+
+
+class Exclusion(ModelSQL, ModelView):
+    'Inclusion'
+    __name__ = 'corseg.poliza.exclusion'
+    movimiento = fields.Many2One(
+            'corseg.poliza.movimiento', 'Movimiento', required=True)
+    certificado = fields.Many2One(
+            'corseg.poliza.certificado', 'Certificado', required=True)
+
+
+class Comentario(ModelSQL, ModelView):
+    'Comentarios sobre la Poliza'
+    __name__ = 'corseg.poliza.comentario'
+    poliza = fields.Many2One(
+            'corseg.poliza', 'Poliza', required=True)
+    fecha = fields.Date('Fecha', required=True)
+    comentario = fields.Text('Comentario', size=None)
 
 
 class VehiculoMarca(ModelSQL, ModelView):
@@ -434,6 +467,30 @@ class VehiculoModelo(ModelSQL, ModelView):
     __name__ = 'corseg.vehiculo.modelo'
     name = fields.Char('Nombre', required=True)
     marca = fields.Many2One('corseg.vehiculo.marca', 'Marca', required=True)
+    active = fields.Boolean('Activo')
+
+    @staticmethod
+    def default_active():
+        return True
+
+
+class FormaPago(ModelSQL, ModelView):
+    'Tipo Pago'
+    __name__ = 'corseg.forma_pago'
+    name = fields.Char('Nombre', required=True)
+
+    active = fields.Boolean('Activo')
+
+    @staticmethod
+    def default_active():
+        return True
+
+
+class FrecuenciaPago(ModelSQL, ModelView):
+    'Frecuencia Pago'
+    __name__ = 'corseg.frecuencia_pago'
+    name = fields.Char('Nombre', required=True)
+    meses = fields.Integer('Meses', required=True)
     active = fields.Boolean('Activo')
 
     @staticmethod
