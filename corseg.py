@@ -4,7 +4,7 @@
 from trytond.transaction import Transaction
 from trytond.pool import Pool
 from trytond.model import ModelView, ModelSQL, fields
-from trytond.pyson import Eval, If, Bool
+from trytond.pyson import Eval, If, Bool, Equal, Not
 from trytond.modules.company.model import (
         CompanyMultiValueMixin, CompanyValueMixin)
 
@@ -16,7 +16,7 @@ __all__ = [
         'FormaPago', 'FrecuenciaPago', 'GrupoPoliza',
         'Movimiento', 'Poliza', 'Ramo', 'TipoComision',
         'VehiculoMarca', 'VehiculoModelo', 'Vendedor',
-        'Comentario', 'Inclusion', 'Exclusion'
+        'Comentario', 'InclusionExclusion'
     ]
 
 STATES = [
@@ -115,9 +115,7 @@ class ComisionCia(ModelSQL, ModelView, CompanyMultiValueMixin):
     re_cuota = fields.Boolean('Recurrente en cuotas',
         help="Hacer esta comision recurrente en todas las cuotas.")
 
-    # TODO test tipo_comision
     # TODO order by renovacion
-    # TODO defualt recurrente = True
 
     @classmethod
     def multivalue_model(cls, field):
@@ -216,7 +214,7 @@ class GrupoPoliza(ModelSQL, ModelView):
 class Poliza(ModelSQL, ModelView):
     'Poliza de seguros'
     __name__ = 'corseg.poliza'
-    company = fields.Many2One('company.company', 'Company', required=True,
+    company = fields.Many2One('company.company', 'Company', required=False, # TODO required=True
         states={
             'readonly': True,
             },
@@ -231,34 +229,45 @@ class Poliza(ModelSQL, ModelView):
         )
 
     # TODO readonly: If(Eval('state'), True, False) 
-    cia = fields.Many2One(
-            'corseg.cia', 'Compania de Seguros', required=True, readonly=True)
+    cia = fields.Many2One('corseg.cia',
+        'Compania de Seguros', required=True,
+        states={
+            'readonly': Not(Equal(Eval('state'), 'new')),
+            },
+        depends=['state'])
     cia_producto = fields.Many2One('corseg.cia.producto',
-        'Producto', required=True, readonly=True,
+        'Producto', required=True,
+        states={
+            'readonly': Not(Equal(Eval('state'), 'new')),
+            },
         domain=[
             If(
                 Bool(Eval('cia')),
                 [('cia', '=', Eval('cia'))], []
             )
         ],
-        depends=['cia'])
+        depends=['cia', 'state'])
     # TODO ramo -> function
-    numero = fields.Char('Numero de Poliza', required=True)
-    contratante = fields.Many2One('party.party', 'Contratante', required=True)
+    numero = fields.Char('Numero de Poliza', required=True,
+        states={
+            'readonly': Not(Equal(Eval('state'), 'new')),
+            },
+        depends=['state'])
 
-    f_emision = fields.Date('Emitida el', required=True)
-    f_desde = fields.Date('Desde', required=True)
-    f_hasta = fields.Date('Hasta', required=True)
+    contratante = fields.Many2One('party.party', 'Contratante', readonly=True)
+    f_emision = fields.Date('Emitida el',  readonly=True)
+    f_desde = fields.Date('Desde',  readonly=True)
+    f_hasta = fields.Date('Hasta',  readonly=True)
     suma_asegurada = fields.Numeric('Suma Asegurada',
-        digits=(16, 2), required=True)
+        digits=(16, 2),  readonly=True)
     prima = fields.Numeric('Prima',
-        digits=(16, 2), required=True)
-    vendedor = fields.Many2One('corseg.vendedor', 'Vendedor', required=True)
+        digits=(16, 2),  readonly=True)
+    vendedor = fields.Many2One('corseg.vendedor', 'Vendedor', readonly=True)
     notas = fields.Text('Notas', size=None)
-    forma_pago = fields.Many2One('corseg.forma_pago', 'Forma pago', required=True)
+    forma_pago = fields.Many2One('corseg.forma_pago', 'Forma pago',  readonly=True)
     frecuencia_pago = fields.Many2One('corseg.frecuencia_pago',
-        'Frecuencia pago', required=True)
-    no_cuotas = fields.Integer('Cant. cuotas')
+        'Frecuencia pago',  readonly=True)
+    no_cuotas = fields.Integer('Cant. cuotas', readonly=True)
 
 #    TODO pagos = function
 #    TODO pagos_cache = fields.Numeric('Pagos', digits=(16, 2))
@@ -267,11 +276,14 @@ class Poliza(ModelSQL, ModelView):
 #   TODO comision_cia
 #   TODO comision_vendedor
 
-
-    certificados = fields.One2Many('corseg.poliza.certificado',
-        'certificado', 'Certificados')
+#    certificados = fields.One2Many('corseg.poliza.certificado',
+#        'poliza', 'Certificados', readonly=True)
     movimientos = fields.One2Many('corseg.poliza.movimiento',
-        'poliza', 'Movimientos')
+        'poliza', 'Movimientos',
+        states={
+            'invisible': Equal(Eval('state'), 'new'),
+            },
+        depends=['state'])
     comentarios = fields.One2Many('corseg.poliza.comentario',
         'poliza', 'Comentarios')
 
@@ -280,14 +292,23 @@ class Poliza(ModelSQL, ModelView):
 
     # TODO renovacion - readonly, empieza en 0 para polizas nuevas
     
-    # activa, finiquito
-    state = fields.Selection([('activa', 'Activa'), ('finiquito', 'Finiquito')], 'Estado', readonly=True, required=True)
+    state = fields.Selection([
+            ('new', 'Nuevo'),
+            ('draft', 'Borrador'),
+            ('activa', 'Activa'),
+            ('finiquito', 'Finiquito')
+        ],
+        'Estado', readonly=True, required=True)
 
     #TODO unique(cia_producto, numero)
 
     @staticmethod
     def default_company():
         return Transaction().context.get('company')
+
+    @staticmethod
+    def default_state():
+        return 'new'
 
     @fields.depends('company', 'cia', 'cia_producto')
     def on_change_company(self):
@@ -303,21 +324,41 @@ class Poliza(ModelSQL, ModelView):
         if self.cia_producto:
             self.cia = self.cia_producto.cia
 
+    @classmethod
+    def create(cls, vlist):
+        vlist = [x.copy() for x in vlist]
+        for values in vlist:
+            values['state'] = 'draft'
+        polizas = super(Poliza, cls).create(vlist)
+        return polizas
+
 
 class Certificado(ModelSQL, ModelView):
     'Certificado'
     __name__ = 'corseg.poliza.certificado'
-    poliza = fields.Many2One(
-            'corseg.poliza', 'Poliza', required=True)
+    inclu_exclu = fields.Many2One('corseg.poliza.inclu_exclu', 'Inclusiones / Exclusiones', required=True,
+            ondelete='CASCADE')
+    poliza = fields.Function(fields.Many2One('corseg.poliza', 'Poliza'),
+        'get_poliza')
     numero = fields.Char('Numero de Certificado', required=True)
     asegurado = fields.Many2One('corseg.poliza.asegurado', 'Asegurado', required=True,
             ondelete='CASCADE')
     beneficiarios = fields.One2Many('corseg.poliza.beneficiario',
         'certificado', 'Beneficiarios')
     notas = fields.Char('Notas', size=None)
+    state = fields.Selection([
+            ('incluido', 'Incluido'),
+            ('excluido', 'Excluido')],
+        'Estado', required=True, readonly=True)
+
     # TODO datos tecnicos
-    # TODO inclusion, exclusion ? seria el id del movimiento
-    # TODO state : activo, excluido
+
+    def get_rec_name(self, name):
+        return self.numero + '-' + self.asegurado.rec_name
+
+    def get_poliza(self, name):
+        if self.inclu_exclu:
+            return self.inclu_exclu.movimiento.poliza
 
 
 class Asegurado(ModelSQL, ModelView):
@@ -342,8 +383,8 @@ class Beneficiario(ModelSQL, ModelView):
     __name__ = 'corseg.poliza.beneficiario'
     party = fields.Many2One('party.party', 'Party', required=True,
             ondelete='CASCADE')
-    certificado = fields.Many2One(
-            'corseg.poliza.certificado', 'Certificado', required=True)
+#    certificados = fields.One2Many('corseg.poliza.certificado',
+#        'asegurado', 'Certificados', readonly=True)
     # TODO parentesco
     # TODO inclusion, exclusion ? seria el id del movimiento
     # TODO state : activo, excluido
@@ -409,35 +450,26 @@ class Movimiento(ModelSQL, ModelView):
     renovacion = fields.Boolean('Renovacion')
     finiquito = fields.Boolean('Finiquito')
 
-    inclusion = fields.One2Many('corseg.poliza.inclusion',
-        'movimiento', 'Inclusion')
-    exclusion = fields.One2Many('corseg.poliza.exclusion',
-        'movimiento', 'Exclusion')
+    inclu_exclu = fields.One2Many('corseg.poliza.inclu_exclu',
+        'movimiento', 'Inclusion / Exclusion')
 
     comentario = fields.Text('Comentarios', size=None)
 
     # TODO renovacion - correlativo de renovaciones
-    # TODO inclusion
-    # TODO exclusion
 
     # TODO order by fecha
     #   advertir si una historia tiene fecha menor a la ultima.
 
 
-class Inclusion(ModelSQL, ModelView):
-    'Inclusion'
-    __name__ = 'corseg.poliza.inclusion'
+class InclusionExclusion(ModelSQL, ModelView):
+    'Inclusion /  Exclusion'
+    __name__ = 'corseg.poliza.inclu_exclu'
     movimiento = fields.Many2One(
             'corseg.poliza.movimiento', 'Movimiento', required=True)
-    certificado = fields.Many2One(
-            'corseg.poliza.certificado', 'Certificado', required=True)
-
-
-class Exclusion(ModelSQL, ModelView):
-    'Inclusion'
-    __name__ = 'corseg.poliza.exclusion'
-    movimiento = fields.Many2One(
-            'corseg.poliza.movimiento', 'Movimiento', required=True)
+    tipo = fields.Selection([
+            ('inclusion', 'Inclusion'),
+            ('exclusion', 'Exclusion')
+        ], 'Tipo', required=True)
     certificado = fields.Many2One(
             'corseg.poliza.certificado', 'Certificado', required=True)
 

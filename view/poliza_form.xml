@@ -16,6 +16,8 @@ this repository contains the full copyright notices and license terms. -->
     <field name="contratante"/>
     <label name="vendedor"/>
     <field name="vendedor"/>
+    <label name="state"/>
+    <field name="state"/>
     <newline />
     <notebook colspan="4">
         <page string="Informacion" id="informacion">
@@ -34,9 +36,11 @@ this repository contains the full copyright notices and license terms. -->
             <separator name="notas" colspan="4"/>
             <field name="notas" colspan="4"/>
         </page>
+<!--
         <page string="Certificados" id="certificados">
             <field name="certificados"/>
         </page>
+-->
         <page string="Movimientos" id="movimientos">
             <field name="movimientos"/>
         </page>

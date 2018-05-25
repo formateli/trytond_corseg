@@ -39,9 +39,8 @@ this repository contains the full copyright notices and license terms. -->
             <label name="no_cuotas"/>
             <field name="no_cuotas"/>
             <newline/>
-            <separator string="Inclusiones / Exclusiones" colspan="4"/>
-            <field name="inclusion" colspan="2"/>
-            <field name="exclusion" colspan="2"/>
+            <separator string="Inclusiones - Exclusiones" colspan="4"/>
+            <field name="inclu_exclu" colspan="4"/>
         </page>
         <page string="Comentarios" id="comentario">
             <field name="comentario" colspan="4"/>
