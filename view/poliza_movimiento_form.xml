@@ -31,7 +31,9 @@ this repository contains the full copyright notices and license terms. -->
             <field name="suma_asegurada"/>
             <label name="prima"/>
             <field name="prima"/>
+<!--
             <separator string="Pago" colspan="4"/>
+-->
             <label name="forma_pago"/>
             <field name="forma_pago"/>
             <label name="frecuencia_pago"/>
@@ -39,7 +41,9 @@ this repository contains the full copyright notices and license terms. -->
             <label name="no_cuotas"/>
             <field name="no_cuotas"/>
             <newline/>
+<!--
             <separator string="Inclusiones - Exclusiones" colspan="4"/>
+-->
             <field name="inclu_exclu" colspan="4"/>
         </page>
         <page string="Comentarios" id="comentario">

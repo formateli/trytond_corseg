@@ -4,19 +4,20 @@
 from trytond.transaction import Transaction
 from trytond.pool import Pool
 from trytond.model import ModelView, ModelSQL, fields
-from trytond.pyson import Eval, If, Bool, Equal, Not
+from trytond.pyson import Eval, If, Bool, Equal, Not, In
 from trytond.modules.company.model import (
         CompanyMultiValueMixin, CompanyValueMixin)
 
 __all__ = [
-        'Asegurado', 'Beneficiario', 'Certificado',
+        'Asegurado', 'Extendido', 'Certificado',
         'CiaProducto', 'CiaSeguros',
         'ComisionCia', 'CiaTipoComision',
         'ComisionVendedor', 'VendedorTipoComision',
         'FormaPago', 'FrecuenciaPago', 'GrupoPoliza',
         'Movimiento', 'Poliza', 'Ramo', 'TipoComision',
         'VehiculoMarca', 'VehiculoModelo', 'Vendedor',
-        'Comentario', 'InclusionExclusion'
+        'Comentario', 'InclusionExclusion',
+        'IncluExcluCertificado',
     ]
 
 STATES = [
@@ -232,13 +233,13 @@ class Poliza(ModelSQL, ModelView):
     cia = fields.Many2One('corseg.cia',
         'Compania de Seguros', required=True,
         states={
-            'readonly': Not(Equal(Eval('state'), 'new')),
+            'readonly': Not(In(Eval('state'), ['new', 'draft'])),
             },
         depends=['state'])
     cia_producto = fields.Many2One('corseg.cia.producto',
         'Producto', required=True,
         states={
-            'readonly': Not(Equal(Eval('state'), 'new')),
+            'readonly': Not(In(Eval('state'), ['new', 'draft'])),
             },
         domain=[
             If(
@@ -250,7 +251,7 @@ class Poliza(ModelSQL, ModelView):
     # TODO ramo -> function
     numero = fields.Char('Numero de Poliza', required=True,
         states={
-            'readonly': Not(Equal(Eval('state'), 'new')),
+            'readonly': Not(In(Eval('state'), ['new', 'draft'])),
             },
         depends=['state'])
 
@@ -336,22 +337,27 @@ class Poliza(ModelSQL, ModelView):
 class Certificado(ModelSQL, ModelView):
     'Certificado'
     __name__ = 'corseg.poliza.certificado'
-    inclu_exclu = fields.Many2One('corseg.poliza.inclu_exclu', 'Inclusiones / Exclusiones', required=True,
-            ondelete='CASCADE')
+#    inclu_exclu = fields.Many2One('corseg.poliza.inclu_exclu', 'Inclusiones / Exclusiones', required=True,
+#            ondelete='CASCADE')
     poliza = fields.Function(fields.Many2One('corseg.poliza', 'Poliza'),
-        'get_poliza')
+        'get_poliza', searcher='search_poliza')
     numero = fields.Char('Numero de Certificado', required=True)
     asegurado = fields.Many2One('corseg.poliza.asegurado', 'Asegurado', required=True,
             ondelete='CASCADE')
-    beneficiarios = fields.One2Many('corseg.poliza.beneficiario',
-        'certificado', 'Beneficiarios')
+#    extendidos = fields.One2Many('corseg.poliza.extendido',
+#        'certificado', 'Extendidos')
     notas = fields.Char('Notas', size=None)
     state = fields.Selection([
+            ('new', 'Nuevo'),
             ('incluido', 'Incluido'),
-            ('excluido', 'Excluido')],
-        'Estado', required=True, readonly=True)
+            ('excluido', 'Excluido')
+        ], 'Estado', required=True, readonly=True)
 
     # TODO datos tecnicos
+
+    @staticmethod
+    def default_state():
+        return 'new'
 
     def get_rec_name(self, name):
         return self.numero + '-' + self.asegurado.rec_name
@@ -359,6 +365,12 @@ class Certificado(ModelSQL, ModelView):
     def get_poliza(self, name):
         if self.inclu_exclu:
             return self.inclu_exclu.movimiento.poliza
+
+    @classmethod
+    def search_poliza(polizas, name, clause):
+        print(polizas)
+        print(name)
+        print(clause)
 
 
 class Asegurado(ModelSQL, ModelView):
@@ -368,7 +380,7 @@ class Asegurado(ModelSQL, ModelView):
             ondelete='CASCADE')
     certificados = fields.One2Many('corseg.poliza.certificado',
         'asegurado', 'Certificados', readonly=True)
-    # TODO siniestros
+    # TODO reclamos
 
     def get_rec_name(self, name):
         return self.party.rec_name
@@ -378,12 +390,12 @@ class Asegurado(ModelSQL, ModelView):
         return [('party.rec_name',) + tuple(clause[1:])]
 
 
-class Beneficiario(ModelSQL, ModelView):
-    'Beneficiario / Dependiente'
-    __name__ = 'corseg.poliza.beneficiario'
+class Extendido(ModelSQL, ModelView):
+    'Beneficiario / Dependiente / Conductor adicional'
+    __name__ = 'corseg.poliza.extendido'
     party = fields.Many2One('party.party', 'Party', required=True,
             ondelete='CASCADE')
-#    certificados = fields.One2Many('corseg.poliza.certificado',
+#    certificado = fields.One2Many('corseg.poliza.certificado',
 #        'asegurado', 'Certificados', readonly=True)
     # TODO parentesco
     # TODO inclusion, exclusion ? seria el id del movimiento
@@ -448,7 +460,7 @@ class Movimiento(ModelSQL, ModelView):
     no_cuotas = fields.Integer('Cant. cuotas')
 
     renovacion = fields.Boolean('Renovacion')
-    finiquito = fields.Boolean('Finiquito')
+    finiquito = fields.Boolean('Finalizacion') # TODO Cambiar nombre a finalizacion
 
     inclu_exclu = fields.One2Many('corseg.poliza.inclu_exclu',
         'movimiento', 'Inclusion / Exclusion')
@@ -466,12 +478,90 @@ class InclusionExclusion(ModelSQL, ModelView):
     __name__ = 'corseg.poliza.inclu_exclu'
     movimiento = fields.Many2One(
             'corseg.poliza.movimiento', 'Movimiento', required=True)
+    poliza = fields.Function(fields.Many2One('corseg.poliza', 'Poliza'),
+        'get_poliza', searcher='search_poliza')
     tipo = fields.Selection([
             ('inclusion', 'Inclusion'),
             ('exclusion', 'Exclusion')
         ], 'Tipo', required=True)
-    certificado = fields.Many2One(
-            'corseg.poliza.certificado', 'Certificado', required=True)
+    certificado = fields.One2One(
+            'corseg.inclu_exclu-certificado', 'inclu_exclu', 'certificado', 'Certificado',
+            domain=[
+                If(
+                    In(Eval('tipo'), ['inclusion']),
+                    ['OR',
+                        ('state', '=', 'new'),
+                        [
+                            ('poliza', '=', Eval('poliza')),
+                            ('state', '=', 'excluido'),
+                        ]
+                    ],
+                    [
+                        ('poliza', '=', Eval('poliza')),
+                        ('state', '=', 'incluido')
+                    ]
+                )
+            ],
+            depends=['poliza', 'tipo']
+    )
+
+#    certificado = fields.Many2One(
+#            'corseg.poliza.certificado', 'Certificado', required=True,
+#            domain=[
+#                If(
+#                    In(Eval('tipo'), ['inclusion']),
+#                    ['OR',
+#                        ('state', '=', 'new'),
+#                        [
+#                            ('inclu_exclu', '=', Eval('id')),
+#
+#                            ('state', '=', 'excluido'),
+#                        ]
+#                    ],
+#                    [
+#                        ('inclu_exclu', '=', Eval('id')),
+#                        ('state', '=', 'incluido')
+#                    ]
+#                )
+#            ],
+#            depends=['id', 'tipo']
+#        )
+
+    @classmethod
+    def create(cls, vlist):
+        inclu_exclus = super(InclusionExclusion, cls).create(vlist)
+        for ie in inclu_exclus:
+            if ie.tipo == 'inclusion':
+                if ie.certificado.state not in ['new', 'excluido']:
+                    raise Exception(
+                        "El certificado debe estar en un estado 'Nuevo' o 'Excluido' " \
+                        "para poder ser incluido.")
+                ie.certificado.state = 'incluido'
+            elif ie.tipo == 'exclusion':
+                if ie.certificado.state not in ['incluido']:
+                    raise Exception(
+                        "El certificado debe estar en un estado 'Incluido' " \
+                        "para poder ser excluido.")
+                ie.certificado.state = 'excluido'
+            ie.certificado.save()
+        return inclu_exclus
+
+    def get_poliza(self, name):
+        if self.movimiento:
+            return self.movimiento.poliza
+
+    def search_poliza(self, name, clause):
+        print(name)
+        print(clause)
+
+
+class IncluExcluCertificado(ModelSQL):
+    'InclusionExclusion / Certificado'
+    __name__ = 'corseg.inclu_exclu-certificado'
+    certificado = fields.Many2One('corseg.poliza.certificado', 'Certificado',
+        ondelete='CASCADE', select=True, required=True)
+    inclu_exclu = fields.Many2One('corseg.poliza.inclu_exclu', 'Inclusion / Exclusion',
+        ondelete='CASCADE', select=True, required=True)
 
 
 class Comentario(ModelSQL, ModelView):

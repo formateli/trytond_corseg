@@ -2,19 +2,27 @@
 <!-- This file is part of trytond-corseg module. The COPYRIGHT file at the top level of
 this repository contains the full copyright notices and license terms. -->
 <form>
+<!--
     <label name="inclu_exclu"/>
     <field name="inclu_exclu" colspan="3"/>
+-->
     <label name="numero"/>
     <field name="numero"/>
     <label name="asegurado"/>
     <field name="asegurado"/>
+    <label name="state"/>
+    <field name="state"/>
     <newline />
     <notebook colspan="4">
-        <page string="Beneficiarios" id="beneficiarios">
-            <field name="beneficiarios" colspan="4"/>
+<!--
+        <page string="Extendidos" id="extendidos">
+            <field name="extendidos" colspan="4"/>
         </page>
+-->
+<!--
         <page string="Inclusiones / Exclusiones" id="inclu_exclu">
             <field name="inclu_exclu" colspan="4"/>
         </page>
+-->
     </notebook>
 </form>

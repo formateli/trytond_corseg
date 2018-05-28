@@ -9,7 +9,7 @@ from .corseg import *
 def register():
     Pool.register(
         Asegurado,
-        Beneficiario,
+        Extendido,
         Certificado,
         CiaProducto,
         CiaSeguros,
@@ -29,4 +29,5 @@ def register():
         VehiculoMarca,
         VehiculoModelo,
         Vendedor,
+        IncluExcluCertificado,
         module='corseg', type_='model')
