@@ -2,27 +2,24 @@
 <!-- This file is part of trytond-corseg module. The COPYRIGHT file at the top level of
 this repository contains the full copyright notices and license terms. -->
 <form>
-    <label name="poliza"/>
-    <field name="poliza" colspan="3"/>
     <label name="fecha"/>
     <field name="fecha"/>
+    <label name="poliza"/>
+    <field name="poliza"/>
     <label name="descripcion"/>
-    <field name="descripcion"/>
+    <field name="descripcion" colspan="3"/>
     <label name="tipo"/>
     <field name="tipo"/>
-    <label name="vendedor"/>
-    <field name="vendedor"/>
+    <label name="tipo_endoso"/>
+    <field name="tipo_endoso"/>
     <newline />
     <notebook colspan="4">
-        <page string="Endoso" id="endoso">
-            <label name="renovacion"/>
-            <field name="renovacion"/>
-            <label name="finiquito"/>
-            <field name="finiquito"/>
-            <label name="f_emision"/>
-            <field name="f_emision"/>
+        <page string="Datos" id="datos" col="6">
             <label name="contratante"/>
             <field name="contratante"/>
+            <newline />
+            <label name="f_emision"/>
+            <field name="f_emision"/>
             <label name="f_desde"/>
             <field name="f_desde"/>
             <label name="f_hasta"/>
@@ -31,23 +28,35 @@ this repository contains the full copyright notices and license terms. -->
             <field name="suma_asegurada"/>
             <label name="prima"/>
             <field name="prima"/>
-<!--
-            <separator string="Pago" colspan="4"/>
--->
+            <newline />
             <label name="forma_pago"/>
             <field name="forma_pago"/>
             <label name="frecuencia_pago"/>
             <field name="frecuencia_pago"/>
             <label name="no_cuotas"/>
             <field name="no_cuotas"/>
-            <newline/>
-<!--
-            <separator string="Inclusiones - Exclusiones" colspan="4"/>
--->
-            <field name="inclu_exclu" colspan="4"/>
+        </page>
+        <page string="Inclusiones / Exclusiones" id="inclu_exclu">
+            <field name="inclu_exclu" colspan="6"/>
+        </page>
+        <page string="Comisiones" id="comisiones">
+            <label name="vendedor"/>
+            <field name="vendedor"/>
         </page>
         <page string="Comentarios" id="comentario">
             <field name="comentario" colspan="4"/>
         </page>
     </notebook>
+
+    <group col="6" colspan="4" id="buttons" yfill="1">
+        <label name="state"/>
+        <field name="state"/>
+        <button name="cancelar" string="Cancelado"
+            icon="tryton-cancel"/>
+        <button name="borrador" string="Borrador"/>
+        <button name="procesar" string="Procesar"
+            icon="tryton-ok"/>
+        <button name="confirmar" string="Confirmar"
+            icon="tryton-go-next"/>
+    </group>
 </form>
