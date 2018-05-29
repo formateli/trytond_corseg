@@ -275,8 +275,9 @@ class Poliza(ModelSQL, ModelView):
 #   TODO comision_cia
 #   TODO comision_vendedor
 
-#    certificados = fields.One2Many('corseg.poliza.certificado',
-#        'poliza', 'Certificados', readonly=True)
+    certificados = fields.One2Many('corseg.poliza.certificado',
+        'poliza', 'Incluidos', readonly=True)
+
     movimientos = fields.One2Many('corseg.poliza.movimiento',
         'poliza', 'Movimientos',
         states={

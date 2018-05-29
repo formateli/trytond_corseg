@@ -36,11 +36,9 @@ this repository contains the full copyright notices and license terms. -->
             <separator name="notas" colspan="4"/>
             <field name="notas" colspan="4"/>
         </page>
-<!--
         <page string="Certificados" id="certificados">
-            <field name="certificados"/>
+            <field name="certificados" colspan="4"/>
         </page>
--->
         <page string="Movimientos" id="movimientos">
             <field name="movimientos"/>
         </page>
