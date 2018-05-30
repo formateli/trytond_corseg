@@ -160,6 +160,33 @@ contains the full copyright notices and license terms. -->
             <field name="perm_delete" eval="True"/>
         </record>
 
+        <!-- Poliza Comentario -->
+        <record model="ir.ui.view" id="poliza_comentario_view_form">
+            <field name="model">corseg.poliza.comentario</field>
+            <field name="type">form</field>
+            <field name="name">poliza_comentario_form</field>
+        </record>
+        <record model="ir.ui.view" id="poliza_comentario_view_tree">
+            <field name="model">corseg.poliza.comentario</field>
+            <field name="type">tree</field>
+            <field name="name">poliza_comentario_tree</field>
+        </record>
+        <record model="ir.model.access" id="access_poliza_comentario">
+            <field name="model" search="[('model', '=', 'corseg.poliza.comentario')]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_delete" eval="False"/>
+        </record>
+        <record model="ir.model.access" id="access_poliza_comentario_admin">
+            <field name="model" search="[('model', '=', 'corseg.poliza.comentario')]"/>
+            <field name="group" ref="group_corseg_admin"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_delete" eval="True"/>
+        </record>
+
         <!-- Comision Cia -->
         <record model="ir.ui.view" id="comision_cia_view_form">
             <field name="model">corseg.comision.cia</field>

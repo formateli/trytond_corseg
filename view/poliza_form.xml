@@ -37,7 +37,6 @@ this repository contains the full copyright notices and license terms. -->
             <field name="notas" colspan="4"/>
         </page>
         <page string="Certificados" id="certificados">
-            <field name="certificados" colspan="4"/>
             <field name="certificados_in"/>
             <field name="certificados_ex"/>
         </page>

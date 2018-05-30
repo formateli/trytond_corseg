@@ -3,7 +3,7 @@
 
 from trytond.transaction import Transaction
 from trytond.pool import Pool
-from trytond.model import Workflow, ModelView, ModelSQL, fields
+from trytond.model import ModelView, ModelSQL, fields
 from trytond.pyson import Eval, If, Bool, Equal, Not, In
 from trytond.modules.company.model import (
         CompanyMultiValueMixin, CompanyValueMixin)
@@ -14,7 +14,7 @@ __all__ = [
         'ComisionCia', 'CiaTipoComision',
         'ComisionVendedor', 'VendedorTipoComision',
         'FormaPago', 'FrecuenciaPago', 'GrupoPoliza',
-        'Poliza', 'Ramo', 'TipoComision',
+        'Poliza', 'Ramo', 'TipoComision', 'Comentario',
         'VehiculoMarca', 'VehiculoModelo', 'Vendedor',
     ]
 
@@ -275,8 +275,6 @@ class Poliza(ModelSQL, ModelView):
 #   TODO comision_cia
 #   TODO comision_vendedor
 
-    certificados = fields.One2Many('corseg.poliza.certificado',
-        'poliza', 'Certificados', readonly=True)
     certificados_in = fields.One2Many('corseg.poliza.certificado',
         'poliza', 'Incluidos', readonly=True,
         filter=[('state', '=', 'incluido')])
@@ -397,6 +395,23 @@ class Vendedor(ModelSQL, ModelView):
         domain.append(('party.rec_name', clause[1], clause[2]))
         domain.append(('alias', clause[1], clause[2]))
         return domain
+
+
+class Comentario(ModelSQL, ModelView):
+    'Comentarios sobre la Poliza'
+    __name__ = 'corseg.poliza.comentario'
+    poliza = fields.Many2One(
+        'corseg.poliza', 'Poliza', required=True)
+    fecha = fields.Date('Fecha', required=True)
+    comentario = fields.Text('Comentario', size=None)
+    user_name = fields.Function(fields.Char('Usuario'),
+        'get_user_name')
+
+    def get_user_name(self, name):
+        if self.create_uid:
+            return self.create_uid.rec_name
+
+    # TODO order_by fecha
 
 
 class VehiculoMarca(ModelSQL, ModelView):
