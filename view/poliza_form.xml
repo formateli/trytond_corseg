@@ -38,6 +38,8 @@ this repository contains the full copyright notices and license terms. -->
         </page>
         <page string="Certificados" id="certificados">
             <field name="certificados" colspan="4"/>
+            <field name="certificados_in"/>
+            <field name="certificados_ex"/>
         </page>
         <page string="Movimientos" id="movimientos">
             <field name="movimientos"/>

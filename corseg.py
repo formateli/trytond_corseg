@@ -276,8 +276,13 @@ class Poliza(ModelSQL, ModelView):
 #   TODO comision_vendedor
 
     certificados = fields.One2Many('corseg.poliza.certificado',
-        'poliza', 'Incluidos', readonly=True)
-
+        'poliza', 'Certificados', readonly=True)
+    certificados_in = fields.One2Many('corseg.poliza.certificado',
+        'poliza', 'Incluidos', readonly=True,
+        filter=[('state', '=', 'incluido')])
+    certificados_ex = fields.One2Many('corseg.poliza.certificado',
+        'poliza', 'Excluidos', readonly=True,
+        filter=[('state', '=', 'excluido')])
     movimientos = fields.One2Many('corseg.poliza.movimiento',
         'poliza', 'Movimientos',
         states={

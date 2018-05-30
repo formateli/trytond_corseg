@@ -10,7 +10,8 @@ from trytond.modules.company.model import (
 
 __all__ = [
         'Certificado', 'Movimiento',
-        'Comentario', 'InclusionExclusion'
+        'Comentario',
+        'InclusionExclusion',
     ]
 
 
