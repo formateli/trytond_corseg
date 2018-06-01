@@ -53,9 +53,9 @@ class Movimiento(Workflow, ModelSQL, ModelView):
         states={
             'readonly': True,
             },
-        domain=[
-            ('id', If(Eval('context', {}).contains('company'), '=', '!='),
-                Eval('context', {}).get('company', -1)),
+        domain=[ #TODO descomentar despues de realizar la migracion
+#            ('id', If(Eval('context', {}).contains('company'), '=', '!='),
+#                Eval('context', {}).get('company', -1)),
             ], select=True)
     poliza = fields.Many2One('corseg.poliza', 'Poliza', required=True,
         domain=[
@@ -90,6 +90,7 @@ class Movimiento(Workflow, ModelSQL, ModelView):
             ('renovacion', 'Renovacion'),
             ('otros', 'Otros'),
             ('finalizacion', 'Finalizacion'),
+            ('anulacion', 'Anulacion'),
         ], 'Tipo Endoso',
         states={
             'invisible': Not(In(Eval('tipo'), ['endoso'])),

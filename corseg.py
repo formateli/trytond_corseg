@@ -217,17 +217,15 @@ class Poliza(ModelSQL, ModelView):
         states={
             'readonly': True,
             },
-        domain=[
-            ('id', If(Eval('context', {}).contains('company'), '=', '!='),
-                Eval('context', {}).get('company', -1)),
+        domain=[ # TODO habilitar el domain al terminar la migracion
+#            ('id', If(Eval('context', {}).contains('company'), '=', '!='),
+#                Eval('context', {}).get('company', -1)),
             ], select=True)
     grupo = fields.Many2One(
             'corseg.poliza.grupo', 'Grupo',
             domain=[('company', '=', Eval('company'))],
             depends=['company']
         )
-
-    # TODO readonly: If(Eval('state'), True, False) 
     cia = fields.Many2One('corseg.cia',
         'Compania de Seguros', required=True,
         states={
@@ -252,7 +250,6 @@ class Poliza(ModelSQL, ModelView):
             'readonly': Not(In(Eval('state'), ['new'])),
             },
         depends=['state'])
-
     contratante = fields.Many2One('party.party', 'Contratante', readonly=True)
     f_emision = fields.Date('Emitida el',  readonly=True)
     f_desde = fields.Date('Desde',  readonly=True)
@@ -291,14 +288,13 @@ class Poliza(ModelSQL, ModelView):
         'poliza', 'Comentarios')
 
     # TODO pagos
-    # TODO comentarios
-
     # TODO renovacion - readonly, empieza en 0 para polizas nuevas
     
     state = fields.Selection([
             ('new', 'Nuevo'),
             ('vigente', 'Vigente'),
-            ('finalizada', 'Finalizada')
+            ('finalizada', 'Finalizada'),
+            ('anulada', 'Anulada'),
         ],
         'Estado', readonly=True, required=True)
 
@@ -317,7 +313,10 @@ class Poliza(ModelSQL, ModelView):
 
     @classmethod
     def search_rec_name(cls, name, clause):
-        return [('cia.rec_name',) + tuple(clause[1:])]
+        domain = ['OR']
+        domain.append(('cia.rec_name', clause[1], clause[2]))
+        domain.append(('numero', clause[1], clause[2]))
+        return domain
 
     @fields.depends('company', 'cia', 'cia_producto')
     def on_change_company(self):
