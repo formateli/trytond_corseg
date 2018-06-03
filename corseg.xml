@@ -214,6 +214,50 @@ contains the full copyright notices and license terms. -->
             <field name="perm_delete" eval="True"/>
         </record>
 
+        <!-- Origen Poliza -->
+        <record model="ir.ui.view" id="poliza_origen_view_form">
+            <field name="model">corseg.poliza.origen</field>
+            <field name="type">form</field>
+            <field name="name">poliza_origen_form</field>
+        </record>
+        <record model="ir.ui.view" id="poliza_origen_view_tree">
+            <field name="model">corseg.poliza.origen</field>
+            <field name="type">tree</field>
+            <field name="name">poliza_origen_tree</field>
+        </record>
+        <record model="ir.action.act_window" id="act_poliza_origen_form">
+            <field name="name">Origen</field>
+            <field name="res_model">corseg.poliza.origen</field>
+        </record>
+        <record model="ir.action.act_window.view" id="act_poliza_origen_form_view1">
+            <field name="sequence" eval="10"/>
+            <field name="view" ref="poliza_origen_view_tree"/>
+            <field name="act_window" ref="act_poliza_origen_form"/>
+        </record>
+        <record model="ir.action.act_window.view" id="act_poliza_origen_form_view2">
+            <field name="sequence" eval="20"/>
+            <field name="view" ref="poliza_origen_view_form"/>
+            <field name="act_window" ref="act_poliza_origen_form"/>
+        </record>
+
+        <menuitem parent="menu_corseg_configuration" sequence="50"
+            action="act_poliza_origen_form" id="menu_poliza_origen_tree"/>
+
+        <record model="ir.model.access" id="access_poliza_origen">
+            <field name="model" search="[('model', '=', 'corseg.poliza.origen')]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_delete" eval="False"/>
+        </record>
+        <record model="ir.model.access" id="access_poliza_origen_admin">
+            <field name="model" search="[('model', '=', 'corseg.poliza.origen')]"/>
+            <field name="group" ref="group_corseg_admin"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_delete" eval="True"/>
+        </record>
 
         <!-- Pagos -->
         <menuitem name="Pagos" parent="menu_corseg_configuration"
@@ -308,7 +352,6 @@ contains the full copyright notices and license terms. -->
             <field name="perm_create" eval="True"/>
             <field name="perm_delete" eval="True"/>
         </record>
-
 
         <!-- Vehiculos -->
         <menuitem name="Vehiculos" parent="menu_corseg_configuration"
@@ -713,7 +756,6 @@ contains the full copyright notices and license terms. -->
             <field name="type">tree</field>
             <field name="name">poliza_movimiento_tree</field>
         </record>
-
         <record model="ir.action.act_window" id="act_poliza_movimiento_form">
             <field name="name">Movimientos</field>
             <field name="res_model">corseg.poliza.movimiento</field>
@@ -802,6 +844,61 @@ contains the full copyright notices and license terms. -->
             <field name="perm_delete" eval="True"/>
         </record>
 
+
+
+
+        <!-- Pago -->
+        <record model="ir.ui.view" id="pago_view_form">
+            <field name="model">corseg.poliza.pago</field>
+            <field name="type">form</field>
+            <field name="name">pago_form</field>
+        </record>
+        <record model="ir.ui.view" id="pago_view_tree">
+            <field name="model">corseg.poliza.pago</field>
+            <field name="type">tree</field>
+            <field name="name">pago_tree</field>
+        </record>
+        <record model="ir.action.act_window" id="act_pago_form">
+            <field name="name">Pagos</field>
+            <field name="res_model">corseg.poliza.pago</field>
+        </record>
+        <record model="ir.action.act_window.view" id="act_pago_form_view1">
+            <field name="sequence" eval="10"/>
+            <field name="view" ref="pago_view_tree"/>
+            <field name="act_window" ref="act_pago_form"/>
+        </record>
+        <record model="ir.action.act_window.view" id="act_pago_form_view2">
+            <field name="sequence" eval="20"/>
+            <field name="view" ref="pago_view_form"/>
+            <field name="act_window" ref="act_pago_form"/>
+        </record>
+
+        <menuitem parent="menu_corseg_poliza" sequence="50"
+            action="act_pago_form" id="menu_pago_tree"/>
+
+        <record model="ir.model.access" id="access_pago">
+            <field name="model" search="[('model', '=', 'corseg.poliza.pago')]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_delete" eval="False"/>
+        </record>
+        <record model="ir.model.access" id="access_pago_admin">
+            <field name="model" search="[('model', '=', 'corseg.poliza.pago')]"/>
+            <field name="group" ref="group_corseg_admin"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_delete" eval="True"/>
+        </record>
+
+
+
+
+
+
+
+        <!-- Cotizaciones -->
 
         <menuitem name="Cotizaciones" parent="menu_corseg"
             id="menu_corseg_cotizacion" sequence="20"/>

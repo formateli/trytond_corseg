@@ -89,7 +89,7 @@ class Movimiento(Workflow, ModelSQL, ModelView):
             ('iniciacion', 'Iniciacion'),
             ('renovacion', 'Renovacion'),
             ('otros', 'Otros'),
-            ('finalizacion', 'Finalizacion'),
+            ('cancelacion', 'Cancelacion'),
             ('anulacion', 'Anulacion'),
         ], 'Tipo Endoso',
         states={
@@ -191,7 +191,7 @@ class Movimiento(Workflow, ModelSQL, ModelView):
     @staticmethod
     def _act_poliza(name, poliza, mov):
         v = getattr(mov, name)
-        if v:
+        if v is not None:
             setattr(poliza, name, v)
             
     @classmethod
@@ -237,8 +237,8 @@ class Movimiento(Workflow, ModelSQL, ModelView):
             pl = mov.poliza
             for f in fields:
                 cls._act_poliza(f, pl, mov)
-            if mov.tipo_endoso == 'finalizacion':
-                pl.state = 'finalizada'
+            if mov.tipo_endoso == 'cancelacion':
+                pl.state = 'cancelada'
             else:
                 pl.state = 'vigente'
             pl.save()

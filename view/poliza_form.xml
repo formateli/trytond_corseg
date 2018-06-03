@@ -20,10 +20,9 @@ this repository contains the full copyright notices and license terms. -->
     <field name="state"/>
     <newline />
     <notebook colspan="4">
-        <page string="Informacion" id="informacion">
+        <page string="Informacion" id="informacion" col="6">
             <label name="f_emision"/>
             <field name="f_emision"/>
-            <newline/>
             <label name="f_desde"/>
             <field name="f_desde"/>
             <label name="f_hasta"/>
@@ -33,8 +32,19 @@ this repository contains the full copyright notices and license terms. -->
             <label name="prima"/>
             <field name="prima"/>
             <newline/>
-            <separator name="notas" colspan="4"/>
-            <field name="notas" colspan="4"/>
+            <label name="forma_pago"/>
+            <field name="forma_pago"/>
+            <label name="frecuencia_pago"/>
+            <field name="frecuencia_pago"/>
+            <label name="no_cuotas"/>
+            <field name="no_cuotas"/>
+            <label name="monto_pago"/>
+            <field name="monto_pago"/>
+            <label name="saldo"/>
+            <field name="saldo"/>
+            <newline/>
+            <separator name="notas" colspan="6"/>
+            <field name="notas" colspan="6"/>
         </page>
         <page string="Certificados" id="certificados">
             <field name="certificados_in"/>
@@ -43,16 +53,11 @@ this repository contains the full copyright notices and license terms. -->
         <page string="Movimientos" id="movimientos">
             <field name="movimientos"/>
         </page>
+        <page string="Pagos" id="pagos">
+            <field name="pagos" colspan="4"/>
+        </page>
         <page string="Comentarios" id="comentarios">
             <field name="comentarios"/>
-        </page>
-        <page string="Pagos" id="pagos">
-            <label name="forma_pago"/>
-            <field name="forma_pago"/>
-            <label name="frecuencia_pago"/>
-            <field name="frecuencia_pago"/>
-            <label name="no_cuotas"/>
-            <field name="no_cuotas"/>
         </page>
     </notebook>
 </form>

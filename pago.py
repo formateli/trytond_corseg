@@ -6,18 +6,15 @@ from trytond.model import Workflow, ModelView, ModelSQL, fields
 from trytond.pyson import Eval, If, Not, In
 
 __all__ = [
-        'Certificado', 'Movimiento',
-        'InclusionExclusion',
+        'Pago',
     ]
 
 
 _STATES={
-        'required': In(Eval('tipo_endoso'),
-            ['iniciacion', 'renovacion']),
         'readonly': Not(In(Eval('state'), ['borrador',])),
     }
 
-_DEPENDS=['tipo_endoso', 'state']
+_DEPENDS=['state']
 
 
 class Pago(Workflow, ModelSQL, ModelView):
@@ -27,14 +24,14 @@ class Pago(Workflow, ModelSQL, ModelView):
         states={
             'readonly': True,
             },
-        domain=[
-            ('id', If(Eval('context', {}).contains('company'), '=', '!='),
-                Eval('context', {}).get('company', -1)),
+        domain=[ #TODO descomentar despues de realizar la migracion
+#            ('id', If(Eval('context', {}).contains('company'), '=', '!='),
+#                Eval('context', {}).get('company', -1)),
             ], select=True)
     # TODO numero
     poliza = fields.Many2One('corseg.poliza', 'Poliza', required=True,
         domain=[
-            ('company', '=', Eval('company')),
+            #('company', '=', Eval('company')), TODO descomentar despues de la migracion
             If(
                 In(Eval('state'), ['confirmado']),
                 [('state', '!=', '')],
@@ -48,11 +45,11 @@ class Pago(Workflow, ModelSQL, ModelView):
         states={
             'readonly': In(Eval('state'), ['confirmado',]),
         }, depends=['state'])
-    referencia = fields.Char('Referencia', required=True,
+    referencia = fields.Char('Referencia',
         states={
             'readonly': In(Eval('state'), ['confirmado',]),
         }, depends=['state'])
-    monto = fields.Numeric('Monto', digits=(16, 2),
+    monto = fields.Numeric('Monto', digits=(16, 2), required=True,
         states=_STATES, depends=_DEPENDS)
     vendedor = fields.Many2One('corseg.vendedor', 'Vendedor',
         states={
@@ -73,7 +70,7 @@ class Pago(Workflow, ModelSQL, ModelView):
 
     @classmethod
     def __setup__(cls):
-        super(Movimiento, cls).__setup__()
+        super(Pago, cls).__setup__()
         cls._order[0] = ('fecha', 'DESC')
         cls._error_messages.update({
                 'delete_cancel': ('El movimiento "%s" debe ser '
@@ -131,64 +128,14 @@ class Pago(Workflow, ModelSQL, ModelView):
     @classmethod
     @ModelView.button
     @Workflow.transition('procesado')
-    def procesar(cls, movs):
-        for mov in movs:
-            if mov.poliza.state == 'new' and \
-                    mov.tipo_endoso != 'iniciacion':
-                cls.raise_user_error(
-                    'poliza_inicia',
-                    (mov.poliza.rec_name,))
-            if mov.poliza.state == 'vigente' and \
-                    mov.tipo_endoso == 'iniciacion':
-                cls.raise_user_error(
-                    'poliza_un_inicia',
-                    (mov.poliza.rec_name,))
+    def procesar(cls, pagos):
+        pass
 
     @classmethod
     @ModelView.button
     @Workflow.transition('confirmado')
-    def confirmar(cls, movs):
-        fields = cls._get_poliza_fields()
-        for mov in movs:
-            pl = mov.poliza
-            for f in fields:
-                cls._act_poliza(f, pl, mov)
-            if mov.tipo_endoso == 'finalizacion':
-                pl.state = 'finalizada'
-            else:
-                pl.state = 'vigente'
-            pl.save()
-
-            for ie in mov.inclu_exclu:
-                cert = ie.certificado
-                if ie.tipo == 'inclusion' and \
-                        cert.state != 'new':
-                    if cert.state != 'excluido':
-                        cls.raise_user_error(
-                            'certificado_excluido',
-                            (cert.rec_name,))
-                    if cert.poliza.id != pl.id:
-                        cls.raise_user_error(
-                            'certificado_poliza',
-                            (cert.rec_name,))
-                elif ie.tipo == 'exclusion' and \
-                        cert.state != 'incluido':
-                    cls.raise_user_error(
-                        'certificado_incluido',
-                        (cert.rec_name,))
-                elif ie.tipo == 'exclusion' and \
-                        cert.poliza.id != pl.id:
-                    cls.raise_user_error(
-                        'certificado_poliza',
-                        (cert.rec_name,))
-
-                if ie.tipo == 'inclusion':
-                    cert.state = 'incluido'
-                else:
-                    cert.state = 'excluido'
-                cert.poliza = pl
-                cert.save()
-                ie.save()
+    def confirmar(cls, pagos):
+        pass
 
     @classmethod
     @ModelView.button

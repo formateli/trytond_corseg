@@ -7,10 +7,11 @@ from trytond.model import ModelView, ModelSQL, fields
 from trytond.pyson import Eval, If, Bool, Equal, Not, In
 from trytond.modules.company.model import (
         CompanyMultiValueMixin, CompanyValueMixin)
+from decimal import Decimal
 
 __all__ = [
         'Asegurado', 'Extendido',
-        'CiaProducto', 'CiaSeguros',
+        'CiaProducto', 'CiaSeguros', 'Origen',
         'ComisionCia', 'CiaTipoComision',
         'ComisionVendedor', 'VendedorTipoComision',
         'FormaPago', 'FrecuenciaPago', 'GrupoPoliza',
@@ -210,6 +211,18 @@ class GrupoPoliza(ModelSQL, ModelView):
         return self.name
 
 
+class Origen(ModelSQL, ModelView):
+    'Origen Poliza'
+    __name__ = 'corseg.poliza.origen'
+    name = fields.Char('Nombre', required=True)
+    notas = fields.Text('Notas', size=None)
+    active = fields.Boolean('Activo')
+
+    @staticmethod
+    def default_active():
+        return True
+
+
 class Poliza(ModelSQL, ModelView):
     'Poliza de seguros'
     __name__ = 'corseg.poliza'
@@ -250,6 +263,11 @@ class Poliza(ModelSQL, ModelView):
             'readonly': Not(In(Eval('state'), ['new'])),
             },
         depends=['state'])
+    origen = fields.Many2One('corseg.poliza.origen', 'Origen',
+        states={
+            'readonly': Not(In(Eval('state'), ['new'])),
+            },
+        depends=['state'])
     contratante = fields.Many2One('party.party', 'Contratante', readonly=True)
     f_emision = fields.Date('Emitida el',  readonly=True)
     f_desde = fields.Date('Desde',  readonly=True)
@@ -264,8 +282,11 @@ class Poliza(ModelSQL, ModelView):
     frecuencia_pago = fields.Many2One('corseg.frecuencia_pago',
         'Frecuencia pago',  readonly=True)
     no_cuotas = fields.Integer('Cant. cuotas', readonly=True)
+    monto_pago = fields.Function(fields.Numeric('Pagado', digits=(16, 2)),
+        'get_monto_pago')
+    saldo = fields.Function(fields.Numeric('Saldo', digits=(16, 2)),
+        'get_saldo')
 
-#    TODO pagos = function
 #    TODO pagos_cache = fields.Numeric('Pagos', digits=(16, 2))
 #    # TODO function -> saldo = fields.Numeric('Saldo', digits=(16, 2))
 
@@ -284,6 +305,12 @@ class Poliza(ModelSQL, ModelView):
             'invisible': Equal(Eval('state'), 'new'),
             },
         depends=['state'])
+    pagos = fields.One2Many('corseg.poliza.pago',
+        'poliza', 'Pagos',
+        states={
+            'invisible': Equal(Eval('state'), 'new'),
+            },
+        depends=['state'])
     comentarios = fields.One2Many('corseg.poliza.comentario',
         'poliza', 'Comentarios')
 
@@ -293,8 +320,7 @@ class Poliza(ModelSQL, ModelView):
     state = fields.Selection([
             ('new', 'Nuevo'),
             ('vigente', 'Vigente'),
-            ('finalizada', 'Finalizada'),
-            ('anulada', 'Anulada'),
+            ('cancelada', 'Cancelada'),
         ],
         'Estado', readonly=True, required=True)
 
@@ -331,6 +357,20 @@ class Poliza(ModelSQL, ModelView):
     def on_change_cia_producto(self):
         if self.cia_producto:
             self.cia = self.cia_producto.cia
+
+    def get_monto_pago(self, name):
+        res = Decimal(0)
+        if self.pagos:
+            for pago in self.pagos:
+                if pago.state == 'confirmado':
+                    res += pago.monto
+        return res
+
+    def get_saldo(self, name):
+        res = Decimal(0)
+        if self.prima:
+            return self.prima - self.monto_pago
+        return res
 
 
 class Asegurado(ModelSQL, ModelView):
@@ -440,7 +480,6 @@ class FormaPago(ModelSQL, ModelView):
     'Tipo Pago'
     __name__ = 'corseg.forma_pago'
     name = fields.Char('Nombre', required=True)
-
     active = fields.Boolean('Activo')
 
     @staticmethod

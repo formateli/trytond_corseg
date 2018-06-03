@@ -4,5 +4,6 @@ this repository contains the full copyright notices and license terms. -->
 <tree>
     <field name="poliza"/>
     <field name="fecha"/>
+    <field name="comentario"/>
     <field name="user_name"/>
 </tree>
