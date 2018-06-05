@@ -224,6 +224,7 @@ class Poliza(ModelSQL, ModelView):
 #            ('id', If(Eval('context', {}).contains('company'), '=', '!='),
 #                Eval('context', {}).get('company', -1)),
             ], select=True)
+    # TODO currency
     grupo = fields.Many2One(
             'corseg.poliza.grupo', 'Grupo',
             domain=[('company', '=', Eval('company'))],
@@ -277,9 +278,6 @@ class Poliza(ModelSQL, ModelView):
     saldo = fields.Function(fields.Numeric('Saldo', digits=(16, 2)),
         'get_saldo')
 
-#    TODO pagos_cache = fields.Numeric('Pagos', digits=(16, 2))
-#    # TODO function -> saldo = fields.Numeric('Saldo', digits=(16, 2))
-
 #   TODO comision_cia
 #   TODO comision_vendedor
 
@@ -304,7 +302,6 @@ class Poliza(ModelSQL, ModelView):
     comentarios = fields.One2Many('corseg.poliza.comentario',
         'poliza', 'Comentarios')
 
-    # TODO pagos
     # TODO renovacion - readonly, empieza en 0 para polizas nuevas
     
     state = fields.Selection([
