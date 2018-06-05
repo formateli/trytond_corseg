@@ -253,7 +253,8 @@ class Poliza(ModelSQL, ModelView):
             )
         ],
         depends=['cia', 'state'])
-    # TODO ramo -> function
+    ramo = fields.Function(fields.Char('Ramo'),
+        'get_ramo')
     numero = fields.Char('Numero de Poliza', required=True,
         states={
             'readonly': Not(In(Eval('state'), ['new'])),
@@ -368,16 +369,22 @@ class Poliza(ModelSQL, ModelView):
     def on_change_cia(self):
         self.cia_producto = None
 
-    @fields.depends('cia', 'cia_producto')
+    @fields.depends('cia', 'cia_producto', 'ramo')
     def on_change_cia_producto(self):
+        self.ramo = None
         if self.cia_producto:
             self.cia = self.cia_producto.cia
+            self.ramo = self.cia_producto.ramo.rec_name
 
     @fields.depends('currency')
     def on_change_with_currency_digits(self, name=None):
         if self.currency:
             return self.currency.digits
         return 2
+
+    def get_ramo(self, name):
+        if self.cia_producto:
+            return self.cia_producto.ramo.rec_name
 
     def get_monto_pago(self, name):
         res = Decimal(0)

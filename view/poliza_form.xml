@@ -2,14 +2,14 @@
 <!-- This file is part of trytond-corseg module. The COPYRIGHT file at the top level of
 this repository contains the full copyright notices and license terms. -->
 <form>
-    <label name="company"/>
-    <field name="company"/>
-    <label name="grupo"/>
-    <field name="grupo"/>
     <label name="cia"/>
     <field name="cia"/>
     <label name="cia_producto"/>
     <field name="cia_producto"/>
+    <label name="ramo"/>
+    <field name="ramo"/>
+    <label name="grupo"/>
+    <field name="grupo"/>
     <label name="numero"/>
     <field name="numero"/>
     <label name="contratante"/>
@@ -57,7 +57,13 @@ this repository contains the full copyright notices and license terms. -->
             <field name="pagos" colspan="4"/>
         </page>
         <page string="Comentarios" id="comentarios">
-            <field name="comentarios"/>
+            <field name="comentarios" colspan="4"/>
+        </page>
+        <page string="Otros" id="otros">
+            <label name="company"/>
+            <field name="company"/>
+            <label name="currency"/>
+            <field name="currency"/>
         </page>
     </notebook>
 </form>
