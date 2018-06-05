@@ -19,16 +19,6 @@ __all__ = [
         'VehiculoMarca', 'VehiculoModelo', 'Vendedor',
     ]
 
-STATES = [
-    ('nuevo', 'Nuevo'),
-    ('renovado', 'Renovado'),
-    ('moroso', 'Moroso'),
-    ('cancelado', 'Cancelado'),
-    ('reconsideracion', 'En Reconsideracion'),
-    ('suspendido', 'Suspendido'),
-    ('reactivado', 'Reactivado'),
-]
-
 
 class CiaSeguros(ModelSQL, ModelView):
     'Compania de Seguros'

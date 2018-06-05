@@ -655,6 +655,38 @@ contains the full copyright notices and license terms. -->
             <field name="act_window" ref="act_poliza_form"/>
         </record>
 
+        <record model="ir.action.act_window.domain"
+                id="act_poliza_form_domain_new">
+            <field name="name">Nuevos</field>
+            <field name="sequence" eval="10"/>
+            <field name="domain" eval="[('state', '=', 'new')]" pyson="1"/>
+            <field name="count" eval="True"/>
+            <field name="act_window" ref="act_poliza_form"/>
+        </record>
+        <record model="ir.action.act_window.domain"
+                id="act_poliza_form_domain_vigente">
+            <field name="name">Vigentes</field>
+            <field name="sequence" eval="20"/>
+            <field name="domain" eval="[('state', '=', 'vigente')]" pyson="1"/>
+            <field name="count" eval="True"/>
+            <field name="act_window" ref="act_poliza_form"/>
+        </record>
+        <record model="ir.action.act_window.domain"
+                id="act_poliza_form_domain_cancelada">
+            <field name="name">Canceladas</field>
+            <field name="sequence" eval="30"/>
+            <field name="domain" eval="[('state', '=', 'cancelada')]" pyson="1"/>
+            <field name="count" eval="True"/>
+            <field name="act_window" ref="act_poliza_form"/>
+        </record>
+        <record model="ir.action.act_window.domain"
+                id="act_poliza_form_domain_all">
+            <field name="name">Todos</field>
+            <field name="sequence" eval="9999"/>
+            <field name="domain"></field>
+            <field name="act_window" ref="act_poliza_form"/>
+        </record>
+
         <menuitem parent="menu_corseg_poliza" sequence="30"
             action="act_poliza_form" id="menu_poliza_tree"/>
 
@@ -771,6 +803,46 @@ contains the full copyright notices and license terms. -->
             <field name="act_window" ref="act_poliza_movimiento_form"/>
         </record>
 
+        <record model="ir.action.act_window.domain"
+                id="act_poliza_movimiento_form_domain_borrador">
+            <field name="name">Borradores</field>
+            <field name="sequence" eval="10"/>
+            <field name="domain" eval="[('state', '=', 'borrador')]" pyson="1"/>
+            <field name="count" eval="True"/>
+            <field name="act_window" ref="act_poliza_movimiento_form"/>
+        </record>
+        <record model="ir.action.act_window.domain"
+                id="act_poliza_movimiento_form_domain_procesado">
+            <field name="name">Procesados</field>
+            <field name="sequence" eval="20"/>
+            <field name="domain" eval="[('state', '=', 'procesado')]" pyson="1"/>
+            <field name="count" eval="True"/>
+            <field name="act_window" ref="act_poliza_movimiento_form"/>
+        </record>
+        <record model="ir.action.act_window.domain"
+                id="act_poliza_movimiento_form_domain_confirmado">
+            <field name="name">Confirmados</field>
+            <field name="sequence" eval="30"/>
+            <field name="domain" eval="[('state', '=', 'confirmado')]" pyson="1"/>
+            <field name="count" eval="True"/>
+            <field name="act_window" ref="act_poliza_movimiento_form"/>
+        </record>
+        <record model="ir.action.act_window.domain"
+                id="act_poliza_movimiento_form_domain_cancelado">
+            <field name="name">Cancelados</field>
+            <field name="sequence" eval="40"/>
+            <field name="domain" eval="[('state', '=', 'cancelado')]" pyson="1"/>
+            <field name="count" eval="True"/>
+            <field name="act_window" ref="act_poliza_movimiento_form"/>
+        </record>
+        <record model="ir.action.act_window.domain"
+                id="act_poliza_movimiento_form_domain_all">
+            <field name="name">Todos</field>
+            <field name="sequence" eval="9999"/>
+            <field name="domain"></field>
+            <field name="act_window" ref="act_poliza_movimiento_form"/>
+        </record>
+
         <menuitem parent="menu_corseg_poliza" sequence="40"
             action="act_poliza_movimiento_form" id="menu_poliza_movimiento_tree"/>
 
@@ -844,9 +916,6 @@ contains the full copyright notices and license terms. -->
             <field name="perm_delete" eval="True"/>
         </record>
 
-
-
-
         <!-- Pago -->
         <record model="ir.ui.view" id="pago_view_form">
             <field name="model">corseg.poliza.pago</field>
@@ -870,6 +939,46 @@ contains the full copyright notices and license terms. -->
         <record model="ir.action.act_window.view" id="act_pago_form_view2">
             <field name="sequence" eval="20"/>
             <field name="view" ref="pago_view_form"/>
+            <field name="act_window" ref="act_pago_form"/>
+        </record>
+
+        <record model="ir.action.act_window.domain"
+                id="act_pago_form_domain_borrador">
+            <field name="name">Borradores</field>
+            <field name="sequence" eval="10"/>
+            <field name="domain" eval="[('state', '=', 'borrador')]" pyson="1"/>
+            <field name="count" eval="True"/>
+            <field name="act_window" ref="act_pago_form"/>
+        </record>
+        <record model="ir.action.act_window.domain"
+                id="act_pago_form_domain_procesado">
+            <field name="name">Procesados</field>
+            <field name="sequence" eval="20"/>
+            <field name="domain" eval="[('state', '=', 'procesado')]" pyson="1"/>
+            <field name="count" eval="True"/>
+            <field name="act_window" ref="act_pago_form"/>
+        </record>
+        <record model="ir.action.act_window.domain"
+                id="act_pago_form_domain_confirmado">
+            <field name="name">Confirmados</field>
+            <field name="sequence" eval="30"/>
+            <field name="domain" eval="[('state', '=', 'confirmado')]" pyson="1"/>
+            <field name="count" eval="True"/>
+            <field name="act_window" ref="act_pago_form"/>
+        </record>
+        <record model="ir.action.act_window.domain"
+                id="act_pago_form_domain_cancelado">
+            <field name="name">Cancelados</field>
+            <field name="sequence" eval="40"/>
+            <field name="domain" eval="[('state', '=', 'cancelado')]" pyson="1"/>
+            <field name="count" eval="True"/>
+            <field name="act_window" ref="act_pago_form"/>
+        </record>
+        <record model="ir.action.act_window.domain"
+                id="act_pago_form_domain_all">
+            <field name="name">Todos</field>
+            <field name="sequence" eval="9999"/>
+            <field name="domain"></field>
             <field name="act_window" ref="act_pago_form"/>
         </record>
 

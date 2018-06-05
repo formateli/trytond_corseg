@@ -64,9 +64,10 @@ class Pago(Workflow, ModelSQL, ModelView):
             ('borrador', 'Borrador'),
             ('procesado', 'Procesado'),
             ('confirmado', 'Confirmado'),
-            ('liq_cia', 'Liquidado por Cia. de Seguros'),
-            ('liq_vendedor', 'Liquidado a Vendedor'),
+            ('cancelado', 'Cancelado'),
         ], 'Estado', required=True, readonly=True)
+
+    # TODO procesado_por, confirmado_por, cancelado_por
 
     @classmethod
     def __setup__(cls):

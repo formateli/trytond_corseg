@@ -141,6 +141,8 @@ class Movimiento(Workflow, ModelSQL, ModelView):
             ('cancelado', 'Cancelado'),
         ], 'Estado', required=True, readonly=True)
 
+    # TODO procesado_por, confirmado_por, cancelado_por
+
     @classmethod
     def __setup__(cls):
         super(Movimiento, cls).__setup__()
