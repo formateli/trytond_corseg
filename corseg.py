@@ -3,7 +3,7 @@
 
 from trytond.transaction import Transaction
 from trytond.pool import Pool
-from trytond.model import ModelView, ModelSQL, fields
+from trytond.model import ModelView, ModelSQL, fields, Unique
 from trytond.pyson import Eval, If, Bool, Equal, Not, In
 from trytond.modules.company.model import (
         CompanyMultiValueMixin, CompanyValueMixin)
@@ -224,7 +224,7 @@ class Poliza(ModelSQL, ModelView):
 #            ('id', If(Eval('context', {}).contains('company'), '=', '!='),
 #                Eval('context', {}).get('company', -1)),
             ], select=True)
-    currency = fields.Many2One('currency.currency', 'Moneda', required=True,
+    currency = fields.Many2One('currency.currency', 'Moneda', required=False, # TODO required=True
         states={
             'readonly': True,
             })
@@ -323,7 +323,15 @@ class Poliza(ModelSQL, ModelView):
         ],
         'Estado', readonly=True, required=True)
 
-    #TODO unique(cia_producto, numero)
+    @classmethod
+    def __setup__(cls):
+        super(Poliza, cls).__setup__()
+        t = cls.__table__()
+        cls._sql_constraints += [
+            ('cia_product_numero_uniq', 
+                Unique(t, t.cia_producto, t.numero),
+                'El numero de poliza ya existe para este producto'),
+        ]
 
     @staticmethod
     def default_company():
