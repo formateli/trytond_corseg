@@ -57,6 +57,8 @@ class Movimiento(Workflow, ModelSQL, ModelView):
 #            ('id', If(Eval('context', {}).contains('company'), '=', '!='),
 #                Eval('context', {}).get('company', -1)),
             ], select=True)
+    currency_digits = fields.Function(fields.Integer('Currency Digits'),
+        'get_currency_digits')
     poliza = fields.Many2One('corseg.poliza', 'Poliza', required=True,
         domain=[
             ('company', '=', Eval('company')),
@@ -109,10 +111,14 @@ class Movimiento(Workflow, ModelSQL, ModelView):
         states=_STATES, depends=_DEPENDS)
     f_hasta = fields.Date('Vig. Hasta',
         states=_STATES, depends=_DEPENDS)
-    suma_asegurada = fields.Numeric('Suma Asegurada', digits=(16, 2),
-        states=_STATES, depends=_DEPENDS)
-    prima = fields.Numeric('Prima', digits=(16, 2),
-        states=_STATES, depends=_DEPENDS)
+    suma_asegurada = fields.Numeric('Suma Asegurada',
+        digits=(16, Eval('currency_digits', 2)),
+        states=_STATES,
+        depends=_DEPENDS + ['currency_digits'])
+    prima = fields.Numeric('Prima',
+        digits=(16, Eval('currency_digits', 2)),
+        states=_STATES,
+        depends=_DEPENDS + ['currency_digits'])
     vendedor = fields.Many2One('corseg.vendedor', 'Vendedor',
         states={
             'required': In(Eval('tipo_endoso'), ['iniciacion',]),
@@ -189,6 +195,22 @@ class Movimiento(Workflow, ModelSQL, ModelView):
     @staticmethod
     def default_company():
         return Transaction().context.get('company')
+
+    @staticmethod
+    def default_currency_digits():
+        return 2
+
+    @fields.depends('poliza', 'currency_digits')
+    def on_change_poliza(self):
+        self.currency_digits = 2
+        if self.poliza:
+            self.currency_digits = \
+                self.poliza.currency_digits
+
+    def get_currency_digits(self, name=None):
+        if self.poliza:
+            self.poliza.currency_digits
+        return 2
 
     @staticmethod
     def _act_poliza(name, poliza, mov):

@@ -224,7 +224,12 @@ class Poliza(ModelSQL, ModelView):
 #            ('id', If(Eval('context', {}).contains('company'), '=', '!='),
 #                Eval('context', {}).get('company', -1)),
             ], select=True)
-    # TODO currency
+    currency = fields.Many2One('currency.currency', 'Moneda', required=True,
+        states={
+            'readonly': True,
+            })
+    currency_digits = fields.Function(fields.Integer('Currency Digits'),
+        'on_change_with_currency_digits')
     grupo = fields.Many2One(
             'corseg.poliza.grupo', 'Grupo',
             domain=[('company', '=', Eval('company'))],
@@ -264,18 +269,24 @@ class Poliza(ModelSQL, ModelView):
     f_desde = fields.Date('Desde',  readonly=True)
     f_hasta = fields.Date('Hasta',  readonly=True)
     suma_asegurada = fields.Numeric('Suma Asegurada',
-        digits=(16, 2),  readonly=True)
+        digits=(16, Eval('currency_digits', 2)), readonly=True,
+        depends=['currency_digits'])
     prima = fields.Numeric('Prima',
-        digits=(16, 2),  readonly=True)
+        digits=(16, Eval('currency_digits', 2)), readonly=True,
+        depends=['currency_digits'])
     vendedor = fields.Many2One('corseg.vendedor', 'Vendedor', readonly=True)
     notas = fields.Text('Notas', size=None)
     forma_pago = fields.Many2One('corseg.forma_pago', 'Forma pago',  readonly=True)
     frecuencia_pago = fields.Many2One('corseg.frecuencia_pago',
         'Frecuencia pago',  readonly=True)
     no_cuotas = fields.Integer('Cant. cuotas', readonly=True)
-    monto_pago = fields.Function(fields.Numeric('Pagado', digits=(16, 2)),
+    monto_pago = fields.Function(fields.Numeric(
+            'Pagado', digits=(16, Eval('currency_digits', 2)),
+            depends=['currency_digits']),
         'get_monto_pago')
-    saldo = fields.Function(fields.Numeric('Saldo', digits=(16, 2)),
+    saldo = fields.Function(fields.Numeric(
+            'Saldo', digits=(16, Eval('currency_digits', 2)),
+            depends=['currency_digits']),
         'get_saldo')
 
 #   TODO comision_cia
@@ -321,6 +332,23 @@ class Poliza(ModelSQL, ModelView):
     def default_state():
         return 'new'
 
+    @staticmethod
+    def default_currency():
+        Company = Pool().get('company.company')
+        company = Transaction().context.get('company')
+        if company:
+            company = Company(company)
+            return company.currency.id
+
+    @staticmethod
+    def default_currency_digits():
+        Company = Pool().get('company.company')
+        company = Transaction().context.get('company')
+        if company:
+            company = Company(company)
+            return company.currency.digits
+        return 2
+
     def get_rec_name(self, name):
         return self.cia.rec_name + ' / ' + self.numero
 
@@ -344,6 +372,12 @@ class Poliza(ModelSQL, ModelView):
     def on_change_cia_producto(self):
         if self.cia_producto:
             self.cia = self.cia_producto.cia
+
+    @fields.depends('currency')
+    def on_change_with_currency_digits(self, name=None):
+        if self.currency:
+            return self.currency.digits
+        return 2
 
     def get_monto_pago(self, name):
         res = Decimal(0)
