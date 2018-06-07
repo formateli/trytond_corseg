@@ -2,10 +2,6 @@
 <!-- This file is part of trytond-corseg module. The COPYRIGHT file at the top level of
 this repository contains the full copyright notices and license terms. -->
 <form>
-<!--
-    <label name="inclu_exclu"/>
-    <field name="inclu_exclu" colspan="3"/>
--->
     <label name="numero"/>
     <field name="numero"/>
     <label name="asegurado"/>

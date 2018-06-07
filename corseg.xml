@@ -889,33 +889,6 @@ contains the full copyright notices and license terms. -->
             <field name="perm_delete" eval="True"/>
         </record>
 
-        <!-- Inclusion / Exclusion -->
-        <record model="ir.ui.view" id="inclu_exclu_view_form">
-            <field name="model">corseg.poliza.inclu_exclu</field>
-            <field name="type">form</field>
-            <field name="name">inclu_exclu_form</field>
-        </record>
-        <record model="ir.ui.view" id="inclu_exclu_view_tree">
-            <field name="model">corseg.poliza.inclu_exclu</field>
-            <field name="type">tree</field>
-            <field name="name">inclu_exclu_tree</field>
-        </record>
-        <record model="ir.model.access" id="access_inclu_exclu">
-            <field name="model" search="[('model', '=', 'corseg.poliza.inclu_exclu')]"/>
-            <field name="perm_read" eval="True"/>
-            <field name="perm_write" eval="False"/>
-            <field name="perm_create" eval="False"/>
-            <field name="perm_delete" eval="False"/>
-        </record>
-        <record model="ir.model.access" id="access_inclu_exclu_admin">
-            <field name="model" search="[('model', '=', 'corseg.poliza.inclu_exclu')]"/>
-            <field name="group" ref="group_corseg_admin"/>
-            <field name="perm_read" eval="True"/>
-            <field name="perm_write" eval="True"/>
-            <field name="perm_create" eval="True"/>
-            <field name="perm_delete" eval="True"/>
-        </record>
-
         <!-- Pago -->
         <record model="ir.ui.view" id="pago_view_form">
             <field name="model">corseg.poliza.pago</field>
@@ -1000,12 +973,6 @@ contains the full copyright notices and license terms. -->
             <field name="perm_create" eval="True"/>
             <field name="perm_delete" eval="True"/>
         </record>
-
-
-
-
-
-
 
         <!-- Cotizaciones -->
 

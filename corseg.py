@@ -300,11 +300,7 @@ class Poliza(ModelSQL, ModelView):
         'poliza', 'Excluidos', readonly=True,
         filter=[('state', '=', 'excluido')])
     movimientos = fields.One2Many('corseg.poliza.movimiento',
-        'poliza', 'Movimientos',
-        states={
-            'invisible': Equal(Eval('state'), 'new'),
-            },
-        depends=['state'])
+        'poliza', 'Movimientos', readonly=True)
     pagos = fields.One2Many('corseg.poliza.pago',
         'poliza', 'Pagos',
         states={
@@ -372,6 +368,8 @@ class Poliza(ModelSQL, ModelView):
     def on_change_company(self):
         self.cia = None
         self.cia_producto = None
+        if self.company:
+            self.currency = self.company.currency
 
     @fields.depends('cia_producto')
     def on_change_cia(self):
