@@ -583,6 +583,7 @@ contains the full copyright notices and license terms. -->
 
 
         <!-- Asegurado -->
+<!--
         <record model="ir.ui.view" id="asegurado_view_form">
             <field name="model">corseg.poliza.asegurado</field>
             <field name="type">form</field>
@@ -626,7 +627,7 @@ contains the full copyright notices and license terms. -->
             <field name="perm_create" eval="True"/>
             <field name="perm_delete" eval="True"/>
         </record>
-
+-->
 
         <!-- Poliza -->
 

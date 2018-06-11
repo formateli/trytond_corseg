@@ -10,7 +10,6 @@ from trytond.modules.company.model import (
 from decimal import Decimal
 
 __all__ = [
-        'Asegurado', 'Extendido',
         'CiaProducto', 'CiaSeguros', 'Origen',
         'ComisionCia', 'CiaTipoComision',
         'ComisionVendedor', 'VendedorTipoComision',
@@ -405,42 +404,6 @@ class Poliza(ModelSQL, ModelView):
         if self.prima:
             return self.prima - self.monto_pago
         return res
-
-
-class Asegurado(ModelSQL, ModelView):
-    'Asegurado'
-    __name__ = 'corseg.poliza.asegurado'
-    party = fields.Many2One('party.party', 'Party', required=True,
-            ondelete='CASCADE')
-    certificados = fields.One2Many('corseg.poliza.certificado',
-        'asegurado', 'Certificados', readonly=True)
-    # TODO reclamos
-
-    def get_rec_name(self, name):
-        return self.party.rec_name
-
-    @classmethod
-    def search_rec_name(cls, name, clause):
-        return [('party.rec_name',) + tuple(clause[1:])]
-
-
-class Extendido(ModelSQL, ModelView):
-    'Beneficiario / Dependiente / Conductor adicional'
-    __name__ = 'corseg.poliza.extendido'
-    party = fields.Many2One('party.party', 'Party', required=True,
-            ondelete='CASCADE')
-#    certificado = fields.One2Many('corseg.poliza.certificado',
-#        'asegurado', 'Certificados', readonly=True)
-    # TODO parentesco
-    # TODO inclusion, exclusion ? seria el id del movimiento
-    # TODO state : activo, excluido
-
-    def get_rec_name(self, name):
-        return self.party.rec_name
-
-    @classmethod
-    def search_rec_name(cls, name, clause):
-        return [('party.rec_name',) + tuple(clause[1:])]
 
 
 class Vendedor(ModelSQL, ModelView):

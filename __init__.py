@@ -10,8 +10,9 @@ from .pago import *
 
 def register():
     Pool.register(
-        Asegurado,
-        Extendido,
+#        Asegurado,
+#        Extendido,
+        PartyCorseg,
         Certificado,
         CiaProducto,
         CiaSeguros,
@@ -26,7 +27,6 @@ def register():
         Comentario,
         Origen,
         Poliza,
-        #InclusionExclusion,
         CertificadoInclusion,
         CertificadoExclusion,
         Ramo,
