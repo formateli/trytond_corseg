@@ -74,6 +74,7 @@ class Vehiculo(ModelSQL, ModelView):
         ], 'Uso'
     )
     tipo = fields.Many2One('corseg.vehiculo.tipo', 'Tipo')
+    comentario = fields.Text('Comentarios', size=None)
 
     def get_rec_name(self, name):
         return "{0}/{1}/{2}".format(
