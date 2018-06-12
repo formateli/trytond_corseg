@@ -15,7 +15,7 @@ __all__ = [
         'ComisionVendedor', 'VendedorTipoComision',
         'FormaPago', 'FrecuenciaPago', 'GrupoPoliza',
         'Poliza', 'Ramo', 'TipoComision', 'Comentario',
-        'VehiculoMarca', 'VehiculoModelo', 'Vendedor',
+        'Vendedor',
     ]
 
 
@@ -448,29 +448,6 @@ class Comentario(ModelSQL, ModelView):
             return self.create_uid.rec_name
 
     # TODO order_by fecha
-
-
-class VehiculoMarca(ModelSQL, ModelView):
-    'Ramo'
-    __name__ = 'corseg.vehiculo.marca'
-    name = fields.Char('Nombre', required=True)
-    active = fields.Boolean('Activo')
-
-    @staticmethod
-    def default_active():
-        return True
-
-
-class VehiculoModelo(ModelSQL, ModelView):
-    'Ramo'
-    __name__ = 'corseg.vehiculo.modelo'
-    name = fields.Char('Nombre', required=True)
-    marca = fields.Many2One('corseg.vehiculo.marca', 'Marca', required=True)
-    active = fields.Boolean('Activo')
-
-    @staticmethod
-    def default_active():
-        return True
 
 
 class FormaPago(ModelSQL, ModelView):

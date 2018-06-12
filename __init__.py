@@ -4,14 +4,13 @@
 
 from trytond.pool import Pool
 from .corseg import *
+from .vehiculo import *
 from .movimiento import *
 from .pago import *
 
 
 def register():
     Pool.register(
-#        Asegurado,
-#        Extendido,
         PartyCorseg,
         Certificado,
         CiaProducto,
@@ -29,10 +28,13 @@ def register():
         Poliza,
         CertificadoInclusion,
         CertificadoExclusion,
+        CertificadoVehiculo,
         Ramo,
         TipoComision,
         VehiculoMarca,
         VehiculoModelo,
+        VehiculoTipo,
+        Vehiculo,
         Vendedor,
         Pago,
         module='corseg', type_='model')

@@ -8,10 +8,10 @@ from trytond.pyson import Eval, If, Not, In, Bool
 
 __all__ = [
         'PartyCorseg',
-#        'Asegurado', 'Extendido',
         'Certificado', 'Movimiento',
         'CertificadoInclusion',
         'CertificadoExclusion',
+        'CertificadoVehiculo',
     ]
 
 
@@ -54,7 +54,17 @@ class Certificado(ModelSQL, ModelView):
 #        })
 #    extendidos = fields.One2Many('corseg.poliza.extendido',
 #        'certificado', 'Extendidos')
-    notas = fields.Char('Notas', size=None)
+    descripcion = fields.Text('Descripcion', size=None)
+
+    vehiculo = fields.Many2Many(
+        'poliza.certificado-vehiculo',
+        'certificado', 'vehiculo', 'Vehiculo', size=1,
+        domain=[])
+
+#    vehiculo = fields.One2Many('corseg.vehiculo',
+#        'certificado', 'Vehiculo',
+#        count=1)
+
     state = fields.Selection([
             ('new', 'Nuevo'),
             ('incluido', 'Incluido'),
@@ -376,4 +386,13 @@ class CertificadoExclusion(ModelSQL):
     certificado = fields.Many2One('corseg.poliza.certificado', 'Certificado',
         ondelete='CASCADE', select=True, required=True)
     movimiento = fields.Many2One('corseg.poliza.movimiento', 'Movimiento',
+        ondelete='CASCADE', select=True, required=True)
+
+
+class CertificadoVehiculo(ModelSQL):
+    'Certificado - Vehiculo'
+    __name__ = 'poliza.certificado-vehiculo'
+    certificado = fields.Many2One('corseg.poliza.certificado', 'Certificado',
+        ondelete='CASCADE', select=True, required=True)
+    vehiculo = fields.Many2One('corseg.vehiculo', 'Vehiculo',
         ondelete='CASCADE', select=True, required=True)

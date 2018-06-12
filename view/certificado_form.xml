@@ -10,15 +10,12 @@ this repository contains the full copyright notices and license terms. -->
     <field name="state"/>
     <newline />
     <notebook colspan="4">
-<!--
-        <page string="Extendidos" id="extendidos">
-            <field name="extendidos" colspan="4"/>
+        <page string="Descripcion" id="descripcion">
+            <field name="descripcion" colspan="4"/>
         </page>
--->
-<!--
-        <page string="Inclusiones / Exclusiones" id="inclu_exclu">
-            <field name="inclu_exclu" colspan="4"/>
+        <page string="Vehiculo" id="vehiculo">
+            <field name="vehiculo" colspan="4"
+                view_ids="corseg.vehiculo_view_tree,corseg.vehiculo_view_form"/>
         </page>
--->
     </notebook>
 </form>
