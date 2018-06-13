@@ -36,9 +36,10 @@ this repository contains the full copyright notices and license terms. -->
             <label name="no_cuotas"/>
             <field name="no_cuotas"/>
         </page>
-        <page string="Inclusiones / Exclusiones" id="inclu_exclu">
+        <page string="Certificados" id="certificados">
             <field name="inclusiones"/>
             <field name="exclusiones"/>
+            <field name="modificaciones" colspan="4"/>
         </page>
         <page string="Comisiones" id="comisiones">
             <label name="vendedor"/>

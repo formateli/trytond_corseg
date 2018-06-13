@@ -8,10 +8,14 @@ from trytond.pyson import Eval, If, Not, In, Bool
 
 __all__ = [
         'PartyCorseg',
-        'Certificado', 'Movimiento',
+        'Certificado',
         'CertificadoInclusion',
         'CertificadoExclusion',
-        'CertificadoVehiculo',
+        'CertificadoModificacion',
+        'Extension',
+        'ExtendidoInclusion',
+        'ExtendidoExclusion',
+        'Movimiento',
     ]
 
 
@@ -27,11 +31,12 @@ _DEPENDS=['tipo_endoso', 'state']
 class PartyCorseg:
     __metaclass__ = PoolMeta
     __name__ = 'party.party'
-
-    asegurado_certs = fields.One2Many('corseg.poliza.certificado',
+    asegurado_certs = fields.One2Many(
+        'corseg.poliza.certificado',
         'asegurado', 'Certificados', readonly=True)
-    extendido_certs = fields.One2Many('corseg.poliza.certificado',
-        'asegurado', 'Certificados', readonly=True)
+    extendido_certs = fields.One2Many(
+        'corseg.poliza.certificado.extension',
+        'extendido', 'Extensiones', readonly=True)
 
 
 class Certificado(ModelSQL, ModelView):
@@ -47,31 +52,35 @@ class Certificado(ModelSQL, ModelView):
         states={
             'readonly': Not(In(Eval('state'), ['new',])),
         })
-#    asegurado = fields.Many2One('corseg.poliza.asegurado', 'Asegurado',
-#        required=True, ondelete='CASCADE',
-#        states={
-#            'readonly': Not(In(Eval('state'), ['new',])),
-#        })
-#    extendidos = fields.One2Many('corseg.poliza.extendido',
-#        'certificado', 'Extendidos')
+    suma_asegurada = fields.Numeric('Suma Asegurada',
+        digits=(16, 2),
+        states={
+            'readonly': Not(In(Eval('state'), ['new',])),
+        })
+    prima = fields.Numeric('Prima',
+        digits=(16, 2),
+        states={
+            'readonly': Not(In(Eval('state'), ['new',])),
+        })
     descripcion = fields.Text('Descripcion', size=None)
-
-    vehiculo = fields.Many2Many(
-        'poliza.certificado-vehiculo',
-        'certificado', 'vehiculo', 'Vehiculo', size=1,
-        domain=[])
-
-#    vehiculo = fields.One2Many('corseg.vehiculo',
-#        'certificado', 'Vehiculo',
-#        count=1)
-
+    extendidos = fields.One2Many(
+        'corseg.poliza.certificado.extension',
+        'certificado', 'Extendidos',
+        states={
+            'readonly': Not(In(Eval('state'), ['new',]))
+        })
+    # TODO incluidos y excluidos con filter sobre extendido
+    vehiculo = fields.One2Many('corseg.vehiculo',
+        'certificado', 'Vehiculo',
+        size=None, # TODO deberia ser 1, pero en estos momentos no funciona con SAO
+        states={
+            'readonly': Not(In(Eval('state'), ['new',])),
+        })
     state = fields.Selection([
             ('new', 'Nuevo'),
             ('incluido', 'Incluido'),
             ('excluido', 'Excluido')
         ], 'Estado', required=True, readonly=True)
-
-    # TODO datos tecnicos
 
     @staticmethod
     def default_state():
@@ -79,6 +88,27 @@ class Certificado(ModelSQL, ModelView):
 
     def get_rec_name(self, name):
         return self.numero + '-' + self.asegurado.rec_name
+
+
+class Extension(ModelSQL, ModelView):
+    'Extension'
+    __name__ = 'corseg.poliza.certificado.extension'
+    certificado = fields.Many2One('corseg.poliza.certificado',
+        'Certificado', required=True)
+    extendido = fields.Many2One('party.party', 'Extendido',
+        required=True, ondelete='CASCADE',
+        states={
+            'readonly': Not(In(Eval('state'), ['new',])),
+        })
+    state = fields.Selection([
+            ('new', 'Nuevo'),
+            ('incluido', 'Incluido'),
+            ('excluido', 'Excluido')
+        ], 'Estado', required=True, readonly=True)
+
+    @staticmethod
+    def default_state():
+        return 'new'
 
 
 class Movimiento(Workflow, ModelSQL, ModelView):
@@ -200,6 +230,13 @@ class Movimiento(Workflow, ModelSQL, ModelView):
                 ('state', '=', 'incluido')
             )
         ],
+        states={
+            'invisible': Not(Bool(Eval('poliza'))),
+            'readonly': Not(In(Eval('state'), ['borrador',])),
+        }, depends=['poliza', 'state'])
+    modificaciones = fields.One2Many(
+        'corseg.poliza.certificado.modificacion',
+        'movimiento', 'Modificaciones',
         states={
             'invisible': Not(Bool(Eval('poliza'))),
             'readonly': Not(In(Eval('state'), ['borrador',])),
@@ -345,6 +382,9 @@ class Movimiento(Workflow, ModelSQL, ModelView):
                         cls.raise_user_error(
                             'certificado_poliza',
                             (cert.rec_name,))
+                else:
+                    #TODO incluir extendidos
+                    pass
                 cert.state = 'incluido'
                 cert.poliza = pl
                 cert.save()
@@ -362,6 +402,9 @@ class Movimiento(Workflow, ModelSQL, ModelView):
                 cert.poliza = pl
                 cert.save()
 
+            #TODO for cert in mov.modificaciones
+
+
     @classmethod
     @ModelView.button
     @Workflow.transition('cancelado')
@@ -369,6 +412,61 @@ class Movimiento(Workflow, ModelSQL, ModelView):
         # TODO cambiar el state de la poliza,
         # si es su primer movimiento debe asignarse 'new'
         pass
+
+
+class CertificadoModificacion(Workflow, ModelSQL, ModelView):
+    'Modificacion de Certificado'
+    __name__ = 'corseg.poliza.certificado.modificacion'
+    movimiento = fields.Many2One('corseg.poliza.movimiento',
+        'Movimiento', ondelete='CASCADE', select=True, required=True)
+    certificado = fields.Many2One('corseg.poliza.certificado',
+        'Certificado', ondelete='CASCADE', select=True, required=True,
+        domain=[])
+    inclusiones = fields.Many2Many(
+        'poliza.certificado-inclusion-certificado.extendido',
+        'modificacion', 'extendido', 'Inclusiones',
+#        domain=[
+#            If(
+#                In(Eval('state'), ['confirmado',]),
+#                [
+#                    ('poliza', '=', Eval('poliza')),
+#                    ('state', '=', 'incluido')
+#                ],
+#                ['OR',
+#                    [('state', '=', 'new')],
+#                    [
+#                        ('poliza', '=', Eval('poliza')),
+#                        ('state', '=', 'excluido'),
+#                    ]
+#                ],
+#            )
+#        ],
+#        states={
+#            'invisible': Not(Bool(Eval('poliza'))),
+#            'readonly': Not(In(Eval('state'), ['borrador',])),
+#        }, depends=['poliza', 'state']
+    )
+    exclusiones = fields.Many2Many(
+        'poliza.certificado-exclusion-certificado.extendido',
+        'modificacion', 'extendido', 'Exclusiones',
+#        domain=[
+#            ('poliza', '=', Eval('poliza')),
+#            If(
+#                In(Eval('state'), ['confirmado',]),
+#                ('state', '=', 'excluido'),
+#                ('state', '=', 'incluido')
+#            )
+#        ],
+#        states={
+#            'invisible': Not(Bool(Eval('poliza'))),
+#            'readonly': Not(In(Eval('state'), ['borrador',])),
+#        }, depends=['poliza', 'state']
+    )
+    comentario = fields.Text('Comentarios', size=None,
+#        states={
+#            'readonly': In(Eval('state'), ['confirmado',]),
+#        }, depends=['state']
+    )
 
 
 class CertificadoInclusion(ModelSQL):
@@ -389,10 +487,19 @@ class CertificadoExclusion(ModelSQL):
         ondelete='CASCADE', select=True, required=True)
 
 
-class CertificadoVehiculo(ModelSQL):
-    'Certificado - Vehiculo'
-    __name__ = 'poliza.certificado-vehiculo'
-    certificado = fields.Many2One('corseg.poliza.certificado', 'Certificado',
-        ondelete='CASCADE', select=True, required=True)
-    vehiculo = fields.Many2One('corseg.vehiculo', 'Vehiculo',
-        ondelete='CASCADE', select=True, required=True)
+class ExtendidoInclusion(ModelSQL):
+    'Extendido - Inclusion'
+    __name__ = 'poliza.certificado-inclusion-certificado.extendido'
+    extendido = fields.Many2One('corseg.poliza.certificado.extension',
+        'Extendido', ondelete='CASCADE', select=True, required=True)
+    modificacion = fields.Many2One('corseg.poliza.certificado.modificacion',
+        'Movimiento', ondelete='CASCADE', select=True, required=True)
+
+
+class ExtendidoExclusion(ModelSQL):
+    'Extendido - Exclusion'
+    __name__ = 'poliza.certificado-exclusion-certificado.extendido'
+    extendido = fields.Many2One('corseg.poliza.certificado.extension',
+        'Extendido', ondelete='CASCADE', select=True, required=True)
+    modificacion = fields.Many2One('corseg.poliza.certificado.modificacion',
+        'Movimiento', ondelete='CASCADE', select=True, required=True)

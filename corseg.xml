@@ -610,53 +610,6 @@ contains the full copyright notices and license terms. -->
             id="menu_corseg_poliza" sequence="30"/>
 
 
-        <!-- Asegurado -->
-<!--
-        <record model="ir.ui.view" id="asegurado_view_form">
-            <field name="model">corseg.poliza.asegurado</field>
-            <field name="type">form</field>
-            <field name="name">asegurado_form</field>
-        </record>
-        <record model="ir.ui.view" id="asegurado_view_tree">
-            <field name="model">corseg.poliza.asegurado</field>
-            <field name="type">tree</field>
-            <field name="name">asegurado_tree</field>
-        </record>
-        <record model="ir.action.act_window" id="act_asegurado_form">
-            <field name="name">Asegurados</field>
-            <field name="res_model">corseg.poliza.asegurado</field>
-        </record>
-        <record model="ir.action.act_window.view" id="act_asegurado_form_view1">
-            <field name="sequence" eval="10"/>
-            <field name="view" ref="asegurado_view_tree"/>
-            <field name="act_window" ref="act_asegurado_form"/>
-        </record>
-        <record model="ir.action.act_window.view" id="act_asegurado_form_view2">
-            <field name="sequence" eval="20"/>
-            <field name="view" ref="asegurado_view_form"/>
-            <field name="act_window" ref="act_asegurado_form"/>
-        </record>
-
-        <menuitem parent="menu_corseg_poliza" sequence="20"
-            action="act_asegurado_form" id="menu_asegurado_tree"/>
-
-        <record model="ir.model.access" id="access_corseg_asegurado">
-            <field name="model" search="[('model', '=', 'corseg.poliza.asegurado')]"/>
-            <field name="perm_read" eval="True"/>
-            <field name="perm_write" eval="False"/>
-            <field name="perm_create" eval="False"/>
-            <field name="perm_delete" eval="False"/>
-        </record>
-        <record model="ir.model.access" id="access_corseg_asegurado_admin">
-            <field name="model" search="[('model', '=', 'corseg.poliza.asegurado')]"/>
-            <field name="group" ref="group_corseg_admin"/>
-            <field name="perm_read" eval="True"/>
-            <field name="perm_write" eval="True"/>
-            <field name="perm_create" eval="True"/>
-            <field name="perm_delete" eval="True"/>
-        </record>
--->
-
         <!-- Poliza -->
 
         <record model="ir.ui.view" id="poliza_view_form">
@@ -917,6 +870,63 @@ contains the full copyright notices and license terms. -->
             <field name="perm_create" eval="True"/>
             <field name="perm_delete" eval="True"/>
         </record>
+
+        <!-- Extendido -->
+        <record model="ir.ui.view" id="extendido_view_form">
+            <field name="model">corseg.poliza.certificado.extension</field>
+            <field name="type">form</field>
+            <field name="name">extendido_form</field>
+        </record>
+        <record model="ir.ui.view" id="extendido_view_tree">
+            <field name="model">corseg.poliza.certificado.extension</field>
+            <field name="type">tree</field>
+            <field name="name">extendido_tree</field>
+        </record>
+        <record model="ir.model.access" id="access_extendido">
+            <field name="model" search="[('model', '=', 'corseg.poliza.certificado.extension')]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_delete" eval="False"/>
+        </record>
+        <record model="ir.model.access" id="access_extendido_admin">
+            <field name="model" search="[('model', '=', 'corseg.poliza.certificado.extension')]"/>
+            <field name="group" ref="group_corseg_admin"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_delete" eval="True"/>
+        </record>
+
+
+
+        <!-- Certificado Modificacion -->
+        <record model="ir.ui.view" id="certificado_modificacion_view_form">
+            <field name="model">corseg.poliza.certificado.modificacion</field>
+            <field name="type">form</field>
+            <field name="name">certificado_modificacion_form</field>
+        </record>
+        <record model="ir.ui.view" id="certificado_modificacion_view_tree">
+            <field name="model">corseg.poliza.certificado.modificacion</field>
+            <field name="type">tree</field>
+            <field name="name">certificado_modificacion_tree</field>
+        </record>
+        <record model="ir.model.access" id="access_certificado_modificacion">
+            <field name="model" search="[('model', '=', 'corseg.poliza.certificado.modificacion')]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_delete" eval="False"/>
+        </record>
+        <record model="ir.model.access" id="access_certificado_modificacion_admin">
+            <field name="model" search="[('model', '=', 'corseg.poliza.certificado.modificacion')]"/>
+            <field name="group" ref="group_corseg_admin"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_delete" eval="True"/>
+        </record>
+
 
         <!-- Pago -->
         <record model="ir.ui.view" id="pago_view_form">

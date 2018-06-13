@@ -54,6 +54,8 @@ class VehiculoModelo(ModelSQL, ModelView):
 class Vehiculo(ModelSQL, ModelView):
     'Vehiculo'
     __name__ = 'corseg.vehiculo'
+    certificado = fields.Many2One('corseg.poliza.certificado',
+        'Certificado', ondelete='CASCADE', select=True, required=True)
     placa = fields.Char('Placa')
     marca = fields.Many2One('corseg.vehiculo.marca', 'Marca')
     modelo = fields.Many2One('corseg.vehiculo.modelo', 'Modelo')
