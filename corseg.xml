@@ -474,6 +474,32 @@ contains the full copyright notices and license terms. -->
             <field name="perm_delete" eval="True"/>
         </record>
 
+        <!-- Vehiculo Modificacion -->
+        <record model="ir.ui.view" id="vehiculo_modificacion_view_form">
+            <field name="model">corseg.vehiculo.modificacion</field>
+            <field name="type">form</field>
+            <field name="name">vehiculo_modificacion_form</field>
+        </record>
+        <record model="ir.ui.view" id="vehiculo_modificacion_view_tree">
+            <field name="model">corseg.vehiculo.modificacion</field>
+            <field name="type">tree</field>
+            <field name="name">vehiculo_modificacion_tree</field>
+        </record>
+        <record model="ir.model.access" id="access_vehiculo_modificacion">
+            <field name="model" search="[('model', '=', 'corseg.vehiculo.modificacion')]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_delete" eval="False"/>
+        </record>
+        <record model="ir.model.access" id="access_vehiculo_modificacion_admin">
+            <field name="model" search="[('model', '=', 'corseg.vehiculo.modificacion')]"/>
+            <field name="group" ref="group_corseg_admin"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_delete" eval="True"/>
+        </record>
 
         <!-- Tipo Comision -->
         <record model="ir.ui.view" id="tipo_comision_view_form">

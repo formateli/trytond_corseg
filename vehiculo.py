@@ -1,13 +1,9 @@
 #This file is part of tryton-corseg project. The COPYRIGHT file at the top level of
 #this repository contains the full copyright notices and license terms.
 
-from trytond.transaction import Transaction
 from trytond.pool import Pool
-from trytond.model import ModelView, ModelSQL, fields, Unique
+from trytond.model import ModelView, ModelSQL, fields
 from trytond.pyson import Eval, If, Bool, Equal, Not, In
-from trytond.modules.company.model import (
-        CompanyMultiValueMixin, CompanyValueMixin)
-from decimal import Decimal
 
 __all__ = [
         'VehiculoMarca',
@@ -56,7 +52,8 @@ class Vehiculo(ModelSQL, ModelView):
     'Vehiculo'
     __name__ = 'corseg.vehiculo'
     certificado = fields.Many2One('corseg.poliza.certificado',
-        'Certificado', ondelete='CASCADE', select=True, required=True)
+        'Certificado', ondelete='CASCADE', select=True,
+        required=False) # TODO debe ser True despues de la migracion
     placa = fields.Char('Placa')
     marca = fields.Many2One('corseg.vehiculo.marca', 'Marca')
     modelo = fields.Many2One('corseg.vehiculo.modelo', 'Modelo')

@@ -10,12 +10,16 @@ this repository contains the full copyright notices and license terms. -->
     <field name="numero"/>
     <label name="asegurado"/>
     <field name="asegurado"/>
+    <newline />
     <label name="suma_asegurada"/>
     <field name="suma_asegurada"/>
     <label name="prima"/>
     <field name="prima"/>
     <newline />
     <notebook colspan="4">
+        <page string="Descripcion" id="descripcion">
+            <field name="descripcion" colspan="4"/>
+        </page>
         <page string="Inclusiones / Exclusiones" id="inclu_exclu">
             <field name="inclusiones"/>
             <field name="exclusiones"/>

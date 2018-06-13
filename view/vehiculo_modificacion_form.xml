@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<!-- This file is part of trytond-corseg module. The COPYRIGHT file at the top level of
+this repository contains the full copyright notices and license terms. -->
+<form>
+    <label name="marca"/>
+    <field name="marca"/>
+    <label name="modelo"/>
+    <field name="modelo"/>
+    <label name="placa"/>
+    <field name="placa"/>
+    <label name="ano"/>
+    <field name="ano"/>
+    <label name="color"/>
+    <field name="color"/>
+    <label name="s_motor"/>
+    <field name="s_motor"/>
+    <label name="s_carroceria"/>
+    <field name="s_carroceria"/>
+    <label name="transmision"/>
+    <field name="transmision"/>
+    <label name="uso"/>
+    <field name="uso"/>
+    <label name="tipo"/>
+    <field name="tipo"/>
+</form>
