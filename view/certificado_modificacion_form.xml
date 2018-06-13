@@ -6,11 +6,22 @@ this repository contains the full copyright notices and license terms. -->
     <field name="movimiento" colspan="3"/>
     <label name="certificado"/>
     <field name="certificado"/>
+    <label name="numero"/>
+    <field name="numero"/>
+    <label name="asegurado"/>
+    <field name="asegurado"/>
+    <label name="suma_asegurada"/>
+    <field name="suma_asegurada"/>
+    <label name="prima"/>
+    <field name="prima"/>
     <newline />
     <notebook colspan="4">
         <page string="Inclusiones / Exclusiones" id="inclu_exclu">
             <field name="inclusiones"/>
             <field name="exclusiones"/>
+        </page>
+        <page string="Vehiculo" id="vehiculo">
+            <field name="vehiculo" colspan="4"/>
         </page>
         <page string="Comentarios" id="comentario">
             <field name="comentario" colspan="4"/>

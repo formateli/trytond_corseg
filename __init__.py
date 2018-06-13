@@ -38,6 +38,7 @@ def register():
         VehiculoModelo,
         VehiculoTipo,
         Vehiculo,
+        VehiculoModificacion,
         Vendedor,
         Pago,
         module='corseg', type_='model')

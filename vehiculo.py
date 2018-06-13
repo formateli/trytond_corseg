@@ -14,6 +14,7 @@ __all__ = [
         'VehiculoModelo',
         'VehiculoTipo',
         'Vehiculo',
+        'VehiculoModificacion',
     ]
 
 
@@ -93,6 +94,54 @@ class Vehiculo(ModelSQL, ModelView):
     @staticmethod
     def default_active():
         return True
+
+    @staticmethod
+    def default_transmision():
+        return 'none'
+
+    @staticmethod
+    def default_uso():
+        return 'none'
+
+
+class VehiculoModificacion(ModelSQL, ModelView):
+    'Vehiculo Modificacion'
+    __name__ = 'corseg.vehiculo.modificacion'
+    modificacion = fields.Many2One('corseg.poliza.certificado',
+        'Modificacion', ondelete='CASCADE', select=True, required=True)
+    placa = fields.Char('Placa')
+    marca = fields.Many2One('corseg.vehiculo.marca', 'Marca')
+    modelo = fields.Many2One('corseg.vehiculo.modelo', 'Modelo')
+    ano = fields.Char('Ano')
+    s_motor = fields.Char('Motor')
+    s_carroceria = fields.Char('Carroceria')
+    color = fields.Char('Color')
+    transmision = fields.Selection([
+            ('none', ''),
+            ('automatica', 'Automatica'),
+            ('manual', 'Manual'),
+        ], 'Transmision'
+    )
+    uso = fields.Selection([
+            ('none', ''),
+            ('particular', 'Particular'),
+            ('comercial', 'Comercial'),
+        ], 'Uso'
+    )
+    tipo = fields.Many2One('corseg.vehiculo.tipo', 'Tipo')
+    comentario = fields.Text('Comentarios', size=None)
+
+    def get_rec_name(self, name):
+        return "{0}/{1}/{2}".format(
+            self.marca, self.modelo, self.placa)
+
+    @classmethod
+    def search_rec_name(cls, name, clause):
+        domain = ['OR']
+        domain.append(('marca.rec_name', clause[1], clause[2]))
+        domain.append(('modelo.rec_name', clause[1], clause[2]))
+        domain.append(('placa', clause[1], clause[2]))
+        return domain
 
     @staticmethod
     def default_transmision():

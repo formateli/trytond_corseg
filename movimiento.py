@@ -110,6 +110,9 @@ class Extension(ModelSQL, ModelView):
     def default_state():
         return 'new'
 
+    def get_rec_name(self, name):
+        return self.extendido.rec_name
+
 
 class Movimiento(Workflow, ModelSQL, ModelView):
     'Movimiento de Poliza'
@@ -271,6 +274,12 @@ class Movimiento(Workflow, ModelSQL, ModelView):
                     '"Incluido" antes de la exclusion.'),
                 'certificado_poliza': ('El certificado "%s" debe pertenecer a la '
                     'misma poliza del movimiento.'),
+                'extension_certificado_nuevo': ('El estado del extendido "%s" debe '
+                    'debe ser "Nuevo" para los certificados nuevos.'),
+                'extendido_incluido': ('El extendido "%s" debe tener estado de '
+                    '"Nuevo" o "Excluido" antes de la inclusion.'),
+                'extendido_excluido': ('El extendido "%s" debe tener estado de '
+                    '"Incluido" antes de la exclusion.'),
                 })
         cls._transitions |= set(
             (
@@ -318,10 +327,15 @@ class Movimiento(Workflow, ModelSQL, ModelView):
         return 2
 
     @staticmethod
-    def _act_poliza(name, poliza, mov):
-        v = getattr(mov, name)
+    def _act_field(name, obj, chg):
+        v = getattr(chg, name)
         if v is not None:
-            setattr(poliza, name, v)
+            try:
+                if v == '' or v == 'none':
+                    return
+            except:
+                pass
+            setattr(obj, name, v)
             
     @classmethod
     def _get_poliza_fields(cls):
@@ -329,6 +343,20 @@ class Movimiento(Workflow, ModelSQL, ModelView):
             'f_desde', 'f_hasta', 'suma_asegurada',
             'prima', 'forma_pago', 'frecuencia_pago',
             'no_cuotas', 'vendedor']
+        return fields
+
+    @classmethod
+    def _get_cert_fields(cls):
+        fields = ['numero', 'asegurado',
+            'suma_asegurada', 'prima',
+            'descripcion']
+        return fields
+
+    @classmethod
+    def _get_vehiculo_fields(cls):
+        fields = ['placa', 'marca', 'modelo',
+            'ano', 's_motor', 's_carroceria',
+            'color', 'transmision', 'uso', 'tipo']
         return fields
 
     @staticmethod
@@ -362,10 +390,12 @@ class Movimiento(Workflow, ModelSQL, ModelView):
     @Workflow.transition('confirmado')
     def confirmar(cls, movs):
         fields = cls._get_poliza_fields()
+        fields_cert = cls._get_cert_fields()
+        fields_vehiculo = cls._get_vehiculo_fields()
         for mov in movs:
             pl = mov.poliza
             for f in fields:
-                cls._act_poliza(f, pl, mov)
+                cls._act_field(f, pl, mov)
             if mov.tipo_endoso == 'cancelacion':
                 pl.state = 'cancelada'
             else:
@@ -383,8 +413,13 @@ class Movimiento(Workflow, ModelSQL, ModelView):
                             'certificado_poliza',
                             (cert.rec_name,))
                 else:
-                    #TODO incluir extendidos
-                    pass
+                    for ext in cert.extendidos:
+                        if ext.state != 'new':
+                            cls.raise_user_error(
+                                'extension_certificado_nuevo',
+                                (ext.rec_name,))
+                        ext.state = 'incluido'
+                        ext.save()
                 cert.state = 'incluido'
                 cert.poliza = pl
                 cert.save()
@@ -402,7 +437,30 @@ class Movimiento(Workflow, ModelSQL, ModelView):
                 cert.poliza = pl
                 cert.save()
 
-            #TODO for cert in mov.modificaciones
+            for mod in mov.modificaciones:
+                for f in fields_cert:
+                    cls._act_field(f, mod.cert, mod)
+                if mod.vehiculo:
+                    for f in fields_vehiculo:
+                        cls._act_field(f, mod.cert.vehiculo, mod.vehiculo)
+                    mod.cert.vehiculo.save()
+                mod.cert.save()
+
+                for ext in mod.inclusiones:
+                    if ext.state not in ['new', 'excluido']:
+                        cls.raise_user_error(
+                            'extendido_excluido',
+                            (ext.rec_name,))
+                    ext.state = 'incluido'
+                    ext.save()
+
+                for ext in mod.exclusiones:
+                    if ext.state not in ['incluido']:
+                        cls.raise_user_error(
+                            'extendido_incluido',
+                            (ext.rec_name,))
+                    ext.state = 'excluido'
+                    ext.save()
 
 
     @classmethod
@@ -467,6 +525,14 @@ class CertificadoModificacion(Workflow, ModelSQL, ModelView):
 #            'readonly': In(Eval('state'), ['confirmado',]),
 #        }, depends=['state']
     )
+
+    numero = fields.Char('Numero')
+    asegurado = fields.Many2One('party.party', 'Asegurado')
+    suma_asegurada = fields.Numeric('Suma Asegurada', digits=(16, 2))
+    prima = fields.Numeric('Prima', digits=(16, 2))
+    descripcion = fields.Text('Descripcion', size=None)
+    vehiculo = fields.One2Many('corseg.vehiculo.modificacion',
+        'modificacion', 'Vehiculo', size=1)
 
 
 class CertificadoInclusion(ModelSQL):
