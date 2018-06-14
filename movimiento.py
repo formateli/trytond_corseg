@@ -544,8 +544,7 @@ class CertificadoModificacion(Workflow, ModelSQL, ModelView):
     comentario = fields.Text('Comentarios', size=None,
         states={
             'readonly': Not(In(Eval('state'), ['new',])),
-        }, depends=['state']
-    )
+        }, depends=['state'])
     numero = fields.Char('Numero')
     asegurado = fields.Many2One('party.party', 'Asegurado')
     suma_asegurada = fields.Numeric('Suma Asegurada',

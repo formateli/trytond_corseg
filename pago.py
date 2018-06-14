@@ -49,6 +49,7 @@ class Pago(Workflow, ModelSQL, ModelView):
         states={
             'readonly': In(Eval('state'), ['confirmado',]),
         }, depends=['state'])
+    #TODO currency_digits
     monto = fields.Numeric('Monto', digits=(16, 2), required=True,
         states=_STATES, depends=_DEPENDS)
     vendedor = fields.Many2One('corseg.vendedor', 'Vendedor',
