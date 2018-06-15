@@ -30,6 +30,7 @@ class Pago(Workflow, ModelSQL, ModelView):
 #                Eval('context', {}).get('company', -1)),
             ], select=True)
     # TODO numero
+    # TODO currency readonly
     currency_digits = fields.Function(fields.Integer('Currency Digits'),
         'get_currency_digits')
     poliza = fields.Many2One('corseg.poliza', 'Poliza', required=True,
