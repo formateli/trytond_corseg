@@ -3,10 +3,13 @@
 
 from trytond.transaction import Transaction
 from trytond.model import Workflow, ModelView, ModelSQL, fields
-from trytond.pyson import Eval, If, Not, In
+from trytond.pyson import Eval, Bool, If, Not, In
 
 __all__ = [
-        'Pago',
+        'LiquidacionCia',
+        'LiquidacionVendedor',
+        'LiquidacionPagoCia',
+        'LiquidacionPagoVendedor',
     ]
 
 
@@ -17,6 +20,7 @@ _STATE = [
         ('posted', 'Posteado'),
         ('cancelado', 'Cancelado'),
     ]
+
 
 class LiquidacionCia(Workflow, ModelSQL, ModelView):
     'Liquidacion Comisiones Cia de Seguros'
@@ -51,9 +55,13 @@ class LiquidacionCia(Workflow, ModelSQL, ModelView):
         'poliza.pagos-liquidacion.cia',
         'liquidacion', 'pago', 'Pagos',
         domain=[
-            ('company', '=', Eval('company')),
+            #('company', '=', Eval('company')), #TODO descomentar despues de Migracion
             ('cia', '=', Eval('cia')),
-            ('state', '=', Eval('confirmado')),
+            If(
+                In(Eval('state'), ['borrador', 'procesado']),
+                ('state', '=', 'confirmado'),
+                ('state', '!=', '')
+            )
         ],
         states={
             'readonly': Not(In(Eval('state'), ['borrador',])),
@@ -62,6 +70,7 @@ class LiquidacionCia(Workflow, ModelSQL, ModelView):
     state = fields.Selection(_STATE, 'Estado',
         required=True, readonly=True)
 
+    # TODO total
     # TODO procesado_por, confirmado_por, cancelado_por
 
     @classmethod
@@ -118,27 +127,31 @@ class LiquidacionCia(Workflow, ModelSQL, ModelView):
     @classmethod
     @ModelView.button
     @Workflow.transition('borrador')
-    def borrador(cls, movs):
+    def borrador(cls, liqs):
         pass
 
     @classmethod
     @ModelView.button
     @Workflow.transition('procesado')
-    def procesar(cls, pagos):
+    def procesar(cls, liqs):
         pass
 
     @classmethod
     @ModelView.button
     @Workflow.transition('confirmado')
-    def confirmar(cls, pagos):
-        pass
+    def confirmar(cls, liqs):
+        for liq in liqs:
+            for pago in liq.pagos:
+                # TODO verificar el state del pago
+                pago.liq_cia = liq
+                pago.state = 'liq_cia'    
+                pago.save()
+        # TODO crear el account_move
 
     @classmethod
     @ModelView.button
     @Workflow.transition('cancelado')
-    def cancelar(cls, movs):
-        # TODO cambiar el state de la poliza,
-        # si es su primer movimiento debe asignarse 'new'
+    def cancelar(cls, liqs):
         pass
 
 
@@ -175,9 +188,13 @@ class LiquidacionVendedor(Workflow, ModelSQL, ModelView):
         'poliza.pagos-liquidacion.vendedor',
         'liquidacion', 'pago', 'Pagos',
         domain=[
-            ('company', '=', Eval('company')),
+            #('company', '=', Eval('company')), #TODO descomentar despues de migracion
             ('vendedor', '=', Eval('vendedor')),
-            ('state', '=', Eval('confirmado')),
+            If(
+                In(Eval('state'), ['borrador', 'procesado']),
+                ('state', '=', 'liq_cia'),
+                ('state', '!=', '')
+            )
         ],
         states={
             'readonly': Not(In(Eval('state'), ['borrador',])),
@@ -185,12 +202,12 @@ class LiquidacionVendedor(Workflow, ModelSQL, ModelView):
         }, depends=['company', 'vendedor', 'state'])
     state = fields.Selection(_STATE, 'Estado',
         required=True, readonly=True)
-
+    # TODO total
     # TODO procesado_por, confirmado_por, cancelado_por
 
     @classmethod
     def __setup__(cls):
-        super(LiquidacionCia, cls).__setup__()
+        super(LiquidacionVendedor, cls).__setup__()
         cls._order[0] = ('fecha', 'DESC')
         cls._error_messages.update({
                 'delete_cancel': ('El movimiento "%s" debe ser '
@@ -242,25 +259,48 @@ class LiquidacionVendedor(Workflow, ModelSQL, ModelView):
     @classmethod
     @ModelView.button
     @Workflow.transition('borrador')
-    def borrador(cls, movs):
+    def borrador(cls, liqs):
         pass
 
     @classmethod
     @ModelView.button
     @Workflow.transition('procesado')
-    def procesar(cls, pagos):
+    def procesar(cls, liqs):
         pass
 
     @classmethod
     @ModelView.button
     @Workflow.transition('confirmado')
-    def confirmar(cls, pagos):
-        pass
+    def confirmar(cls, liqs):
+        for liq in liqs:
+            for pago in liq.pagos:
+                # TODO verificar el state del pago
+                pago.liq_vendedor = liq
+                pago.state = 'liq_vendedor'
+                pago.save()
+        # TODO crear el account_move
 
     @classmethod
     @ModelView.button
     @Workflow.transition('cancelado')
-    def cancelar(cls, movs):
-        # TODO cambiar el state de la poliza,
-        # si es su primer movimiento debe asignarse 'new'
+    def cancelar(cls, liqs):
         pass
+
+
+class LiquidacionPagoCia(ModelSQL):
+    'Pago - Liquidacion Cia'
+    __name__ = 'poliza.pagos-liquidacion.cia'
+    pago = fields.Many2One('corseg.poliza.pago',
+        'Pago', ondelete='CASCADE', select=True, required=True)
+    liquidacion = fields.Many2One('corseg.liquidacion.cia',
+        'Liquidacion', ondelete='CASCADE', select=True, required=True)
+
+
+class LiquidacionPagoVendedor(ModelSQL):
+    'Pago - Liquidacion Vendedor'
+    __name__ = 'poliza.pagos-liquidacion.vendedor'
+    pago = fields.Many2One('corseg.poliza.pago',
+        'Pago', ondelete='CASCADE', select=True, required=True)
+    liquidacion = fields.Many2One('corseg.liquidacion.vendedor',
+        'Liquidacion', ondelete='CASCADE', select=True, required=True)
+

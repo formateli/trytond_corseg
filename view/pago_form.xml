@@ -4,52 +4,54 @@ this repository contains the full copyright notices and license terms. -->
 <form>
     <label name="fecha"/>
     <field name="fecha"/>
-    <label name="poliza"/>
-    <field name="poliza"/>
     <label name="referencia"/>
     <field name="referencia"/>
+    <label name="poliza"/>
+    <field name="poliza"/>
+    <label name="cia"/>
+    <field name="cia"/>
     <label name="vendedor"/>
     <field name="vendedor"/>
+    <newline />
     <label name="monto"/>
     <field name="monto"/>
     <newline />
-
-<!--
+    <label name="comision_cia"/>
+    <field name="comision_cia"/>
+    <label name="comision_vendedor"/>
+    <field name="comision_vendedor"/>
     <notebook colspan="4">
-        <page string="Datos" id="datos" col="6">
-            <label name="contratante"/>
-            <field name="contratante"/>
-            <newline />
-            <label name="f_emision"/>
-            <field name="f_emision"/>
-            <label name="f_desde"/>
-            <field name="f_desde"/>
-            <label name="f_hasta"/>
-            <field name="f_hasta"/>
-            <label name="suma_asegurada"/>
-            <field name="suma_asegurada"/>
-            <label name="prima"/>
-            <field name="prima"/>
-            <newline />
-            <label name="forma_pago"/>
-            <field name="forma_pago"/>
-            <label name="frecuencia_pago"/>
-            <field name="frecuencia_pago"/>
-            <label name="no_cuotas"/>
-            <field name="no_cuotas"/>
-        </page>
-        <page string="Inclusiones / Exclusiones" id="inclu_exclu">
-            <field name="inclu_exclu" colspan="6"/>
-        </page>
-        <page string="Comisiones" id="comisiones">
-            <label name="vendedor"/>
-            <field name="vendedor"/>
-        </page>
         <page string="Comentarios" id="comentario">
             <field name="comentario" colspan="4"/>
         </page>
+        <page string="Info" id="info">
+            <label name="company"/>
+            <field name="company"/>
+            <newline />
+            <separator string="Liquidaciones" colspan="4"/>
+            <label name="liq_cia"/>
+            <field name="liq_cia"/>
+            <label name="liq_vendedor"/>
+            <field name="liq_vendedor"/>
+            <separator string="Auditoria" colspan="4"/>
+            <label name="made_by"/>
+            <field name="made_by"/>
+            <label name="made_date"/>
+            <field name="made_date"/>
+            <label name="processed_by"/>
+            <field name="processed_by"/>
+            <label name="processed_date"/>
+            <field name="processed_date"/>
+            <label name="confirmed_by"/>
+            <field name="confirmed_by"/>
+            <label name="confirmed_date"/>
+            <field name="confirmed_date"/>
+            <label name="canceled_by"/>
+            <field name="canceled_by"/>
+            <label name="canceled_date"/>
+            <field name="canceled_date"/>
+        </page>
     </notebook>
--->
     <group col="6" colspan="4" id="buttons" yfill="1">
         <label name="state"/>
         <field name="state"/>
