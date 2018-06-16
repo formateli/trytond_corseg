@@ -5,6 +5,7 @@ from trytond.pool import Pool, PoolMeta
 from trytond.transaction import Transaction
 from trytond.model import Workflow, ModelView, ModelSQL, fields
 from trytond.pyson import Eval, If, Not, In, Bool
+from .tools import auditoria_field, get_current_date, set_auditoria
 
 __all__ = [
         'PartyCorseg',
@@ -257,8 +258,14 @@ class Movimiento(Workflow, ModelSQL, ModelView):
             ('confirmado', 'Confirmado'),
             ('cancelado', 'Cancelado'),
         ], 'Estado', required=True, readonly=True)
-
-    # TODO procesado_por, confirmado_por, cancelado_por
+    made_by = auditoria_field('user', 'Creado por')
+    made_date = auditoria_field('date', 'fecha')
+    processed_by = auditoria_field('user', 'Procesado por')
+    processed_date = auditoria_field('date', 'fecha')
+    confirmed_by = auditoria_field('user', 'Confirmado por')
+    confirmed_date = auditoria_field('date', 'fecha')
+    canceled_by = auditoria_field('user', 'Cancelado por')
+    canceled_date = auditoria_field('date', 'fecha')
 
     @classmethod
     def __setup__(cls):
@@ -364,6 +371,23 @@ class Movimiento(Workflow, ModelSQL, ModelView):
             'color', 'transmision', 'uso', 'tipo']
         return fields
 
+    @classmethod
+    def create(cls, vlist):
+        vlist = [x.copy() for x in vlist]
+        for values in vlist:
+            if values.get('made_by') is None:
+                values['made_by'] = Transaction().user
+                values['made_date'] = get_current_date()
+        movs = super(Movimiento, cls).create(vlist)
+        return movs
+
+    @classmethod
+    def delete(cls, movs):
+        for mov in movs:
+            if mov.state not in ['borrador', 'cancelado']:
+                cls.raise_user_error('delete_cancel', (mov.rec_name,))
+        super(Movimiento, cls).delete(movs)
+
     @staticmethod
     def default_state():
         return 'borrador'
@@ -389,6 +413,8 @@ class Movimiento(Workflow, ModelSQL, ModelView):
                 cls.raise_user_error(
                     'poliza_un_inicia',
                     (mov.poliza.rec_name,))
+            set_auditoria(mov, 'processed')
+            mov.save()
 
     @classmethod
     @ModelView.button
@@ -483,13 +509,16 @@ class Movimiento(Workflow, ModelSQL, ModelView):
                 mod.state = 'confirmado'
                 mod.save()
 
+            set_auditoria(mov, 'confirmed')
+            mov.save()
+
     @classmethod
     @ModelView.button
     @Workflow.transition('cancelado')
     def cancelar(cls, movs):
-        # TODO cambiar el state de la poliza,
-        # si es su primer movimiento debe asignarse 'new'
-        pass
+        for mov in movs:
+            set_auditoria(mov, 'canceled')
+            mov.save()
 
 
 class CertificadoModificacion(Workflow, ModelSQL, ModelView):
