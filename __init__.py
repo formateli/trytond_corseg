@@ -3,6 +3,7 @@
 # contains the full copyright notices and license terms.
 
 from trytond.pool import Pool
+from .configuration import *
 from .corseg import *
 from .vehiculo import *
 from .movimiento import *
@@ -12,6 +13,8 @@ from .liquidacion import *
 
 def register():
     Pool.register(
+        Configuratio,
+        ConfigurationSequences,
         PartyCorseg,
         Certificado,
         CertificadoInclusion,

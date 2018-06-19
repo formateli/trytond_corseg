@@ -223,7 +223,8 @@ class Poliza(ModelSQL, ModelView):
 #            ('id', If(Eval('context', {}).contains('company'), '=', '!='),
 #                Eval('context', {}).get('company', -1)),
             ], select=True)
-    currency = fields.Many2One('currency.currency', 'Moneda', required=False, # TODO required=True
+    currency = fields.Many2One('currency.currency',
+        'Moneda', required=False, # TODO required=True
         states={
             'readonly': True,
             })

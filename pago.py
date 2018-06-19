@@ -29,8 +29,10 @@ class Pago(Workflow, ModelSQL, ModelView):
 #            ('id', If(Eval('context', {}).contains('company'), '=', '!='),
 #                Eval('context', {}).get('company', -1)),
             ], select=True)
-    # TODO numero
-    # TODO currency readonly
+    number = fields.Char('Number', size=None, readonly=True, select=True)
+    currency = fields.Many2One('currency.currency',
+        'Moneda', required=False, # TODO required=True
+        readonly=True)
     currency_digits = fields.Function(fields.Integer('Currency Digits'),
         'get_currency_digits')
     poliza = fields.Many2One('corseg.poliza', 'Poliza', required=True,
@@ -59,9 +61,9 @@ class Pago(Workflow, ModelSQL, ModelView):
     monto = fields.Numeric('Monto',
         digits=(16, Eval('currency_digits', 2)),
         required=True, states=_STATES, depends=['currency_digits'])
-    vendedor = fields.Many2One('corseg.vendedor', 'Vendedor',
+    vendedor = fields.Many2One('corseg.vendedor',
+        'Vendedor', required=True,
         states={
-            'required': In(Eval('tipo_endoso'), ['iniciacion',]),
             'readonly': Not(In(Eval('state'), ['borrador',])),
         }, depends=_DEPENDS)
     comision_cia = fields.Numeric('Comision Cia',
@@ -137,6 +139,14 @@ class Pago(Workflow, ModelSQL, ModelView):
         return 'borrador'
 
     @staticmethod
+    def default_currency():
+        Company = Pool().get('company.company')
+        company = Transaction().context.get('company')
+        if company:
+            company = Company(company)
+            return company.currency.id
+
+    @staticmethod
     def default_currency_digits():
         return 2
 
@@ -163,6 +173,17 @@ class Pago(Workflow, ModelSQL, ModelView):
     @classmethod
     def search_cia(cls, name, clause):
         return [('poliza.cia',) + tuple(clause[1:])]
+
+    @classmethod
+    def set_number(cls, pagos):
+        pool = Pool()
+        Sequence = pool.get('ir.sequence')
+        for pago in pagos:
+            if pago.number:
+                continue
+            pago.number = \
+                Sequence.get_id(pago.sequence.id)
+        cls.save(pagos)
 
     @classmethod
     def create(cls, vlist):
@@ -202,6 +223,7 @@ class Pago(Workflow, ModelSQL, ModelView):
         for pago in pagos:
             set_auditoria(pago, 'confirmed')
             pago.save()
+        cls.set_number(pagos)
 
     @classmethod
     @ModelView.button
