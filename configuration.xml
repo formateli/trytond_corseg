@@ -1,27 +1,27 @@
 <?xml version="1.0"?>
 <tryton>
     <data>
-        <record model="ir.ui.view" id="cash_bank_configuration_view_form">
-            <field name="model">cash_bank.configuration</field>
+        <record model="ir.ui.view" id="corseg_configuration_view_form">
+            <field name="model">corseg.configuration</field>
             <field name="type">form</field>
             <field name="name">configuration_form</field>
         </record>
-        <record model="ir.action.act_window" id="act_cash_bank_configuration_form">
-            <field name="name">Cash &amp; Bank Configuration</field>
-            <field name="res_model">cash_bank.configuration</field>
+        <record model="ir.action.act_window" id="act_corseg_configuration_form">
+            <field name="name">Configuracion de Corretaje</field>
+            <field name="res_model">corseg.configuration</field>
         </record>
         <record model="ir.action.act_window.view"
-                id="act_cash_bank_configuration_view1">
+                id="act_corseg_configuration_view1">
             <field name="sequence" eval="1"/>
-            <field name="view" ref="cash_bank_configuration_view_form"/>
-            <field name="act_window" ref="act_cash_bank_configuration_form"/>
+            <field name="view" ref="corseg_configuration_view_form"/>
+            <field name="act_window" ref="act_corseg_configuration_form"/>
         </record>
-        <menuitem parent="menu_cash_bank_configuration"
-            action="act_cash_bank_configuration_form"
+        <menuitem parent="menu_corseg_configuration"
+            action="act_corseg_configuration_form"
             id="menu_configuration" sequence="5" icon="tryton-list"/>
 
         <record model="ir.model.access" id="access_configuration">
-            <field name="model" search="[('model', '=', 'cash_bank.configuration')]"/>
+            <field name="model" search="[('model', '=', 'corseg.configuration')]"/>
             <field name="perm_read" eval="True"/>
             <field name="perm_write" eval="False"/>
             <field name="perm_create" eval="False"/>
@@ -29,8 +29,8 @@
         </record>
 
         <record model="ir.model.access" id="access_configuration_admin">
-            <field name="model" search="[('model', '=', 'cash_bank.configuration')]"/>
-            <field name="group" ref="group_cash_bank_admin"/>
+            <field name="model" search="[('model', '=', 'corseg.configuration')]"/>
+            <field name="group" ref="group_corseg_admin"/>
             <field name="perm_read" eval="True"/>
             <field name="perm_write" eval="True"/>
             <field name="perm_create" eval="True"/>

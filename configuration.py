@@ -46,6 +46,7 @@ class Configuration(
 
 
 class ConfigurationSequences(ModelSQL, CompanyValueMixin):
+    'Configuration Sequences'
     __name__ = 'corseg.configuration.sequences'
     pago_seq = fields.MultiValue(fields.Many2One(
         'ir.sequence', "Pago Sequence", 

@@ -272,7 +272,7 @@ class Movimiento(Workflow, ModelSQL, ModelView):
         super(Movimiento, cls).__setup__()
         cls._order[0] = ('fecha', 'DESC')
         cls._error_messages.update({
-                'delete_cancel': ('El movimiento "%s" debe ser '
+                'delete_cancel': ('El movimiento "%s" debe estar '
                     'cancelado antes de eliminarse.'),
                 'poliza_inicia': ('El primer movimiento para la poliza "%s" debe '
                     'ser un endoso de tipo Iniciacion.'),

@@ -1,0 +1,155 @@
+<?xml version="1.0"?>
+<!-- This file is part of trytond-corseg module. 
+The COPYRIGHT file at the top level of this repository 
+contains the full copyright notices and license terms. -->
+<tryton>
+    <data>
+        <!-- Vehiculos -->
+        <menuitem name="Vehiculos" parent="menu_corseg_configuration"
+            id="menu_corseg_vehiculos" sequence="22"/>
+
+        <!-- Vehiculo Marca -->
+        <record model="ir.ui.view" id="vehiculo_marca_view_form">
+            <field name="model">corseg.vehiculo.marca</field>
+            <field name="type">form</field>
+            <field name="name">vehiculo_marca_form</field>
+        </record>
+        <record model="ir.ui.view" id="vehiculo_marca_view_tree">
+            <field name="model">corseg.vehiculo.marca</field>
+            <field name="type">tree</field>
+            <field name="name">vehiculo_marca_tree</field>
+        </record>
+        <record model="ir.action.act_window" id="act_vehiculo_marca_form">
+            <field name="name">Vehiculo Marca</field>
+            <field name="res_model">corseg.vehiculo.marca</field>
+        </record>
+        <record model="ir.action.act_window.view" id="act_vehiculo_marca_form_view1">
+            <field name="sequence" eval="10"/>
+            <field name="view" ref="vehiculo_marca_view_tree"/>
+            <field name="act_window" ref="act_vehiculo_marca_form"/>
+        </record>
+        <record model="ir.action.act_window.view" id="act_vehiculo_marca_form_view2">
+            <field name="sequence" eval="20"/>
+            <field name="view" ref="vehiculo_marca_view_form"/>
+            <field name="act_window" ref="act_vehiculo_marca_form"/>
+        </record>
+
+        <menuitem parent="menu_corseg_vehiculos" sequence="10"
+            action="act_vehiculo_marca_form" id="menu_vehiculo_marca_tree"/>
+
+        <record model="ir.model.access" id="access_vehiculo_marca">
+            <field name="model" search="[('model', '=', 'corseg.vehiculo.marca')]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_delete" eval="False"/>
+        </record>
+        <record model="ir.model.access" id="access_vehiculo_marca_admin">
+            <field name="model" search="[('model', '=', 'corseg.vehiculo.marca')]"/>
+            <field name="group" ref="group_corseg_admin"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_delete" eval="True"/>
+        </record>
+
+        <!-- Vehiculo Modelo -->
+        <record model="ir.ui.view" id="vehiculo_modelo_view_form">
+            <field name="model">corseg.vehiculo.modelo</field>
+            <field name="type">form</field>
+            <field name="name">vehiculo_modelo_form</field>
+        </record>
+        <record model="ir.ui.view" id="vehiculo_modelo_view_tree">
+            <field name="model">corseg.vehiculo.modelo</field>
+            <field name="type">tree</field>
+            <field name="name">vehiculo_modelo_tree</field>
+        </record>
+        <record model="ir.action.act_window" id="act_vehiculo_modelo_form">
+            <field name="name">Vehiculo Modelo</field>
+            <field name="res_model">corseg.vehiculo.modelo</field>
+        </record>
+        <record model="ir.action.act_window.view" id="act_vehiculo_modelo_form_view1">
+            <field name="sequence" eval="10"/>
+            <field name="view" ref="vehiculo_modelo_view_tree"/>
+            <field name="act_window" ref="act_vehiculo_modelo_form"/>
+        </record>
+        <record model="ir.action.act_window.view" id="act_vehiculo_modelo_form_view2">
+            <field name="sequence" eval="20"/>
+            <field name="view" ref="vehiculo_modelo_view_form"/>
+            <field name="act_window" ref="act_vehiculo_modelo_form"/>
+        </record>
+
+        <menuitem parent="menu_corseg_vehiculos" sequence="20"
+            action="act_vehiculo_modelo_form" id="menu_vehiculo_modelo_tree"/>
+
+        <record model="ir.model.access" id="access_vehiculo_modelo">
+            <field name="model" search="[('model', '=', 'corseg.vehiculo.modelo')]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_delete" eval="False"/>
+        </record>
+        <record model="ir.model.access" id="access_vehiculo_modelo_admin">
+            <field name="model" search="[('model', '=', 'corseg.vehiculo.modelo')]"/>
+            <field name="group" ref="group_corseg_admin"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_delete" eval="True"/>
+        </record>
+
+        <!-- Vehiculo -->
+        <record model="ir.ui.view" id="vehiculo_view_form">
+            <field name="model">corseg.vehiculo</field>
+            <field name="type">form</field>
+            <field name="name">vehiculo_form</field>
+        </record>
+        <record model="ir.ui.view" id="vehiculo_view_tree">
+            <field name="model">corseg.vehiculo</field>
+            <field name="type">tree</field>
+            <field name="name">vehiculo_tree</field>
+        </record>
+        <record model="ir.model.access" id="access_vehiculo">
+            <field name="model" search="[('model', '=', 'corseg.vehiculo')]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_delete" eval="False"/>
+        </record>
+        <record model="ir.model.access" id="access_vehiculo_admin">
+            <field name="model" search="[('model', '=', 'corseg.vehiculo')]"/>
+            <field name="group" ref="group_corseg_admin"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_delete" eval="True"/>
+        </record>
+
+        <!-- Vehiculo Modificacion -->
+        <record model="ir.ui.view" id="vehiculo_modificacion_view_form">
+            <field name="model">corseg.vehiculo.modificacion</field>
+            <field name="type">form</field>
+            <field name="name">vehiculo_modificacion_form</field>
+        </record>
+        <record model="ir.ui.view" id="vehiculo_modificacion_view_tree">
+            <field name="model">corseg.vehiculo.modificacion</field>
+            <field name="type">tree</field>
+            <field name="name">vehiculo_modificacion_tree</field>
+        </record>
+        <record model="ir.model.access" id="access_vehiculo_modificacion">
+            <field name="model" search="[('model', '=', 'corseg.vehiculo.modificacion')]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_delete" eval="False"/>
+        </record>
+        <record model="ir.model.access" id="access_vehiculo_modificacion_admin">
+            <field name="model" search="[('model', '=', 'corseg.vehiculo.modificacion')]"/>
+            <field name="group" ref="group_corseg_admin"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_delete" eval="True"/>
+        </record>
+    </data>
+</tryton>

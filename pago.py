@@ -2,13 +2,12 @@
 #this repository contains the full copyright notices and license terms.
 
 from trytond.transaction import Transaction
+from trytond.pool import Pool
 from trytond.model import Workflow, ModelView, ModelSQL, fields
 from trytond.pyson import Eval, If, Not, In
 from .tools import auditoria_field, get_current_date, set_auditoria
 
-__all__ = [
-        'Pago',
-    ]
+__all__ = ['FormaPago', 'FrecuenciaPago', 'Pago']
 
 
 _STATES={
@@ -16,6 +15,29 @@ _STATES={
     }
 
 _DEPENDS=['state']
+
+
+class FormaPago(ModelSQL, ModelView):
+    'Tipo Pago'
+    __name__ = 'corseg.forma_pago'
+    name = fields.Char('Nombre', required=True)
+    active = fields.Boolean('Activo')
+
+    @staticmethod
+    def default_active():
+        return True
+
+
+class FrecuenciaPago(ModelSQL, ModelView):
+    'Frecuencia Pago'
+    __name__ = 'corseg.frecuencia_pago'
+    name = fields.Char('Nombre', required=True)
+    meses = fields.Integer('Meses', required=True)
+    active = fields.Boolean('Activo')
+
+    @staticmethod
+    def default_active():
+        return True
 
 
 class Pago(Workflow, ModelSQL, ModelView):

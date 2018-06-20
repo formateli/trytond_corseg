@@ -5,6 +5,7 @@
 from trytond.pool import Pool
 from .configuration import *
 from .corseg import *
+from .comision import *
 from .vehiculo import *
 from .movimiento import *
 from .pago import *
@@ -13,7 +14,7 @@ from .liquidacion import *
 
 def register():
     Pool.register(
-        Configuratio,
+        Configuration,
         ConfigurationSequences,
         PartyCorseg,
         Certificado,
@@ -25,25 +26,25 @@ def register():
         ExtendidoExclusion,
         CiaProducto,
         CiaSeguros,
+        TipoComision,
         ComisionCia,
         CiaTipoComision,
         ComisionVendedor,
         VendedorTipoComision,
-        FormaPago,
-        FrecuenciaPago,
         GrupoPoliza,
         Movimiento,
-        Comentario,
-        Origen,
+        ComentarioPoliza,
+        OrigenPoliza,
         Poliza,
         Ramo,
-        TipoComision,
         VehiculoMarca,
         VehiculoModelo,
         VehiculoTipo,
         Vehiculo,
         VehiculoModificacion,
         Vendedor,
+        FormaPago,
+        FrecuenciaPago,
         Pago,
         LiquidacionCia,
         LiquidacionVendedor,

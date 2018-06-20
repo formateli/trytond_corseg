@@ -5,18 +5,30 @@ from trytond.transaction import Transaction
 from trytond.pool import Pool
 from trytond.model import ModelView, ModelSQL, fields, Unique
 from trytond.pyson import Eval, If, Bool, Equal, Not, In
-from trytond.modules.company.model import (
-        CompanyMultiValueMixin, CompanyValueMixin)
 from decimal import Decimal
 
 __all__ = [
-        'CiaProducto', 'CiaSeguros', 'Origen',
-        'ComisionCia', 'CiaTipoComision',
-        'ComisionVendedor', 'VendedorTipoComision',
-        'FormaPago', 'FrecuenciaPago', 'GrupoPoliza',
-        'Poliza', 'Ramo', 'TipoComision', 'Comentario',
+        'Ramo',
+        'CiaSeguros',
+        'CiaProducto',
+        'OrigenPoliza',
+        'GrupoPoliza',
+        'ComentarioPoliza',
+        'Poliza',
         'Vendedor',
     ]
+
+
+class Ramo(ModelSQL, ModelView):
+    'Ramo'
+    __name__ = 'corseg.ramo'
+    name = fields.Char('Nombre', required=True)
+    active = fields.Boolean('Activo')
+
+
+    @staticmethod
+    def default_active():
+        return True
 
 
 class CiaSeguros(ModelSQL, ModelView):
@@ -40,34 +52,6 @@ class CiaSeguros(ModelSQL, ModelView):
         return [('party.rec_name',) + tuple(clause[1:])]
 
 
-class Ramo(ModelSQL, ModelView):
-    'Ramo'
-    __name__ = 'corseg.ramo'
-    name = fields.Char('Nombre', required=True)
-    active = fields.Boolean('Activo')
-
-    @staticmethod
-    def default_active():
-        return True
-
-
-class TipoComision(ModelSQL, ModelView):
-    'Tipo Comision'
-    __name__ = 'corseg.tipo_comision'
-    name = fields.Char('Nombre', required=True)
-    tipo = fields.Selection([
-            ('fijo', 'Monto Fijo'),
-            ('porcentaje', 'Porcentaje'),
-        ], 'Tipo', required=True)
-    monto = fields.Numeric('Monto', digits=(16, 2))
-    description = fields.Char('Descripcion', size=None)
-    active = fields.Boolean('Activo')
-
-    @staticmethod
-    def default_active():
-        return True
-
-
 class CiaProducto(ModelSQL, ModelView):
     'Producto Compania de Seguros'
     __name__ = 'corseg.cia.producto'
@@ -87,83 +71,6 @@ class CiaProducto(ModelSQL, ModelView):
     @staticmethod
     def default_active():
         return True
-
-
-class ComisionCia(ModelSQL, ModelView, CompanyMultiValueMixin):
-    'Tabla Comision Cia'
-    __name__ = 'corseg.comision.cia'
-    producto = fields.Many2One('corseg.cia.producto',
-        'Producto', required=True)
-    renovacion = fields.Integer('Renovacion', required=True)
-    tipo_comision = fields.MultiValue(fields.Many2One('corseg.tipo_comision',
-            'Tipo Comision', required=True))
-    tipo_cia_comision = fields.One2Many(
-        'corseg.cia.tipo_comision', 'comision_cia', 'Tipo Comision')
-    re_renovacion = fields.Boolean('Recurrente en renovacion',
-        help="Hacer esta comision recurrente en las proximas renovaciones.")
-    re_cuota = fields.Boolean('Recurrente en cuotas',
-        help="Hacer esta comision recurrente en todas las cuotas.")
-
-    # TODO order by renovacion
-
-    @classmethod
-    def multivalue_model(cls, field):
-        pool = Pool()
-        if field in {'tipo_comision'}:
-            return pool.get('corseg.cia.tipo_comision')
-        return super(ComisionCia, cls).multivalue_model(field)
-
-
-class CiaTipoComision(ModelSQL, CompanyValueMixin):
-    "Cia Tipo Comision"
-    __name__ = 'corseg.cia.tipo_comision'
-    comision_cia = fields.Many2One(
-        'corseg.comision.cia', 'Comision Cia',
-        ondelete='CASCADE', select=True)
-    tipo_comision = fields.Many2One('corseg.tipo_comision',
-        'Tipo Comision', required=True)
-
-
-class ComisionVendedor(ModelSQL, ModelView, CompanyMultiValueMixin):
-    'Tabla Comision Vendedor'
-    __name__ = 'corseg.comision.vendedor'
-    producto = fields.Many2One('corseg.cia.producto',
-        'Producto', required=True)
-    cia_name = fields.Function(fields.Char('Cia'), 'get_cia_name')
-    vendedor = fields.Many2One('corseg.vendedor', 'Vendedor',
-        required=True, ondelete='CASCADE')
-    renovacion = fields.Integer('Renovacion', required=True)
-    tipo_comision = fields.MultiValue(fields.Many2One('corseg.tipo_comision',
-            'Tipo Comision', required=True))
-    tipo_vendedor_comision = fields.One2Many(
-        'corseg.vendedor.tipo_comision', 'comision_vendedor', 'Tipo Comision')
-    re_renovacion = fields.Boolean('Recurrente en renovacion',
-        help="Hacer esta comision recurrente en las proximas renovaciones.")
-    re_cuota = fields.Boolean('Recurrente en cuotas',
-        help="Hacer esta comision recurrente en todas las cuotas.")
-
-    # TODO order by vendedor, renovacion
-
-    @classmethod
-    def multivalue_model(cls, field):
-        pool = Pool()
-        if field in {'tipo_comision'}:
-            return pool.get('corseg.vendedor.tipo_comision')
-        return super(ComisionVendedor, cls).multivalue_model(field)
-
-    def get_cia_name(self, name):
-        if self.producto:
-            return self.producto.cia.rec_name
-
-
-class VendedorTipoComision(ModelSQL, CompanyValueMixin):
-    "Vendedor Tipo Comision"
-    __name__ = 'corseg.vendedor.tipo_comision'
-    comision_vendedor = fields.Many2One(
-        'corseg.comision.vendedor', 'Comision Vendedor',
-        ondelete='CASCADE', select=True)
-    tipo_comision = fields.Many2One('corseg.tipo_comision',
-        'Tipo Comision', required=True)
 
 
 class GrupoPoliza(ModelSQL, ModelView):
@@ -200,7 +107,7 @@ class GrupoPoliza(ModelSQL, ModelView):
         return self.name
 
 
-class Origen(ModelSQL, ModelView):
+class OrigenPoliza(ModelSQL, ModelView):
     'Origen Poliza'
     __name__ = 'corseg.poliza.origen'
     name = fields.Char('Nombre', required=True)
@@ -210,6 +117,23 @@ class Origen(ModelSQL, ModelView):
     @staticmethod
     def default_active():
         return True
+
+
+class ComentarioPoliza(ModelSQL, ModelView):
+    'Comentarios sobre la Poliza'
+    __name__ = 'corseg.poliza.comentario'
+    poliza = fields.Many2One(
+        'corseg.poliza', 'Poliza', required=True)
+    fecha = fields.Date('Fecha', required=True)
+    comentario = fields.Text('Comentario', size=None)
+    user_name = fields.Function(fields.Char('Usuario'),
+        'get_user_name')  #TODO cambiar por res.user
+
+    def get_user_name(self, name):
+        if self.create_uid:
+            return self.create_uid.rec_name
+
+    # TODO order_by fecha
 
 
 class Poliza(ModelSQL, ModelView):
@@ -432,43 +356,3 @@ class Vendedor(ModelSQL, ModelView):
         domain.append(('party.rec_name', clause[1], clause[2]))
         domain.append(('alias', clause[1], clause[2]))
         return domain
-
-
-class Comentario(ModelSQL, ModelView):
-    'Comentarios sobre la Poliza'
-    __name__ = 'corseg.poliza.comentario'
-    poliza = fields.Many2One(
-        'corseg.poliza', 'Poliza', required=True)
-    fecha = fields.Date('Fecha', required=True)
-    comentario = fields.Text('Comentario', size=None)
-    user_name = fields.Function(fields.Char('Usuario'),
-        'get_user_name')
-
-    def get_user_name(self, name):
-        if self.create_uid:
-            return self.create_uid.rec_name
-
-    # TODO order_by fecha
-
-
-class FormaPago(ModelSQL, ModelView):
-    'Tipo Pago'
-    __name__ = 'corseg.forma_pago'
-    name = fields.Char('Nombre', required=True)
-    active = fields.Boolean('Activo')
-
-    @staticmethod
-    def default_active():
-        return True
-
-
-class FrecuenciaPago(ModelSQL, ModelView):
-    'Frecuencia Pago'
-    __name__ = 'corseg.frecuencia_pago'
-    name = fields.Char('Nombre', required=True)
-    meses = fields.Integer('Meses', required=True)
-    active = fields.Boolean('Activo')
-
-    @staticmethod
-    def default_active():
-        return True
