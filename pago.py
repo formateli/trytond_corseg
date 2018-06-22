@@ -245,6 +245,7 @@ class Pago(Workflow, ModelSQL, ModelView):
     def procesar(cls, pagos):
         for pago in pagos:
             set_auditoria(pago, 'processed')
+            pago.currency = pago.company.currency #TODO borrar despues de migrar
             pago.save()
 
     @classmethod
