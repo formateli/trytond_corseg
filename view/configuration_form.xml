@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<!-- This file is part of trytond-corseg module. The COPYRIGHT file at the top level of
+this repository contains the full copyright notices and license terms. -->
+<form>
+    <label name="pago_seq"/>
+    <field name="pago_seq"/>
+    <label name="movimiento_seq"/>
+    <field name="movimiento_seq"/>
+    <label name="liq_cia_seq"/>
+    <field name="liq_cia_seq"/>
+    <label name="liq_vendedor_seq"/>
+    <field name="liq_vendedor_seq"/>
+</form>

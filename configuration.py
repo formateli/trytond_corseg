@@ -19,6 +19,14 @@ class Configuration(
                 [Eval('context', {}).get('company', -1), None]),
             ('code', '=', 'corseg.pago'),
         ]))
+    movimiento_seq = fields.MultiValue(fields.Many2One(
+        'ir.sequence', "Movimiento Sequence", required=True,
+        domain=[
+            ('company', 'in',
+                [Eval('context', {}).get('company', -1), None]),
+
+            ('code', '=', 'corseg.movimiento'),
+        ]))
     liq_cia_seq = fields.MultiValue(fields.Many2One(
         'ir.sequence', "Liquidacion Cia", required=True,
         domain=[

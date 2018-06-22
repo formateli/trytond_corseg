@@ -129,6 +129,7 @@ class Movimiento(Workflow, ModelSQL, ModelView):
 #            ('id', If(Eval('context', {}).contains('company'), '=', '!='),
 #                Eval('context', {}).get('company', -1)),
             ], select=True)
+    number = fields.Char('Numero', size=None, readonly=True, select=True)
     currency_digits = fields.Function(fields.Integer('Currency Digits'),
         'get_currency_digits')
     poliza = fields.Many2One('corseg.poliza', 'Poliza', required=True,
@@ -270,7 +271,10 @@ class Movimiento(Workflow, ModelSQL, ModelView):
     @classmethod
     def __setup__(cls):
         super(Movimiento, cls).__setup__()
-        cls._order[0] = ('fecha', 'DESC')
+        cls._order = [
+                ('number', 'DESC'),
+                ('fecha', 'DESC'),
+            ]
         cls._error_messages.update({
                 'delete_cancel': ('El movimiento "%s" debe estar '
                     'cancelado antes de eliminarse.'),
@@ -315,8 +319,6 @@ class Movimiento(Workflow, ModelSQL, ModelView):
                     'tryton-clear', 'tryton-go-previous'),
                 },
             })
-
-    #TODO order by fecha, id
 
     @staticmethod
     def default_company():
@@ -370,6 +372,18 @@ class Movimiento(Workflow, ModelSQL, ModelView):
             'ano', 's_motor', 's_carroceria',
             'color', 'transmision', 'uso', 'tipo']
         return fields
+
+    @classmethod
+    def set_number(cls, movs):
+        pool = Pool()
+        Sequence = pool.get('ir.sequence')
+        Config = pool.get('corseg.configuration')
+        config = Config(1)
+        for mov in movs:
+            if mov.number:
+                continue
+            mov.number = Sequence.get_id(config.movimiento_seq.id)
+        cls.save(movs)
 
     @classmethod
     def create(cls, vlist):
@@ -511,6 +525,8 @@ class Movimiento(Workflow, ModelSQL, ModelView):
 
             set_auditoria(mov, 'confirmed')
             mov.save()
+
+        cls.set_number(movs)
 
     @classmethod
     @ModelView.button

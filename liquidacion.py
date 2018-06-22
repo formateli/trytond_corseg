@@ -4,6 +4,7 @@
 from trytond.transaction import Transaction
 from trytond.model import Workflow, ModelView, ModelSQL, fields
 from trytond.pyson import Eval, Bool, If, Not, In
+from decimal import Decimal
 from .tools import auditoria_field, get_current_date, set_auditoria
 
 __all__ = [
@@ -23,10 +24,9 @@ _STATE = [
     ]
 
 
-class LiquidacionCia(Workflow, ModelSQL, ModelView):
-    'Liquidacion Comisiones Cia de Seguros'
-    __name__ = 'corseg.liquidacion.cia'
-    company = fields.Many2One('company.company', 'Company', required=False, # TODO required=True
+class LiquidacionBase(Workflow, ModelSQL, ModelView):
+    company = fields.Many2One('company.company', 'Company',
+        required=False, # TODO required=True
         states={
             'readonly': True,
             },
@@ -34,12 +34,9 @@ class LiquidacionCia(Workflow, ModelSQL, ModelView):
 #            ('id', If(Eval('context', {}).contains('company'), '=', '!='),
 #                Eval('context', {}).get('company', -1)),
             ], select=True)
-    number = fields.Char('Numeror', size=None, readonly=True, select=True)
-    cia = fields.Many2One(
-        'corseg.cia', 'Compania de Seguros', required=True,
-        states={
-            'readonly': Not(In(Eval('state'), ['borrador',])),
-        }, depends=['state'])
+    number = fields.Char('Numero', size=None, readonly=True, select=True)
+    currency_digits = fields.Function(fields.Integer('Currency Digits'),
+        'get_currency_digits')
     fecha = fields.Date('Fecha', required=True,
         states={
             'readonly': Not(In(Eval('state'), ['borrador',])),
@@ -51,6 +48,141 @@ class LiquidacionCia(Workflow, ModelSQL, ModelView):
     comentario = fields.Text('Comentarios', size=None,
         states={
             'readonly': In(Eval('state'), ['confirmado',]),
+        }, depends=['state'])
+    state = fields.Selection(_STATE, 'Estado',
+        required=True, readonly=True)
+
+
+    total = fields.Function(fields.Numeric('Total',
+        digits=(16, Eval('currency_digits', 2)),
+        depends=['currency_digits']), 'get_total')
+    total_cache = fields.Numeric('Total Cache',
+        digits=(16, Eval('currency_digits', 2)),
+        depends=['currency_digits'])
+
+    made_by = auditoria_field('user', 'Creado por')
+    made_date = auditoria_field('date', 'fecha')
+    processed_by = auditoria_field('user', 'Procesado por')
+    processed_date = auditoria_field('date', 'fecha')
+    confirmed_by = auditoria_field('user', 'Confirmado por')
+    confirmed_date = auditoria_field('date', 'fecha')
+    canceled_by = auditoria_field('user', 'Cancelado por')
+    canceled_date = auditoria_field('date', 'fecha')
+
+    @classmethod
+    def __setup__(cls):
+        super(LiquidacionBase, cls).__setup__()
+        cls._order = [
+                ('number', 'DESC'),
+                ('fecha', 'DESC'),
+            ]
+        cls._error_messages.update({
+                'delete_cancel': ('La Liquidacion "%s" debe estar '
+                    'cancelada antes de eliminarse.'),
+                })
+        cls._transitions |= set(
+            (
+                ('borrador', 'procesado'),
+                ('procesado', 'confirmado'),
+                ('procesado', 'cancelado'),
+                ('cancelado', 'borrador'),
+            )
+        )
+        cls._buttons.update({
+            'cancelar': {
+                'invisible': Not(In(Eval('state'), ['procesado'])),
+                },
+            'procesar': {
+                'invisible': ~Eval('state').in_(['borrador']),
+                },
+            'confirmar': {
+                'invisible': ~Eval('state').in_(['procesado']),
+                },
+            'borrador': {
+                'invisible': ~Eval('state').in_(['cancelado']),
+                'icon': If(Eval('state') == 'cancelado',
+                    'tryton-clear', 'tryton-go-previous'),
+                },
+            })
+
+    @staticmethod
+    def default_company():
+        return Transaction().context.get('company')
+
+    @staticmethod
+    def default_state():
+        return 'borrador'
+
+    @staticmethod
+    def default_currency_digits():
+        Company = Pool().get('company.company')
+        company = Transaction().context.get('company')
+        if company:
+            company = Company(company)
+            return company.currency.digits
+        return 2
+
+    @fields.depends('pagos')
+    def on_change_pagos(self, ente=None):
+        self.total = self.get_total(ente=ente)
+
+    def get_currency_digits(self, name=None):
+        if self.company:
+            self.company.currency.digits
+        return 2
+
+    def get_total(self, name=None, ente=None):
+        total = Decima(0.0)
+        if self.pagos:
+            for pago in self.pago:
+                total += getattr(pago, 'comision_' + ente)
+        return total
+
+    @classmethod
+    def set_number(cls, liqs, seq_name=None):
+        pool = Pool()
+        Sequence = pool.get('ir.sequence')
+        Config = pool.get('corseg.configuration')
+        config = Config(1)
+        for liq in liqs:
+            if liq.number:
+                continue
+            seq = getattr(config, seq_name)
+            liq.number = Sequence.get_id(seq.id)
+        cls.save(liqs)
+
+    @classmethod
+    def create(cls, vlist):
+        vlist = [x.copy() for x in vlist]
+        for values in vlist:
+            if values.get('made_by') is None:
+                values['made_by'] = Transaction().user
+                values['made_date'] = get_current_date()
+        liqs = super(LiquidacionBase, cls).create(vlist)
+        return liqs
+
+    @classmethod
+    def delete(cls, liqs):
+        for liq in liqs:
+            if liq.state not in ['borrador', 'cancelado']:
+                cls.raise_user_error('delete_cancel', (liq.rec_name,))
+        super(LiquidacionVendedor, cls).delete(liqs)
+
+    @classmethod
+    def store_cache(cls, liqs):
+        for liq in liqs:
+            cls.write([liq], {
+                    'total_cache': liq.total,
+                    })
+
+
+class LiquidacionCia(LiquidacionBase):
+    'Liquidacion Comisiones Cia de Seguros'
+    __name__ = 'corseg.liquidacion.cia'
+    cia = fields.Many2One(
+        'corseg.cia', 'Compania de Seguros', required=True,
+        states={
+            'readonly': Not(In(Eval('state'), ['borrador',])),
         }, depends=['state'])
     pagos = fields.Many2Many(
         'poliza.pagos-liquidacion.cia',
@@ -68,96 +200,21 @@ class LiquidacionCia(Workflow, ModelSQL, ModelView):
             'readonly': Not(In(Eval('state'), ['borrador',])),
             'invisible': Not(Bool(Eval('cia'))),
         }, depends=['company', 'cia', 'state'])
-    state = fields.Selection(_STATE, 'Estado',
-        required=True, readonly=True)
-    # TODO total
-    made_by = auditoria_field('user', 'Creado por')
-    made_date = auditoria_field('date', 'fecha')
-    processed_by = auditoria_field('user', 'Procesado por')
-    processed_date = auditoria_field('date', 'fecha')
-    confirmed_by = auditoria_field('user', 'Confirmado por')
-    confirmed_date = auditoria_field('date', 'fecha')
-    canceled_by = auditoria_field('user', 'Cancelado por')
-    canceled_date = auditoria_field('date', 'fecha')
 
-    @classmethod
-    def __setup__(cls):
-        super(LiquidacionCia, cls).__setup__()
-        cls._order[0] = ('fecha', 'DESC')
-        cls._error_messages.update({
-                'delete_cancel': ('La Liquidacion "%s" debe estar '
-                    'cancelada antes de eliminarse.'),
-                'poliza_inicia': ('El primer movimiento para la poliza "%s" debe '
-                    'ser un endoso de tipo Iniciacion.'),
-                'poliza_un_inicia': ('Solo debe existir un movimiento de Iniciacion '
-                    'de tipo endoso para la poliza "%s"'),
-                'certificado_incluido': ('El certificado "%s" debe tener estado de '
-                    '"Excluido" antes de la inclusion.'),
-                'certificado_excluido': ('El certificado "%s" debe tener estado de '
-                    '"Incluido" antes de la exclusion.'),
-                'certificado_poliza': ('El certificado "%s" debe pertenecer a la '
-                    'misma poliza del movimiento.'),
-                })
-        cls._transitions |= set(
-            (
-                ('borrador', 'procesado'),
-                ('procesado', 'confirmado'),
-                ('procesado', 'cancelado'),
-                ('cancelado', 'borrador'),
-            )
-        )
-        cls._buttons.update({
-            'cancelar': {
-                'invisible': Not(In(Eval('state'), ['procesado'])),
-                },
-            'procesar': {
-                'invisible': ~Eval('state').in_(['borrador']),
-                },
-            'confirmar': {
-                'invisible': ~Eval('state').in_(['procesado']),
-                },
-            'borrador': {
-                'invisible': ~Eval('state').in_(['cancelado']),
-                'icon': If(Eval('state') == 'cancelado',
-                    'tryton-clear', 'tryton-go-previous'),
-                },
-            })
 
-    @staticmethod
-    def default_company():
-        return Transaction().context.get('company')
+    @fields.depends('pagos')
+    def on_change_pagos(self):
+        super(LiquidacionCia, self).on_change_pagos(
+            ente='cia')
 
-    @staticmethod
-    def default_state():
-        return 'borrador'
+    def get_total(self, name=None):
+        super(LiquidacionCia, self).get_total(
+            liqs, ente='cia')
 
     @classmethod
     def set_number(cls, liqs):
-        pool = Pool()
-        Sequence = pool.get('ir.sequence')
-        for liq in liqs:
-            if liq.number:
-                continue
-            liq.number = \
-                Sequence.get_id(liq.sequence.id)
-        cls.save(liqs)
-
-    @classmethod
-    def create(cls, vlist):
-        vlist = [x.copy() for x in vlist]
-        for values in vlist:
-            if values.get('made_by') is None:
-                values['made_by'] = Transaction().user
-                values['made_date'] = get_current_date()
-        liqs = super(LiquidacionCia, cls).create(vlist)
-        return liqs
-
-    @classmethod
-    def delete(cls, liqs):
-        for liq in liqs:
-            if liq.state not in ['borrador', 'cancelado']:
-                cls.raise_user_error('delete_cancel', (liq.rec_name,))
-        super(LiquidacionCia, cls).delete(liqs)
+        super(LiquidacionCia, cls).set_number(
+            liqs, seq_name='liq_cia_seq')
 
     @classmethod
     @ModelView.button
@@ -172,6 +229,7 @@ class LiquidacionCia(Workflow, ModelSQL, ModelView):
         for liq in liqs:
             set_auditoria(liq, 'processed')
             liq.save()
+        cls.store_cache(liqs)
 
     @classmethod
     @ModelView.button
@@ -186,6 +244,7 @@ class LiquidacionCia(Workflow, ModelSQL, ModelView):
             set_auditoria(liq, 'confirmed')
             liq.save()
         cls.set_number(liqs)
+        cls.store_cache(liqs)
         # TODO crear el account_move
 
     @classmethod
@@ -195,36 +254,16 @@ class LiquidacionCia(Workflow, ModelSQL, ModelView):
         for liq in liqs:
             set_auditoria(liq, 'canceled')
             liq.save()
+        cls.store_cache(liqs)
 
 
-class LiquidacionVendedor(Workflow, ModelSQL, ModelView):
+class LiquidacionVendedor(LiquidacionBase):
     'Liquidacion Comisiones Vendedor'
     __name__ = 'corseg.liquidacion.vendedor'
-    company = fields.Many2One('company.company', 'Company', required=False, # TODO required=True
-        states={
-            'readonly': True,
-            },
-        domain=[ #TODO descomentar despues de realizar la migracion
-#            ('id', If(Eval('context', {}).contains('company'), '=', '!='),
-#                Eval('context', {}).get('company', -1)),
-            ], select=True)
-    number = fields.Char('Numeror', size=None, readonly=True, select=True)
     vendedor = fields.Many2One('corseg.vendedor',
         'Vendedor', required=True,
         states={
             'readonly': Not(In(Eval('state'), ['borrador',])),
-        }, depends=['state'])
-    fecha = fields.Date('Fecha', required=True,
-        states={
-            'readonly': Not(In(Eval('state'), ['borrador',])),
-        }, depends=['state'])
-    referencia = fields.Char('Referencia',
-        states={
-            'readonly': In(Eval('state'), ['confirmado',]),
-        }, depends=['state'])
-    comentario = fields.Text('Comentarios', size=None,
-        states={
-            'readonly': In(Eval('state'), ['confirmado',]),
         }, depends=['state'])
     pagos = fields.Many2Many(
         'poliza.pagos-liquidacion.vendedor',
@@ -242,96 +281,20 @@ class LiquidacionVendedor(Workflow, ModelSQL, ModelView):
             'readonly': Not(In(Eval('state'), ['borrador',])),
             'invisible': Not(Bool(Eval('vendedor'))),
         }, depends=['company', 'vendedor', 'state'])
-    state = fields.Selection(_STATE, 'Estado',
-        required=True, readonly=True)
-    # TODO total
-    made_by = auditoria_field('user', 'Creado por')
-    made_date = auditoria_field('date', 'fecha')
-    processed_by = auditoria_field('user', 'Procesado por')
-    processed_date = auditoria_field('date', 'fecha')
-    confirmed_by = auditoria_field('user', 'Confirmado por')
-    confirmed_date = auditoria_field('date', 'fecha')
-    canceled_by = auditoria_field('user', 'Cancelado por')
-    canceled_date = auditoria_field('date', 'fecha')
 
-    @classmethod
-    def __setup__(cls):
-        super(LiquidacionVendedor, cls).__setup__()
-        cls._order[0] = ('fecha', 'DESC')
-        cls._error_messages.update({
-                'delete_cancel': ('La Liquidacion "%s" debe estar '
-                    'cancelado antes de eliminarse.'),
-                'poliza_inicia': ('El primer movimiento para la poliza "%s" debe '
-                    'ser un endoso de tipo Iniciacion.'),
-                'poliza_un_inicia': ('Solo debe existir un movimiento de Iniciacion '
-                    'de tipo endoso para la poliza "%s"'),
-                'certificado_incluido': ('El certificado "%s" debe tener estado de '
-                    '"Excluido" antes de la inclusion.'),
-                'certificado_excluido': ('El certificado "%s" debe tener estado de '
-                    '"Incluido" antes de la exclusion.'),
-                'certificado_poliza': ('El certificado "%s" debe pertenecer a la '
-                    'misma poliza del movimiento.'),
-                })
-        cls._transitions |= set(
-            (
-                ('borrador', 'procesado'),
-                ('procesado', 'confirmado'),
-                ('procesado', 'cancelado'),
-                ('cancelado', 'borrador'),
-            )
-        )
-        cls._buttons.update({
-            'cancelar': {
-                'invisible': Not(In(Eval('state'), ['procesado'])),
-                },
-            'procesar': {
-                'invisible': ~Eval('state').in_(['borrador']),
-                },
-            'confirmar': {
-                'invisible': ~Eval('state').in_(['procesado']),
-                },
-            'borrador': {
-                'invisible': ~Eval('state').in_(['cancelado']),
-                'icon': If(Eval('state') == 'cancelado',
-                    'tryton-clear', 'tryton-go-previous'),
-                },
-            })
+    @fields.depends('pagos')
+    def on_change_pagos(self):
+        super(LiquidacionVendedor, self).on_change_pagos(
+            ente='vendedor')
 
-    @staticmethod
-    def default_company():
-        return Transaction().context.get('company')
-
-    @staticmethod
-    def default_state():
-        return 'borrador'
+    def get_total(self, name=None):
+        super(LiquidacionVendedor, self).get_total(
+            liqs, ente='vendedor')
 
     @classmethod
     def set_number(cls, liqs):
-        pool = Pool()
-        Sequence = pool.get('ir.sequence')
-        for liq in liqs:
-            if liq.number:
-                continue
-            liq.number = \
-                Sequence.get_id(liq.sequence.id)
-        cls.save(liqs)
-
-    @classmethod
-    def create(cls, vlist):
-        vlist = [x.copy() for x in vlist]
-        for values in vlist:
-            if values.get('made_by') is None:
-                values['made_by'] = Transaction().user
-                values['made_date'] = get_current_date()
-        liqs = super(LiquidacionVendedor, cls).create(vlist)
-        return liqs
-
-    @classmethod
-    def delete(cls, liqs):
-        for liq in liqs:
-            if liq.state not in ['borrador', 'cancelado']:
-                cls.raise_user_error('delete_cancel', (liq.rec_name,))
-        super(LiquidacionVendedor, cls).delete(liqs)
+        super(LiquidacionVendedor, cls).set_number(
+            liqs, seq_name='liq_vendedor_seq')
 
     @classmethod
     @ModelView.button
@@ -346,6 +309,7 @@ class LiquidacionVendedor(Workflow, ModelSQL, ModelView):
         for liq in liqs:
             set_auditoria(liq, 'processed')
             liq.save()
+        cls.store_cache(liqs)
 
     @classmethod
     @ModelView.button
@@ -360,6 +324,7 @@ class LiquidacionVendedor(Workflow, ModelSQL, ModelView):
             set_auditoria(liq, 'confirmed')
             liq.save()
         cls.set_number(pagos)
+        cls.store_cache(liqs)
         # TODO crear el account_move
 
     @classmethod
@@ -369,6 +334,7 @@ class LiquidacionVendedor(Workflow, ModelSQL, ModelView):
         for liq in liqs:
             set_auditoria(liq, 'canceled')
             liq.save()
+        cls.store_cache(liqs)
 
 
 class LiquidacionPagoCia(ModelSQL):

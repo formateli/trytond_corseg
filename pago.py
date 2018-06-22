@@ -51,7 +51,7 @@ class Pago(Workflow, ModelSQL, ModelView):
 #            ('id', If(Eval('context', {}).contains('company'), '=', '!='),
 #                Eval('context', {}).get('company', -1)),
             ], select=True)
-    number = fields.Char('Number', size=None, readonly=True, select=True)
+    number = fields.Char('Numero', size=None, readonly=True, select=True)
     currency = fields.Many2One('currency.currency',
         'Moneda', required=False, # TODO required=True
         readonly=True)
@@ -122,7 +122,10 @@ class Pago(Workflow, ModelSQL, ModelView):
     @classmethod
     def __setup__(cls):
         super(Pago, cls).__setup__()
-        cls._order[0] = ('fecha', 'DESC')
+        cls._order = [
+                ('number', 'DESC'),
+                ('fecha', 'DESC'),
+            ]
         cls._error_messages.update({
                 'delete_cancel': ('El Pago "%s" debe ser '
                     'cancelado antes de eliminarse.'),
@@ -170,6 +173,11 @@ class Pago(Workflow, ModelSQL, ModelView):
 
     @staticmethod
     def default_currency_digits():
+        Company = Pool().get('company.company')
+        company = Transaction().context.get('company')
+        if company:
+            company = Company(company)
+            return company.currency.digits
         return 2
 
     @fields.depends('poliza', 'cia', 'currency_digits')
@@ -200,11 +208,12 @@ class Pago(Workflow, ModelSQL, ModelView):
     def set_number(cls, pagos):
         pool = Pool()
         Sequence = pool.get('ir.sequence')
+        Config = pool.get('corseg.configuration')
+        config = Config(1)
         for pago in pagos:
             if pago.number:
                 continue
-            pago.number = \
-                Sequence.get_id(pago.sequence.id)
+            pago.number = Sequence.get_id(config.pago_seq.id)
         cls.save(pagos)
 
     @classmethod

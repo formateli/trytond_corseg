@@ -10,17 +10,16 @@ this repository contains the full copyright notices and license terms. -->
     <field name="referencia"/>
     <label name="company"/>
     <field name="company"/>
-
+    <label name="total"/>
+    <field name="total"/>
     <notebook colspan="4">
         <page string="Pagos" id="pagos">
             <field name="pagos" colspan="4"/>
         </page>
-
         <page string="Comentarios" id="comentario">
             <field name="comentario" colspan="4"/>
         </page>
     </notebook>
-
     <group col="6" colspan="4" id="buttons" yfill="1">
         <label name="state"/>
         <field name="state"/>

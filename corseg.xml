@@ -436,5 +436,66 @@ contains the full copyright notices and license terms. -->
             <field name="perm_create" eval="True"/>
             <field name="perm_delete" eval="True"/>
         </record>
+
+        <!-- Sequences -->
+        <record model="ir.sequence.type" id="sequence_type_corseg_movimiento">
+            <field name="name">Corseg Movimientos</field>
+            <field name="code">corseg.movimiento</field>
+        </record>
+        <record model="ir.sequence.type-res.group"
+                id="sequence_type_corseg_movimiento_group_admin">
+            <field name="sequence_type" ref="sequence_type_corseg_movimiento"/>
+            <field name="group" ref="res.group_admin"/>
+        </record>
+        <record model="ir.sequence.type-res.group"
+                id="sequence_type_corseg_movimiento_group_corseg_admin">
+            <field name="sequence_type" ref="sequence_type_corseg_movimiento"/>
+            <field name="group" ref="group_corseg_admin"/>
+        </record>
+
+        <record model="ir.sequence.type" id="sequence_type_corseg_pago">
+            <field name="name">Corseg Pagos</field>
+            <field name="code">corseg.pago</field>
+        </record>
+        <record model="ir.sequence.type-res.group"
+                id="sequence_type_corseg_pago_group_admin">
+            <field name="sequence_type" ref="sequence_type_corseg_pago"/>
+            <field name="group" ref="res.group_admin"/>
+        </record>
+        <record model="ir.sequence.type-res.group"
+                id="sequence_type_corseg_pago_group_corseg_admin">
+            <field name="sequence_type" ref="sequence_type_corseg_pago"/>
+            <field name="group" ref="group_corseg_admin"/>
+        </record>
+
+        <record model="ir.sequence.type" id="sequence_type_corseg_liq_cia">
+            <field name="name">Corseg Liquidacion Cia</field>
+            <field name="code">corseg.liquidacion.cia</field>
+        </record>
+        <record model="ir.sequence.type-res.group"
+                id="sequence_type_corseg_liq_cia_group_admin">
+            <field name="sequence_type" ref="sequence_type_corseg_liq_cia"/>
+            <field name="group" ref="res.group_admin"/>
+        </record>
+        <record model="ir.sequence.type-res.group"
+                id="sequence_type_corseg_liq_cia_group_corseg_admin">
+            <field name="sequence_type" ref="sequence_type_corseg_liq_cia"/>
+            <field name="group" ref="group_corseg_admin"/>
+        </record>
+
+        <record model="ir.sequence.type" id="sequence_type_corseg_liq_vendedor">
+            <field name="name">Corseg Liquidacion Vendedor</field>
+            <field name="code">corseg.liquidacion.vendedor</field>
+        </record>
+        <record model="ir.sequence.type-res.group"
+                id="sequence_type_corseg_liq_vendedor_group_admin">
+            <field name="sequence_type" ref="sequence_type_corseg_liq_vendedor"/>
+            <field name="group" ref="res.group_admin"/>
+        </record>
+        <record model="ir.sequence.type-res.group"
+                id="sequence_type_corseg_liq_vendedor_group_corseg_admin">
+            <field name="sequence_type" ref="sequence_type_corseg_liq_vendedor"/>
+            <field name="group" ref="group_corseg_admin"/>
+        </record>
     </data>
 </tryton>

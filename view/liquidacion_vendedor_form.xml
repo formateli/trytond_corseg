@@ -10,6 +10,8 @@ this repository contains the full copyright notices and license terms. -->
     <field name="referencia"/>
     <label name="company"/>
     <field name="company"/>
+    <label name="total"/>
+    <field name="total"/>
     <notebook colspan="4">
         <page string="Pagos" id="pagos">
             <field name="pagos" colspan="4"/>

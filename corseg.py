@@ -5,6 +5,7 @@ from trytond.transaction import Transaction
 from trytond.pool import Pool
 from trytond.model import ModelView, ModelSQL, fields, Unique
 from trytond.pyson import Eval, If, Bool, Equal, Not, In
+from trytond.modules.company.model import CompanyMultiValueMixin
 from decimal import Decimal
 
 __all__ = [
@@ -25,7 +26,6 @@ class Ramo(ModelSQL, ModelView):
     name = fields.Char('Nombre', required=True)
     active = fields.Boolean('Activo')
 
-
     @staticmethod
     def default_active():
         return True
@@ -35,7 +35,10 @@ class CiaSeguros(ModelSQL, ModelView):
     'Compania de Seguros'
     __name__ = 'corseg.cia'
     party = fields.Many2One('party.party', 'Entidad', required=True,
-            ondelete='CASCADE')
+        ondelete='CASCADE',
+        states={
+            'readonly': Bool(Eval('productos')),
+        }, depends=['productos'])
     productos = fields.One2Many('corseg.cia.producto',
         'cia', 'Productos')
     active = fields.Boolean('Activo')
@@ -52,18 +55,28 @@ class CiaSeguros(ModelSQL, ModelView):
         return [('party.rec_name',) + tuple(clause[1:])]
 
 
-class CiaProducto(ModelSQL, ModelView):
+class CiaProducto(ModelSQL, ModelView, CompanyMultiValueMixin):
     'Producto Compania de Seguros'
     __name__ = 'corseg.cia.producto'
     name = fields.Char('Nombre', required=True)
     cia = fields.Many2One(
-            'corseg.cia', 'Compania de Seguros', required=True)
+        'corseg.cia', 'Compania de Seguros', required=True)
     ramo = fields.Many2One(
-            'corseg.ramo', 'Ramo', required=True)
-    comision_cia = fields.One2Many('corseg.comision.cia',
-        'producto', 'Tabla Comision')
-    comision_vendedor = fields.One2Many('corseg.comision.vendedor',
-        'producto', 'Tabla Comision Vendedor')
+        'corseg.ramo', 'Ramo', required=True)
+
+    comision_cia = fields.MultiValue(fields.Many2One(
+        'corseg.comision',
+        'Comision Cia'))
+    comision_vendedor = fields.MultiValue(fields.Many2One(
+        'corseg.comision.vendedor',
+        'Comision Vendedor'))
+    comision_vendedor_defecto = fields.MultiValue(fields.Many2One(
+        'corseg.comision',
+        'Comision Vendedor por Defecto'))
+
+    comisiones = fields.One2Many(
+        'corseg.comisiones.cia.producto', 'cia_producto', 'Comisiones')
+
     es_colectiva = fields.Boolean('Colectiva')
     description = fields.Text('Descripcion', size=None)
     active = fields.Boolean('Activo')
@@ -72,6 +85,14 @@ class CiaProducto(ModelSQL, ModelView):
     def default_active():
         return True
 
+    @classmethod
+    def multivalue_model(cls, field):
+        pool = Pool()
+        if field in {'comision_cia', 'comision_vendedor',
+                'comision_vendedor_defecto'}:
+            return pool.get('corseg.comisiones.cia.producto')
+        return super(CiaProducto, cls).multivalue_model(field)
+
 
 class GrupoPoliza(ModelSQL, ModelView):
     'Grupo de Polizas'
@@ -79,11 +100,11 @@ class GrupoPoliza(ModelSQL, ModelView):
     company = fields.Many2One('company.company', 'Company', required=True,
         states={
             'readonly': True,
-            },
+        },
         domain=[
             ('id', If(Eval('context', {}).contains('company'), '=', '!='),
                 Eval('context', {}).get('company', -1)),
-            ], select=True)
+        ], select=True)
     name = fields.Char('Nombre', required=True)
     parent = fields.Many2One('corseg.poliza.grupo', 'Parent', select=True)
     childs = fields.One2Many('corseg.poliza.grupo',
@@ -126,14 +147,31 @@ class ComentarioPoliza(ModelSQL, ModelView):
         'corseg.poliza', 'Poliza', required=True)
     fecha = fields.Date('Fecha', required=True)
     comentario = fields.Text('Comentario', size=None)
-    user_name = fields.Function(fields.Char('Usuario'),
-        'get_user_name')  #TODO cambiar por res.user
+    made_by = fields.Many2One('res.user', 'Creado por',
+        readonly=True)
 
-    def get_user_name(self, name):
-        if self.create_uid:
-            return self.create_uid.rec_name
+    @classmethod
+    def __setup__(cls):
+        super(ComentarioPoliza, cls).__setup__()
+        cls._order = [
+                ('fecha', 'DESC'),
+                ('id', 'DESC'),
+            ]
 
-    # TODO order_by fecha
+    @staticmethod
+    def default_fecha():
+        pool = Pool()
+        Date = pool.get('ir.date')
+        return Date.today()
+
+    @classmethod
+    def create(cls, vlist):
+        vlist = [x.copy() for x in vlist]
+        for values in vlist:
+            if values.get('made_by') is None:
+                values['made_by'] = Transaction().user
+        comentarios = super(ComentarioPoliza, cls).create(vlist)
+        return comentarios
 
 
 class Poliza(ModelSQL, ModelView):
@@ -214,8 +252,13 @@ class Poliza(ModelSQL, ModelView):
             depends=['currency_digits']),
         'get_saldo')
 
-#   TODO comision_cia
-#   TODO comision_vendedor
+
+#    comision_cia = fields.One2Many('corseg.comision.cia.poliza',
+#        'poliza', 'Tabla Comision Cia')
+#    comision_vendedor = fields.One2Many('corseg.comision.vendedor.poliza',
+#        'poliza', 'Tabla Comision Vendedor')
+
+
 
     certificados_in = fields.One2Many('corseg.poliza.certificado',
         'poliza', 'Incluidos', readonly=True,
@@ -252,6 +295,14 @@ class Poliza(ModelSQL, ModelView):
                 Unique(t, t.cia_producto, t.numero),
                 'El numero de poliza ya existe para este producto'),
         ]
+
+        cls._error_messages.update({
+            'comision_renovacion_cero': ('El primer registro de la tabla de '
+                'comisiones dede ser para la renovacion zero. Poliza: "%s".'),
+            'comision_renovacion_menor': ('El valor de la renovacion del '
+                'registro de la tabla de comisiones debe ser mayor que '
+                'el anterior. Poliza: "%s".'),
+        })
 
     @staticmethod
     def default_company():
@@ -299,12 +350,91 @@ class Poliza(ModelSQL, ModelView):
     def on_change_cia(self):
         self.cia_producto = None
 
-    @fields.depends('cia', 'cia_producto', 'ramo')
+    @fields.depends('cia', 'cia_producto', 'ramo', 'vendedor',
+        'comision_cia', 'comision_vendedor')
     def on_change_cia_producto(self):
         self.ramo = None
+        self.vendedor = None
+        self.comision_cia = self._get_comision(
+            self.comision_cia, 'cia', True)
+        self.comision_vendedor = self._get_comision(
+            self.comision_vendedor, 'vendedor', True)
         if self.cia_producto:
             self.cia = self.cia_producto.cia
             self.ramo = self.cia_producto.ramo.rec_name
+            self.comision_cia = self._get_comision(
+                self.comision_cia, 'cia')
+            self.comision_vendedor = self._get_comision(
+                self.comision_vendedor, 'vendedor')
+
+    @classmethod
+    def _validate_comision(cls, poliza, comision):
+        last = None
+        for com in comision:
+            if last is None and com.renovacion != 0:
+                cls.raise_user_error(
+                    'comision_renovacion_cero',
+                    (poliza.rec_name,))
+            elif last >= com.renovacion:
+                cls.raise_user_error(
+                    'comision_renovacion_menor',
+                    (poliza.rec_name,))
+            last = com.renovacion
+
+    def _get_comision_cia(self, just_erase=False):
+        pool = Pool()
+        ComisionCia = pool.get('corseg.comision.cia')
+        ComisionCiaPoliza = pool.get('corseg.comision.cia.poliza')
+
+        try:
+            ComisionCiaPoliza.delete(self.comision_cia)
+        except:
+            pass
+        if just_erase:
+            return []
+
+        cms = ComisionCia.search([
+            ('producto', '=', self.cia_producto.id)])
+        res = []
+        if cms:
+            for cm in cms:
+                new = ComisionCiaPoliza()
+                new.renovacion = cm.renovacion
+                new.tipo_comision = cm.tipo_comision
+                new.re_renovacion = cm.re_renovacion
+                new.re_cuota = cm.re_cuota
+                res.append(new)
+        return res
+
+    def _get_comision(self, comision, ente, just_erase=False):
+        pool = Pool()
+        Comision = pool.get('corseg.comision.{0}'.format(ente))
+        ComisionPoliza = pool.get('corseg.comision.{0}.poliza'.format(ente))
+
+        try:
+            ComisionPoliza.delete(comision)
+        except:
+            pass
+        if just_erase:
+            return []
+
+        domain = [('producto', '=', self.cia_producto.id)]
+        if ente == 'vendedor':
+            if not self.vendedor:
+                return []
+            domain.append(('vendedor', '=', self.vendedor.id))
+
+        cms = Comision.search(domain)
+        res = []
+        if cms:
+            for cm in cms:
+                new = ComisionPoliza()
+                new.renovacion = cm.renovacion
+                new.tipo_comision = cm.tipo_comision
+                new.re_renovacion = cm.re_renovacion
+                new.re_cuota = cm.re_cuota
+                res.append(new)
+        return res
 
     @fields.depends('currency')
     def on_change_with_currency_digits(self, name=None):

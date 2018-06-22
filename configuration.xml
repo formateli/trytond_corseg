@@ -16,6 +16,7 @@
             <field name="view" ref="corseg_configuration_view_form"/>
             <field name="act_window" ref="act_corseg_configuration_form"/>
         </record>
+
         <menuitem parent="menu_corseg_configuration"
             action="act_corseg_configuration_form"
             id="menu_configuration" sequence="5" icon="tryton-list"/>
@@ -27,7 +28,6 @@
             <field name="perm_create" eval="False"/>
             <field name="perm_delete" eval="False"/>
         </record>
-
         <record model="ir.model.access" id="access_configuration_admin">
             <field name="model" search="[('model', '=', 'corseg.configuration')]"/>
             <field name="group" ref="group_corseg_admin"/>

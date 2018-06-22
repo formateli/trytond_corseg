@@ -5,6 +5,7 @@ this repository contains the full copyright notices and license terms. -->
     <field name="fecha"/>
     <field name="cia"/>
     <field name="referencia"/>
+    <field name="total_cache"/>
     <field name="state"/>
     <field name="company"/>
 </tree>

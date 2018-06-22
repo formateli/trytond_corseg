@@ -4,6 +4,9 @@ The COPYRIGHT file at the top level of this repository
 contains the full copyright notices and license terms. -->
 <tryton>
     <data>
+        <menuitem parent="menu_corseg_configuration" sequence="25"
+            name="Comisiones" id="menu_comision"/>
+
         <!-- Tipo Comision -->
         <record model="ir.ui.view" id="tipo_comision_view_form">
             <field name="model">corseg.tipo_comision</field>
@@ -30,7 +33,7 @@ contains the full copyright notices and license terms. -->
             <field name="act_window" ref="act_tipo_comision_form"/>
         </record>
 
-        <menuitem parent="menu_corseg_configuration" sequence="25"
+        <menuitem parent="menu_comision" sequence="10"
             action="act_tipo_comision_form" id="menu_tipo_comision_tree"/>
 
         <record model="ir.model.access" id="access_tipo_comision">
@@ -42,72 +45,6 @@ contains the full copyright notices and license terms. -->
         </record>
         <record model="ir.model.access" id="access_tipo_comision_admin">
             <field name="model" search="[('model', '=', 'corseg.tipo_comision')]"/>
-            <field name="group" ref="group_corseg_admin"/>
-            <field name="perm_read" eval="True"/>
-            <field name="perm_write" eval="True"/>
-            <field name="perm_create" eval="True"/>
-            <field name="perm_delete" eval="True"/>
-        </record>
-
-
-        <!-- Comision Cia -->
-        <record model="ir.ui.view" id="comision_cia_view_form">
-            <field name="model">corseg.comision.cia</field>
-            <field name="type">form</field>
-            <field name="name">comision_cia_form</field>
-        </record>
-        <record model="ir.ui.view" id="comision_cia_view_tree">
-            <field name="model">corseg.comision.cia</field>
-            <field name="type">tree</field>
-            <field name="name">comision_cia_tree</field>
-        </record>
-        <record model="ir.model.access" id="access_comision_cia">
-            <field name="model" search="[('model', '=', 'corseg.comision.cia')]"/>
-            <field name="perm_read" eval="True"/>
-            <field name="perm_write" eval="False"/>
-            <field name="perm_create" eval="False"/>
-            <field name="perm_delete" eval="False"/>
-        </record>
-        <record model="ir.model.access" id="access_comision_cia_admin">
-            <field name="model" search="[('model', '=', 'corseg.comision.cia')]"/>
-            <field name="group" ref="group_corseg_admin"/>
-            <field name="perm_read" eval="True"/>
-            <field name="perm_write" eval="True"/>
-            <field name="perm_create" eval="True"/>
-            <field name="perm_delete" eval="True"/>
-        </record>
-
-
-        <!-- Comision Vendedor -->
-        <record model="ir.ui.view" id="comision_vendedor_view_form">
-            <field name="model">corseg.comision.vendedor</field>
-            <field name="type">form</field>
-            <field name="name">comision_vendedor_form</field>
-        </record>
-        <record model="ir.ui.view" id="comision_vendedor2_view_form">
-            <field name="model">corseg.comision.vendedor</field>
-            <field name="type">form</field>
-            <field name="name">comision_vendedor2_form</field>
-        </record>
-        <record model="ir.ui.view" id="comision_vendedor_view_tree">
-            <field name="model">corseg.comision.vendedor</field>
-            <field name="type">tree</field>
-            <field name="name">comision_vendedor_tree</field>
-        </record>
-        <record model="ir.ui.view" id="comision_vendedor2_view_tree">
-            <field name="model">corseg.comision.vendedor</field>
-            <field name="type">tree</field>
-            <field name="name">comision_vendedor2_tree</field>
-        </record>
-        <record model="ir.model.access" id="access_comision_vendedor">
-            <field name="model" search="[('model', '=', 'corseg.comision.vendedor')]"/>
-            <field name="perm_read" eval="True"/>
-            <field name="perm_write" eval="False"/>
-            <field name="perm_create" eval="False"/>
-            <field name="perm_delete" eval="False"/>
-        </record>
-        <record model="ir.model.access" id="access_comision_vendedor_admin">
-            <field name="model" search="[('model', '=', 'corseg.comision.vendedor')]"/>
             <field name="group" ref="group_corseg_admin"/>
             <field name="perm_read" eval="True"/>
             <field name="perm_write" eval="True"/>

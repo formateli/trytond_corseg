@@ -3,13 +3,15 @@
 
 from trytond.pool import Pool
 from trytond.model import ModelView, ModelSQL, fields
-from trytond.modules.company.model import (
-        CompanyMultiValueMixin, CompanyValueMixin)
+from trytond.modules.company.model import CompanyValueMixin
 
 __all__ = [
         'TipoComision',
-        'ComisionCia', 'CiaTipoComision',
-        'ComisionVendedor', 'VendedorTipoComision',
+        'Comision',
+        'ComisionLinea',
+        'ComisionVendedor',
+        'ComisionVendedorLinea',
+        'CiaProductoComisiones',
     ]
 
 
@@ -30,78 +32,90 @@ class TipoComision(ModelSQL, ModelView):
         return True
 
 
-class ComisionCia(ModelSQL, ModelView, CompanyMultiValueMixin):
-    'Tabla Comision Cia'
-    __name__ = 'corseg.comision.cia'
-    producto = fields.Many2One('corseg.cia.producto',
-        'Producto', required=True)
+class ComisionBaseLinea(ModelSQL, ModelView):
     renovacion = fields.Integer('Renovacion', required=True)
-    tipo_comision = fields.MultiValue(fields.Many2One('corseg.tipo_comision',
-        'Tipo Comision', required=True))
-    tipo_cia_comision = fields.One2Many(
-        'corseg.cia.tipo_comision', 'comision_cia', 'Tipo Comision')
+    tipo_comision = fields.Many2One('corseg.tipo_comision',
+        'Tipo Comision', required=True)
     re_renovacion = fields.Boolean('Recurrente en renovacion',
         help="Hacer esta comision recurrente en las proximas renovaciones.")
     re_cuota = fields.Boolean('Recurrente en cuotas',
         help="Hacer esta comision recurrente en todas las cuotas.")
-
-    # TODO order by renovacion
+    active = fields.Boolean('Activo')
 
     @classmethod
-    def multivalue_model(cls, field):
-        pool = Pool()
-        if field in {'tipo_comision'}:
-            return pool.get('corseg.cia.tipo_comision')
-        return super(ComisionCia, cls).multivalue_model(field)
+    def __setup__(cls):
+        super(ComisionBaseLinea, cls).__setup__()
+        cls._order = [
+                ('renovacion', 'ASC'),
+                ('id', 'ASC'),
+            ]
+
+    @staticmethod
+    def default_active():
+        return True
 
 
-class CiaTipoComision(ModelSQL, CompanyValueMixin):
-    "Cia Tipo Comision"
-    __name__ = 'corseg.cia.tipo_comision'
-    comision_cia = fields.Many2One(
-        'corseg.comision.cia', 'Comision Cia',
-        ondelete='CASCADE', select=True)
-    tipo_comision = fields.Many2One('corseg.tipo_comision',
-        'Tipo Comision', required=True)
+class Comision(ModelSQL, ModelView):
+    'Comision'
+    __name__ = 'corseg.comision'
+    name = fields.Char('Nombre', required=True)
+    lineas = fields.One2Many('corseg.comision.linea',
+        'comision', 'Lineas')
+    active = fields.Boolean('Activo')
+
+    @staticmethod
+    def default_active():
+        return True
 
 
-class ComisionVendedor(ModelSQL, ModelView, CompanyMultiValueMixin):
-    'Tabla Comision Vendedor'
+class ComisionLinea(ComisionBaseLinea):
+    'Comision Linea'
+    __name__ = 'corseg.comision.linea'
+    comision = fields.Many2One('corseg.comision',
+        'Comision', required=True)
+
+
+class ComisionVendedor(ModelSQL, ModelView):
+    'Comision Vendedor'
     __name__ = 'corseg.comision.vendedor'
-    producto = fields.Many2One('corseg.cia.producto',
-        'Producto', required=True)
-    cia_name = fields.Function(fields.Char('Cia'), 'get_cia_name')
+    name = fields.Char('Nombre', required=True)
+    lineas = fields.One2Many('corseg.comision.vendedor.linea',
+        'parent', 'Lineas')
+    active = fields.Boolean('Activo')
+
+    @staticmethod
+    def default_active():
+        return True
+
+
+class ComisionVendedorLinea(ModelSQL, ModelView):
+    'Comision Vendedor Linea'
+    __name__ = 'corseg.comision.vendedor.linea'
+    parent = fields.Many2One('corseg.comision.vendedor',
+        'Parent', required=True)
     vendedor = fields.Many2One('corseg.vendedor', 'Vendedor',
-        required=True, ondelete='CASCADE')
-    renovacion = fields.Integer('Renovacion', required=True)
-    tipo_comision = fields.MultiValue(fields.Many2One('corseg.tipo_comision',
-            'Tipo Comision', required=True))
-    tipo_vendedor_comision = fields.One2Many(
-        'corseg.vendedor.tipo_comision', 'comision_vendedor', 'Tipo Comision')
-    re_renovacion = fields.Boolean('Recurrente en renovacion',
-        help="Hacer esta comision recurrente en las proximas renovaciones.")
-    re_cuota = fields.Boolean('Recurrente en cuotas',
-        help="Hacer esta comision recurrente en todas las cuotas.")
+        required=True)
+    comision = fields.Many2One('corseg.comision', 'Comision',
+        required=True)
+    active = fields.Boolean('Activo')
 
-    # TODO order by vendedor, renovacion
-
-    @classmethod
-    def multivalue_model(cls, field):
-        pool = Pool()
-        if field in {'tipo_comision'}:
-            return pool.get('corseg.vendedor.tipo_comision')
-        return super(ComisionVendedor, cls).multivalue_model(field)
-
-    def get_cia_name(self, name):
-        if self.producto:
-            return self.producto.cia.rec_name
+    @staticmethod
+    def default_active():
+        return True
 
 
-class VendedorTipoComision(ModelSQL, CompanyValueMixin):
-    "Vendedor Tipo Comision"
-    __name__ = 'corseg.vendedor.tipo_comision'
-    comision_vendedor = fields.Many2One(
-        'corseg.comision.vendedor', 'Comision Vendedor',
+class CiaProductoComisiones(ModelSQL, CompanyValueMixin):
+    "Cia Producto Comisiones"
+    __name__ = 'corseg.comisiones.cia.producto'
+    cia_producto = fields.Many2One(
+        'corseg.cia.producto', 'Cia Producto',
         ondelete='CASCADE', select=True)
-    tipo_comision = fields.Many2One('corseg.tipo_comision',
-        'Tipo Comision', required=True)
+    comision_cia = fields.Many2One(
+        'corseg.comision',
+        'Comision Cia')
+    comision_vendedor = fields.Many2One(
+        'corseg.comision.vendedor',
+        'Comision Vendedor')
+    comision_vendedor_defecto = fields.Many2One(
+        'corseg.comision',
+        'Comision Vendedor por Defecto')
