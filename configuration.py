@@ -48,7 +48,8 @@ class Configuration(
     @classmethod
     def multivalue_model(cls, field):
         pool = Pool()
-        if field in {'pago_seq', 'liq_cia_seq', 'liq_vendedor_seq'}:
+        if field in {'pago_seq', 'movimiento_seq',
+                'liq_cia_seq', 'liq_vendedor_seq'}:
             return pool.get('corseg.configuration.sequences')
         return super(Configuration, cls).multivalue_model(field)
 
@@ -56,24 +57,31 @@ class Configuration(
 class ConfigurationSequences(ModelSQL, CompanyValueMixin):
     'Configuration Sequences'
     __name__ = 'corseg.configuration.sequences'
-    pago_seq = fields.MultiValue(fields.Many2One(
+    pago_seq = fields.Many2One(
         'ir.sequence', "Pago Sequence", 
         domain=[
             ('company', 'in',
                 [Eval('context', {}).get('company', -1), None]),
             ('code', '=', 'corseg.pago'),
-        ]))
-    liq_cia_seq = fields.MultiValue(fields.Many2One(
+        ])
+    movimiento_seq = fields.Many2One(
+        'ir.sequence', "Movimiento Sequence", 
+        domain=[
+            ('company', 'in',
+                [Eval('context', {}).get('company', -1), None]),
+            ('code', '=', 'corseg.movimiento'),
+        ])
+    liq_cia_seq = fields.Many2One(
         'ir.sequence', "Liquidacion Cia",
         domain=[
             ('company', 'in',
                 [Eval('context', {}).get('company', -1), None]),
             ('code', '=', 'corseg.liquidacion.cia'),
-        ]))
-    liq_vendedor_seq = fields.MultiValue(fields.Many2One(
+        ])
+    liq_vendedor_seq = fields.Many2One(
         'ir.sequence', "Liquidacion Vendedor",
         domain=[
             ('company', 'in',
                 [Eval('context', {}).get('company', -1), None]),
             ('code', '=', 'corseg.liquidacion.vendedor'),
-        ]))
+        ])
