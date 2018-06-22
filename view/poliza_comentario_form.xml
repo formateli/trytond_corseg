@@ -6,8 +6,8 @@ this repository contains the full copyright notices and license terms. -->
     <field name="poliza" colspan="3"/>
     <label name="fecha"/>
     <field name="fecha"/>
-    <label name="user_name"/>
-    <field name="user_name"/>
+    <label name="made_by"/>
+    <field name="made_by"/>
     <newline />
     <field name="comentario" colspan="4"/>
 </form>

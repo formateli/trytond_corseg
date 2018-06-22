@@ -5,5 +5,5 @@ this repository contains the full copyright notices and license terms. -->
     <field name="poliza"/>
     <field name="fecha"/>
     <field name="comentario"/>
-    <field name="user_name"/>
+    <field name="made_by"/>
 </tree>

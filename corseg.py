@@ -450,7 +450,8 @@ class Poliza(ModelSQL, ModelView):
         res = Decimal(0)
         if self.pagos:
             for pago in self.pagos:
-                if pago.state == 'confirmado':
+                if pago.state not in \
+                        ['borrador', 'procesado']:
                     res += pago.monto
         return res
 
