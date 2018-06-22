@@ -2,9 +2,12 @@
 <!-- This file is part of trytond-corseg module. The COPYRIGHT file at the top level of
 this repository contains the full copyright notices and license terms. -->
 <tree>
+    <field name="number"/>
     <field name="poliza"/>
     <field name="fecha"/>
     <field name="referencia"/>
     <field name="monto"/>
+    <field name="comision_cia"/>
+    <field name="comision_vendedor"/>
     <field name="state"/>
 </tree>

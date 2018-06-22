@@ -4,12 +4,12 @@ this repository contains the full copyright notices and license terms. -->
 <form>
     <label name="cia"/>
     <field name="cia"/>
+    <label name="number"/>
+    <field name="number"/>
     <label name="fecha"/>
     <field name="fecha"/>
     <label name="referencia"/>
     <field name="referencia"/>
-    <label name="company"/>
-    <field name="company"/>
     <label name="total"/>
     <field name="total"/>
     <notebook colspan="4">
@@ -18,6 +18,27 @@ this repository contains the full copyright notices and license terms. -->
         </page>
         <page string="Comentarios" id="comentario">
             <field name="comentario" colspan="4"/>
+        </page>
+        <page string="Info" id="info">
+            <label name="company"/>
+            <field name="company" colspan="3"/>
+            <separator string="Auditoria" id="auditoria" colspan="4"/>
+            <label name="made_by"/>
+            <field name="made_by"/>
+            <label name="made_date"/>
+            <field name="made_date"/>
+            <label name="processed_by"/>
+            <field name="processed_by"/>
+            <label name="processed_date"/>
+            <field name="processed_date"/>
+            <label name="confirmed_by"/>
+            <field name="confirmed_by"/>
+            <label name="confirmed_date"/>
+            <field name="confirmed_date"/>
+            <label name="canceled_by"/>
+            <field name="canceled_by"/>
+            <label name="canceled_date"/>
+            <field name="canceled_date"/>
         </page>
     </notebook>
     <group col="6" colspan="4" id="buttons" yfill="1">

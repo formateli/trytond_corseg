@@ -43,7 +43,7 @@ this repository contains the full copyright notices and license terms. -->
             <label name="saldo"/>
             <field name="saldo"/>
             <newline/>
-            <separator name="notas" colspan="6"/>
+            <separator string="Notas" colspan="6" id="notas"/>
             <field name="notas" colspan="6"/>
         </page>
         <page string="Certificados" id="certificados">
@@ -55,6 +55,10 @@ this repository contains the full copyright notices and license terms. -->
         </page>
         <page string="Pagos" id="pagos">
             <field name="pagos" colspan="4"/>
+        </page>
+        <page string="Comisiones" id="comisiones">
+            <field name="comision_cia" colspan="2"/>
+            <field name="comision_vendedor" colspan="2"/>
         </page>
         <page string="Comentarios" id="comentarios">
             <field name="comentarios" colspan="4"/>

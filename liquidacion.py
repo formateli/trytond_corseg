@@ -52,15 +52,12 @@ class LiquidacionBase(Workflow, ModelSQL, ModelView):
         }, depends=['state'])
     state = fields.Selection(_STATE, 'Estado',
         required=True, readonly=True)
-
-
     total = fields.Function(fields.Numeric('Total',
         digits=(16, Eval('currency_digits', 2)),
         depends=['currency_digits']), 'get_total')
-    total_cache = fields.Numeric('Total Cache',
+    total_cache = fields.Numeric('Total',
         digits=(16, Eval('currency_digits', 2)),
         depends=['currency_digits'])
-
     made_by = auditoria_field('user', 'Creado por')
     made_date = auditoria_field('date', 'fecha')
     processed_by = auditoria_field('user', 'Procesado por')
@@ -123,21 +120,17 @@ class LiquidacionBase(Workflow, ModelSQL, ModelView):
             return company.currency.digits
         return 2
 
-    @fields.depends('pagos')
-    def on_change_pagos(self, ente=None):
-        self.total = self.get_total(ente=ente)
+    def _get_total(self, pagos, ente):
+        total = Decimal(0.0)
+        if pagos:
+            for pago in pagos:
+                total += getattr(pago, 'comision_' + ente)
+        return total
 
     def get_currency_digits(self, name=None):
         if self.company:
             self.company.currency.digits
         return 2
-
-    def get_total(self, name=None, ente=None):
-        total = Decima(0.0)
-        if self.pagos:
-            for pago in self.pago:
-                total += getattr(pago, 'comision_' + ente)
-        return total
 
     @classmethod
     def set_number(cls, liqs, seq_name=None):
@@ -167,7 +160,7 @@ class LiquidacionBase(Workflow, ModelSQL, ModelView):
         for liq in liqs:
             if liq.state not in ['borrador', 'cancelado']:
                 cls.raise_user_error('delete_cancel', (liq.rec_name,))
-        super(LiquidacionVendedor, cls).delete(liqs)
+        super(LiquidacionBase, cls).delete(liqs)
 
     @classmethod
     def store_cache(cls, liqs):
@@ -202,15 +195,13 @@ class LiquidacionCia(LiquidacionBase):
             'invisible': Not(Bool(Eval('cia'))),
         }, depends=['company', 'cia', 'state'])
 
-
     @fields.depends('pagos')
     def on_change_pagos(self):
-        super(LiquidacionCia, self).on_change_pagos(
-            ente='cia')
+        self.total = self.get_total()
 
     def get_total(self, name=None):
-        super(LiquidacionCia, self).get_total(
-            liqs, ente='cia')
+        return super(LiquidacionCia, self)._get_total(
+            self.pagos, 'cia')
 
     @classmethod
     def set_number(cls, liqs):
@@ -285,12 +276,11 @@ class LiquidacionVendedor(LiquidacionBase):
 
     @fields.depends('pagos')
     def on_change_pagos(self):
-        super(LiquidacionVendedor, self).on_change_pagos(
-            ente='vendedor')
+        self.total = self.get_total()
 
     def get_total(self, name=None):
-        super(LiquidacionVendedor, self).get_total(
-            liqs, ente='vendedor')
+        return super(LiquidacionVendedor, self)._get_total(
+            self.pagos, 'vendedor')
 
     @classmethod
     def set_number(cls, liqs):
@@ -324,7 +314,7 @@ class LiquidacionVendedor(LiquidacionBase):
                 pago.save()
             set_auditoria(liq, 'confirmed')
             liq.save()
-        cls.set_number(pagos)
+        cls.set_number(liqs)
         cls.store_cache(liqs)
         # TODO crear el account_move
 
