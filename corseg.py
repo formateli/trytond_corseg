@@ -63,7 +63,6 @@ class CiaProducto(ModelSQL, ModelView, CompanyMultiValueMixin):
         'corseg.cia', 'Compania de Seguros', required=True)
     ramo = fields.Many2One(
         'corseg.ramo', 'Ramo', required=True)
-
     comision_cia = fields.MultiValue(fields.Many2One(
         'corseg.comision',
         'Comision Cia'))
@@ -73,10 +72,8 @@ class CiaProducto(ModelSQL, ModelView, CompanyMultiValueMixin):
     comision_vendedor_defecto = fields.MultiValue(fields.Many2One(
         'corseg.comision',
         'Comision Vendedor por Defecto'))
-
     comisiones = fields.One2Many(
         'corseg.comisiones.cia.producto', 'cia_producto', 'Comisiones')
-
     es_colectiva = fields.Boolean('Colectiva')
     description = fields.Text('Descripcion', size=None)
     active = fields.Boolean('Activo')

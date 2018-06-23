@@ -120,6 +120,12 @@ class LiquidacionBase(Workflow, ModelSQL, ModelView):
             return company.currency.digits
         return 2
 
+    def get_rec_name(self, name):
+        if self.number:
+            return self.number
+        else:
+            return self.id
+
     def _get_total(self, pagos, ente):
         total = Decimal(0.0)
         if pagos:

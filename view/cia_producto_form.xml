@@ -17,11 +17,13 @@ this repository contains the full copyright notices and license terms. -->
             <separator name="description" colspan="4"/>
             <field name="description" colspan="4"/>
         </page>
-        <page string="Comision Cia." id="comision_cia">
-            <field name="comision_cia" colspan="4"/>
-        </page>
-        <page string="Comision Vendedor" id="comision_vendedor">
-            <field name="comision_vendedor" colspan="4"/>
+        <page string="Comisiones" id="comisiones">
+            <label name="comision_cia"/>
+            <field name="comision_cia"/>
+            <label name="comision_vendedor"/>
+            <field name="comision_vendedor"/>
+            <label name="comision_vendedor_defecto"/>
+            <field name="comision_vendedor_defecto"/>
         </page>
     </notebook>
 </form>
