@@ -385,21 +385,54 @@ class Movimiento(Workflow, ModelSQL, ModelView):
                 self.poliza.cia_producto.comision_cia.lineas)
 
         if (not self.comision_vendedor and
-                self.poliza.cia_producto.comision_vendedor and
                 self.vendedor):
+            if self.poliza.cia_producto.comision_vendedor:
+                found = False
+                for vnd in self.poliza.cia_producto.comision_vendedor:
+                    if vnd.vendedor.id == self.vendedor.id:
+                        self._fill_comision(
+                            ComisionMovimientoVendedor,
+                            vnd.comision.lineas)
+                        found = True
+                        break
+                if not found:
+                    self._set_comision_vendedor_defecto(
+                        ComisionMovimientoVendedor)                    
+            elif:
+                self._set_comision_vendedor_defecto(
+                    ComisionMovimientoVendedor)
+
+    def _set_comision_vendedor_defecto(self, ComisionMovimientoVendedor):
+        if self.poliza.cia_producto.comision_vendedor_defecto:
             self._fill_comision(
                 ComisionMovimientoVendedor,
-                self.poliza.cia_producto.comision_vendedor.lineas)
+                self.poliza.cia_producto.comision_vendedor_defecto.lineas)        
 
     def _set_comision(self):
         pool = Pool()
-        ComisionPolizaCia = pool.get('corseg.comision.poliza.cia')
+        ComisionPolizaCia = pool.get(
+            'corseg.comision.poliza.cia')
+        ComisionPolizaVendedor = pool.get(
+            'corseg.comision.poliza.vendedor')
 
         if self.comision_cia:
             ComisionPolizaCia.delete(
                 [com for com in self.poliza.comision_cia])
             for cm in self.comision_cia:
                 new = ComisionPolizaCia()
+                new.poliza = self.poliza
+                new.renovacion = cm.renovacion
+                new.tipo_comision = cm.tipo_comision
+                new.re_renovacion = cm.re_renovacion
+                new.re_cuota = cm.re_cuota
+                new.active = cm.active
+                new.save()
+
+        if self.comision_vendedor:
+            ComisionPolizaVendedor.delete(
+                [com for com in self.poliza.comision_vendedor])
+            for cm in self.comision_vendedor:
+                new = ComisionPolizaVendedor()
                 new.poliza = self.poliza
                 new.renovacion = cm.renovacion
                 new.tipo_comision = cm.tipo_comision
