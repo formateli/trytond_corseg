@@ -26,6 +26,14 @@ this repository contains the full copyright notices and license terms. -->
         <page string="Comentarios" id="comentario">
             <field name="comentario" colspan="4"/>
         </page>
+        <page string="Sustitucion" id="sustitucion">
+            <label name="sustituir"/>
+            <field name="sustituir"/>
+            <label name="pago_sustituir"/>
+            <field name="pago_sustituir"/>
+            <label name="sustituido_por"/>
+            <field name="sustituido_por"/>
+        </page>
         <page string="Info" id="info">
             <label name="company"/>
             <field name="company"/>

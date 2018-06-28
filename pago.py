@@ -4,7 +4,7 @@
 from trytond.transaction import Transaction
 from trytond.pool import Pool
 from trytond.model import Workflow, ModelView, ModelSQL, fields
-from trytond.pyson import Eval, If, Not, In
+from trytond.pyson import Eval, If, Not, In, Bool
 from .tools import auditoria_field, get_current_date, set_auditoria
 
 __all__ = ['FormaPago', 'FrecuenciaPago', 'Pago']
@@ -66,28 +66,24 @@ class Pago(Workflow, ModelSQL, ModelView):
                 [('state', '!=', 'finalizada')]
             )
         ],
-        states={
-            'readonly': Not(In(Eval('state'), ['borrador',])),
-        }, depends=['company', 'state'])
+        states=_STATES, depends=['company', 'state'])
     cia = fields.Function(
         fields.Many2One('corseg.cia', 'Compania de Seguros'),
         'get_cia', searcher='search_cia')
     fecha = fields.Date('Fecha', required=True,
         states={
-            'readonly': In(Eval('state'), ['confirmado',]),
+            'readonly': Not(In(Eval('state'), ['borrador', 'procesado'])),
         }, depends=['state'])
     referencia = fields.Char('Referencia',
         states={
-            'readonly': In(Eval('state'), ['confirmado',]),
+            'readonly': Not(In(Eval('state'), ['borrador', 'procesado'])),
         }, depends=['state'])
-    monto = fields.Numeric('Monto',
+    monto = fields.Numeric('Monto', required=True,
         digits=(16, Eval('currency_digits', 2)),
-        required=True, states=_STATES, depends=['currency_digits'])
+        states=_STATES, depends=['currency_digits'])
     vendedor = fields.Many2One('corseg.vendedor',
         'Vendedor', required=True,
-        states={
-            'readonly': Not(In(Eval('state'), ['borrador',])),
-        }, depends=_DEPENDS)
+        states=_STATES, depends=_DEPENDS)
     comision_cia = fields.Numeric('Comision Cia',
         digits=(16, Eval('currency_digits', 2)),
         required=True, states=_STATES, depends=['currency_digits'])
@@ -96,7 +92,29 @@ class Pago(Workflow, ModelSQL, ModelView):
         required=True, states=_STATES, depends=['currency_digits'])
     comentario = fields.Text('Comentarios', size=None,
         states={
-            'readonly': In(Eval('state'), ['confirmado',]),
+            'readonly': Not(In(Eval('state'), ['borrador', 'procesado'])),
+        }, depends=['state'])
+    sustituir = fields.Boolean('Sustituir',
+        states=_STATES, depends=['state'])
+    pago_sustituir = fields.Many2One(
+        'corseg.poliza.pago', 'Sustituye a',
+        domain=[
+            ('company', '=', Eval('company')),
+            If(
+                In(Eval('state'), ['borrador', 'procesado']),
+                ('state', '=', 'confirmado'),
+                ('state', '!=', '')
+            ),
+        ],
+        states={
+            'invisible': Not(Bool(Eval('sustituir'))),
+            'readonly': Not(In(Eval('state'), ['borrador',])),
+            'required': Bool(Eval('sustituir')),
+        }, depends=['company', 'state', 'sustituir'])
+    sustituido_por = fields.Many2One(
+        'corseg.poliza.pago', 'Sustituido por', readonly=True,
+        states={
+            'invisible': Not(In(Eval('state'), ['sustituido',])),
         }, depends=['state'])
     liq_cia = fields.Many2One('corseg.liquidacion.cia',
         'Liq. Cia', readonly=True)
@@ -107,6 +125,7 @@ class Pago(Workflow, ModelSQL, ModelView):
             ('procesado', 'Procesado'),
             ('confirmado', 'Confirmado'),
             ('cancelado', 'Cancelado'),
+            ('sustituido', 'Sustituido'),
             ('liq_cia', 'Liquidado por Cia'),
             ('liq_vendedor', 'Liquidado al Vendedor'),
         ], 'Estado', required=True, readonly=True)
@@ -129,6 +148,8 @@ class Pago(Workflow, ModelSQL, ModelView):
         cls._error_messages.update({
                 'delete_cancel': ('El Pago "%s" debe ser '
                     'cancelado antes de eliminarse.'),
+                'pago_confirmado': ('El Pago a sustiruir en el Pago "%s" '
+                    'debe tener un estado de "Confirmado".'),
                 })
         cls._transitions |= set(
             (
@@ -180,16 +201,25 @@ class Pago(Workflow, ModelSQL, ModelView):
             return company.currency.digits
         return 2
 
-    @fields.depends('poliza', 'cia', 'currency_digits')
+    @fields.depends('poliza', 'cia', 'currency_digits',
+            'vendedor')
     def on_change_poliza(self):
         self.cia = None
+        self.vendedor = None
         self.currency_digits = 2
         if self.poliza:
             self.cia = self.poliza.cia
             self.currency_digits = \
                 self.poliza.currency_digits
-            # TODO rellenar los valores por defecto de esta poliza:
-            #      comision_cia, vendedor y tabla de comisiones por defecto
+            self.vendedor = self.poliza.vendedor
+
+
+
+    def get_rec_name(self, name):
+        if self.number:
+            return self.number
+        else:
+            return self.id
 
     def get_cia(self, name):
         if self.poliza:
@@ -253,6 +283,13 @@ class Pago(Workflow, ModelSQL, ModelView):
     @Workflow.transition('confirmado')
     def confirmar(cls, pagos):
         for pago in pagos:
+            if pago.sustituir:
+                if pago.pago_sustituir.state != 'confirmado':
+                    cls.raise_user_error(
+                        'pago_confirmado', (pago.rec_name,))
+                pago.pago_sustituir.state = 'sustituido'
+                pago.pago_sustituir.sustituido_por = pago
+                pago.pago_sustituir.save()
             set_auditoria(pago, 'confirmed')
             pago.save()
         cls.set_number(pagos)
@@ -261,8 +298,6 @@ class Pago(Workflow, ModelSQL, ModelView):
     @ModelView.button
     @Workflow.transition('cancelado')
     def cancelar(cls, pagos):
-        # TODO cambiar el state de la poliza,
-        # si es su primer movimiento debe asignarse 'new'
         for pago in pagos:
             set_auditoria(pago, 'canceled')
             pago.save()

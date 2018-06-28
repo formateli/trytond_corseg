@@ -199,5 +199,117 @@ contains the full copyright notices and license terms. -->
             <field name="perm_create" eval="True"/>
             <field name="perm_delete" eval="True"/>
         </record>
+
+
+        <!-- Comision Poliza Cia -->
+        <record model="ir.ui.view" id="comision_poliza_cia_view_form">
+            <field name="model">corseg.comision.poliza.cia</field>
+            <field name="type">form</field>
+            <field name="name">comision_poliza_cia_form</field>
+        </record>
+        <record model="ir.ui.view" id="comision_poliza_cia_view_tree">
+            <field name="model">corseg.comision.poliza.cia</field>
+            <field name="type">tree</field>
+            <field name="name">comision_poliza_cia_tree</field>
+        </record>
+        <record model="ir.model.access" id="access_comision_poliza_cia">
+            <field name="model" search="[('model', '=', 'corseg.comision.poliza.cia')]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_delete" eval="False"/>
+        </record>
+        <record model="ir.model.access" id="access_comision_poliza_cia_admin">
+            <field name="model" search="[('model', '=', 'corseg.comision.poliza.cia')]"/>
+            <field name="group" ref="group_corseg_admin"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_delete" eval="True"/>
+        </record>
+
+
+        <!-- Comision Poliza Vendedor -->
+        <record model="ir.ui.view" id="comision_poliza_vendedor_view_form">
+            <field name="model">corseg.comision.poliza.vendedor</field>
+            <field name="type">form</field>
+            <field name="name">comision_poliza_vendedor_form</field>
+        </record>
+        <record model="ir.ui.view" id="comision_poliza_vendedor_view_tree">
+            <field name="model">corseg.comision.poliza.vendedor</field>
+            <field name="type">tree</field>
+            <field name="name">comision_poliza_vendedor_tree</field>
+        </record>
+        <record model="ir.model.access" id="access_comision_poliza_vendedor">
+            <field name="model" search="[('model', '=', 'corseg.comision.poliza.vendedor')]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_delete" eval="False"/>
+        </record>
+        <record model="ir.model.access" id="access_comision_poliza_vendedor_admin">
+            <field name="model" search="[('model', '=', 'corseg.comision.poliza.vendedor')]"/>
+            <field name="group" ref="group_corseg_admin"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_delete" eval="True"/>
+        </record>
+
+
+        <!-- Comision Movimiento Cia -->
+        <record model="ir.ui.view" id="comision_movimiento_cia_view_form">
+            <field name="model">corseg.comision.movimiento.cia</field>
+            <field name="type">form</field>
+            <field name="name">comision_movimiento_cia_form</field>
+        </record>
+        <record model="ir.ui.view" id="comision_movimiento_cia_view_tree">
+            <field name="model">corseg.comision.movimiento.cia</field>
+            <field name="type">tree</field>
+            <field name="name">comision_movimiento_cia_tree</field>
+        </record>
+        <record model="ir.model.access" id="access_comision_movimiento_cia">
+            <field name="model" search="[('model', '=', 'corseg.comision.movimiento.cia')]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_delete" eval="False"/>
+        </record>
+        <record model="ir.model.access" id="access_comision_movimiento_cia_admin">
+            <field name="model" search="[('model', '=', 'corseg.comision.movimiento.cia')]"/>
+            <field name="group" ref="group_corseg_admin"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_delete" eval="True"/>
+        </record>
+
+
+        <!-- Comision Movimiento Vendedor -->
+        <record model="ir.ui.view" id="comision_movimiento_vendedor_view_form">
+            <field name="model">corseg.comision.movimiento.vendedor</field>
+            <field name="type">form</field>
+            <field name="name">comision_movimiento_vendedor_form</field>
+        </record>
+        <record model="ir.ui.view" id="comision_movimiento_vendedor_view_tree">
+            <field name="model">corseg.comision.movimiento.vendedor</field>
+            <field name="type">tree</field>
+            <field name="name">comision_movimiento_vendedor_tree</field>
+        </record>
+        <record model="ir.model.access" id="access_comision_movimiento_vendedor">
+            <field name="model" search="[('model', '=', 'corseg.comision.movimiento.vendedor')]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_delete" eval="False"/>
+        </record>
+        <record model="ir.model.access" id="access_comision_movimiento_vendedor_admin">
+            <field name="model" search="[('model', '=', 'corseg.comision.movimiento.vendedor')]"/>
+            <field name="group" ref="group_corseg_admin"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_delete" eval="True"/>
+        </record>
     </data>
 </tryton>

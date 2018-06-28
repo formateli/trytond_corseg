@@ -158,6 +158,14 @@ contains the full copyright notices and license terms. -->
             <field name="act_window" ref="act_pago_form"/>
         </record>
         <record model="ir.action.act_window.domain"
+                id="act_pago_form_domain_sustituido">
+            <field name="name">Sustituidos</field>
+            <field name="sequence" eval="45"/>
+            <field name="domain" eval="[('state', '=', 'sustituido')]" pyson="1"/>
+            <field name="count" eval="True"/>
+            <field name="act_window" ref="act_pago_form"/>
+        </record>
+        <record model="ir.action.act_window.domain"
                 id="act_pago_form_domain_liq_cia">
             <field name="name">Liq. Cia</field>
             <field name="sequence" eval="50"/>

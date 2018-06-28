@@ -497,5 +497,35 @@ contains the full copyright notices and license terms. -->
             <field name="sequence_type" ref="sequence_type_corseg_liq_vendedor"/>
             <field name="group" ref="group_corseg_admin"/>
         </record>
+
+        <record model="ir.sequence.type" id="sequence_type_corseg_comision_ajuste_cia">
+            <field name="name">Ajuste Comision Cia</field>
+            <field name="code">corseg.comision.ajuste.cia</field>
+        </record>
+        <record model="ir.sequence.type-res.group"
+                id="sequence_type_corseg_comision_ajuste_cia_group_admin">
+            <field name="sequence_type" ref="sequence_type_corseg_comision_ajuste_cia"/>
+            <field name="group" ref="res.group_admin"/>
+        </record>
+        <record model="ir.sequence.type-res.group"
+                id="sequence_type_corseg_comision_ajuste_cia_group_corseg_admin">
+            <field name="sequence_type" ref="sequence_type_corseg_comision_ajuste_cia"/>
+            <field name="group" ref="group_corseg_admin"/>
+        </record>
+
+        <record model="ir.sequence.type" id="sequence_type_corseg_comision_ajuste_vendedor">
+            <field name="name">Ajuste Comision Vendedor</field>
+            <field name="code">corseg.comision.ajuste.vendedor</field>
+        </record>
+        <record model="ir.sequence.type-res.group"
+                id="sequence_type_corseg_comision_ajuste_vendedor_group_admin">
+            <field name="sequence_type" ref="sequence_type_corseg_comision_ajuste_vendedor"/>
+            <field name="group" ref="res.group_admin"/>
+        </record>
+        <record model="ir.sequence.type-res.group"
+                id="sequence_type_corseg_comision_ajuste_vendedor_group_corseg_admin">
+            <field name="sequence_type" ref="sequence_type_corseg_comision_ajuste_vendedor"/>
+            <field name="group" ref="group_corseg_admin"/>
+        </record>
     </data>
 </tryton>

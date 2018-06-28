@@ -26,14 +26,14 @@ _STATE = [
 
 
 class LiquidacionBase(Workflow, ModelSQL, ModelView):
-    company = fields.Many2One('company.company', 'Company',
-        required=False, # TODO required=True
+    company = fields.Many2One('company.company',
+        'Company', required=True,
         states={
             'readonly': True,
             },
-        domain=[ #TODO descomentar despues de realizar la migracion
-#            ('id', If(Eval('context', {}).contains('company'), '=', '!='),
-#                Eval('context', {}).get('company', -1)),
+        domain=[
+            ('id', If(Eval('context', {}).contains('company'), '=', '!='),
+                Eval('context', {}).get('company', -1)),
             ], select=True)
     number = fields.Char('Numero', size=None, readonly=True, select=True)
     currency_digits = fields.Function(fields.Integer('Currency Digits'),
@@ -188,7 +188,7 @@ class LiquidacionCia(LiquidacionBase):
         'poliza.pagos-liquidacion.cia',
         'liquidacion', 'pago', 'Pagos',
         domain=[
-            #('company', '=', Eval('company')), #TODO descomentar despues de Migracion
+            ('company', '=', Eval('company')),
             ('cia', '=', Eval('cia')),
             If(
                 In(Eval('state'), ['borrador', 'procesado']),
@@ -267,7 +267,7 @@ class LiquidacionVendedor(LiquidacionBase):
         'poliza.pagos-liquidacion.vendedor',
         'liquidacion', 'pago', 'Pagos',
         domain=[
-            #('company', '=', Eval('company')), #TODO descomentar despues de migracion
+            ('company', '=', Eval('company')),
             ('vendedor', '=', Eval('vendedor')),
             If(
                 In(Eval('state'), ['borrador', 'procesado']),

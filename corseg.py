@@ -248,15 +248,10 @@ class Poliza(ModelSQL, ModelView):
             'Saldo', digits=(16, Eval('currency_digits', 2)),
             depends=['currency_digits']),
         'get_saldo')
-
-
-#    comision_cia = fields.One2Many('corseg.comision.cia.poliza',
-#        'poliza', 'Tabla Comision Cia')
-#    comision_vendedor = fields.One2Many('corseg.comision.vendedor.poliza',
-#        'poliza', 'Tabla Comision Vendedor')
-
-
-
+    comision_cia = fields.One2Many('corseg.comision.poliza.cia',
+        'poliza', 'Comision Cia', readonly=True)
+    comision_vendedor = fields.One2Many('corseg.comision.poliza.vendedor',
+        'poliza', 'Comision Vendedor', readonly=True)
     certificados_in = fields.One2Many('corseg.poliza.certificado',
         'poliza', 'Incluidos', readonly=True,
         filter=[('state', '=', 'incluido')])
@@ -352,86 +347,9 @@ class Poliza(ModelSQL, ModelView):
     def on_change_cia_producto(self):
         self.ramo = None
         self.vendedor = None
-        self.comision_cia = self._get_comision(
-            self.comision_cia, 'cia', True)
-        self.comision_vendedor = self._get_comision(
-            self.comision_vendedor, 'vendedor', True)
         if self.cia_producto:
             self.cia = self.cia_producto.cia
             self.ramo = self.cia_producto.ramo.rec_name
-            self.comision_cia = self._get_comision(
-                self.comision_cia, 'cia')
-            self.comision_vendedor = self._get_comision(
-                self.comision_vendedor, 'vendedor')
-
-    @classmethod
-    def _validate_comision(cls, poliza, comision):
-        last = None
-        for com in comision:
-            if last is None and com.renovacion != 0:
-                cls.raise_user_error(
-                    'comision_renovacion_cero',
-                    (poliza.rec_name,))
-            elif last >= com.renovacion:
-                cls.raise_user_error(
-                    'comision_renovacion_menor',
-                    (poliza.rec_name,))
-            last = com.renovacion
-
-    def _get_comision_cia(self, just_erase=False):
-        pool = Pool()
-        ComisionCia = pool.get('corseg.comision.cia')
-        ComisionCiaPoliza = pool.get('corseg.comision.cia.poliza')
-
-        try:
-            ComisionCiaPoliza.delete(self.comision_cia)
-        except:
-            pass
-        if just_erase:
-            return []
-
-        cms = ComisionCia.search([
-            ('producto', '=', self.cia_producto.id)])
-        res = []
-        if cms:
-            for cm in cms:
-                new = ComisionCiaPoliza()
-                new.renovacion = cm.renovacion
-                new.tipo_comision = cm.tipo_comision
-                new.re_renovacion = cm.re_renovacion
-                new.re_cuota = cm.re_cuota
-                res.append(new)
-        return res
-
-    def _get_comision(self, comision, ente, just_erase=False):
-        pool = Pool()
-        Comision = pool.get('corseg.comision.{0}'.format(ente))
-        ComisionPoliza = pool.get('corseg.comision.{0}.poliza'.format(ente))
-
-        try:
-            ComisionPoliza.delete(comision)
-        except:
-            pass
-        if just_erase:
-            return []
-
-        domain = [('producto', '=', self.cia_producto.id)]
-        if ente == 'vendedor':
-            if not self.vendedor:
-                return []
-            domain.append(('vendedor', '=', self.vendedor.id))
-
-        cms = Comision.search(domain)
-        res = []
-        if cms:
-            for cm in cms:
-                new = ComisionPoliza()
-                new.renovacion = cm.renovacion
-                new.tipo_comision = cm.tipo_comision
-                new.re_renovacion = cm.re_renovacion
-                new.re_cuota = cm.re_cuota
-                res.append(new)
-        return res
 
     @fields.depends('currency')
     def on_change_with_currency_digits(self, name=None):
@@ -444,11 +362,11 @@ class Poliza(ModelSQL, ModelView):
             return self.cia_producto.ramo.rec_name
 
     def get_monto_pago(self, name):
-        res = Decimal(0)
+        res = Decimal('0.0')
         if self.pagos:
             for pago in self.pagos:
                 if pago.state not in \
-                        ['borrador', 'procesado']:
+                        ['borrador', 'procesado', 'sustituido']:
                     res += pago.monto
         return res
 

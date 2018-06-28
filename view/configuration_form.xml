@@ -6,8 +6,14 @@ this repository contains the full copyright notices and license terms. -->
     <field name="pago_seq"/>
     <label name="movimiento_seq"/>
     <field name="movimiento_seq"/>
+    <separator string="Liquidacion de Comisiones" id="liquidaciones" colspan="4" />
     <label name="liq_cia_seq"/>
     <field name="liq_cia_seq"/>
     <label name="liq_vendedor_seq"/>
     <field name="liq_vendedor_seq"/>
+    <separator string="Ajuste de Comisiones" id="ajuste_comision" colspan="4" />
+    <label name="ajuste_comision_cia_seq"/>
+    <field name="ajuste_comision_cia_seq"/>
+    <label name="ajuste_comision_vendedor_seq"/>
+    <field name="ajuste_comision_vendedor_seq"/>
 </form>

@@ -41,6 +41,20 @@ class Configuration(
                 [Eval('context', {}).get('company', -1), None]),
             ('code', '=', 'corseg.liquidacion.vendedor'),
         ]))
+    ajuste_comision_cia_seq = fields.MultiValue(fields.Many2One(
+        'ir.sequence', "Ajuste Comision Cia", required=True,
+        domain=[
+            ('company', 'in',
+                [Eval('context', {}).get('company', -1), None]),
+            ('code', '=', 'corseg.comision.ajuste.cia'),
+        ]))
+    ajuste_comision_vendedor_seq = fields.MultiValue(fields.Many2One(
+        'ir.sequence', "Ajuste Comision Vendedor", required=True,
+        domain=[
+            ('company', 'in',
+                [Eval('context', {}).get('company', -1), None]),
+            ('code', '=', 'corseg.comision.ajuste.vendedor'),
+        ]))
 
     #TODO default account para comisiones cia
     #TODO default account para comisiones vendedor
@@ -49,7 +63,8 @@ class Configuration(
     def multivalue_model(cls, field):
         pool = Pool()
         if field in {'pago_seq', 'movimiento_seq',
-                'liq_cia_seq', 'liq_vendedor_seq'}:
+                'liq_cia_seq', 'liq_vendedor_seq',
+                'ajuste_comision_cia_seq', 'ajuste_comision_vendedor_seq'}:
             return pool.get('corseg.configuration.sequences')
         return super(Configuration, cls).multivalue_model(field)
 
@@ -84,4 +99,18 @@ class ConfigurationSequences(ModelSQL, CompanyValueMixin):
             ('company', 'in',
                 [Eval('context', {}).get('company', -1), None]),
             ('code', '=', 'corseg.liquidacion.vendedor'),
+        ])
+    ajuste_comision_cia_seq = fields.Many2One(
+        'ir.sequence', "Ajuste Comision Cia",
+        domain=[
+            ('company', 'in',
+                [Eval('context', {}).get('company', -1), None]),
+            ('code', '=', 'corseg.comision.ajuste.cia'),
+        ])
+    ajuste_comision_vendedor_seq = fields.Many2One(
+        'ir.sequence', "Ajuste Comision Vendedor",
+        domain=[
+            ('company', 'in',
+                [Eval('context', {}).get('company', -1), None]),
+            ('code', '=', 'corseg.comision.ajuste.vendedor'),
         ])

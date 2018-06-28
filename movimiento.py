@@ -249,6 +249,18 @@ class Movimiento(Workflow, ModelSQL, ModelView):
             'invisible': Not(Bool(Eval('poliza'))),
             'readonly': Not(In(Eval('state'), ['borrador',])),
         }, depends=['poliza', 'state'])
+    comision_cia = fields.One2Many(
+        'corseg.comision.movimiento.cia',
+        'movimiento', 'Comision Cia',
+        states={
+            'readonly': Not(In(Eval('state'), ['borrador',])),            
+        }, depends=['state'])
+    comision_vendedor = fields.One2Many(
+        'corseg.comision.movimiento.vendedor',
+        'movimiento', 'Comision Vendedor',
+        states={
+            'readonly': Not(In(Eval('state'), ['borrador',])),            
+        }, depends=['state'])
     comentario = fields.Text('Comentarios', size=None,
         states={
             'readonly': In(Eval('state'), ['confirmado',]),
@@ -328,6 +340,14 @@ class Movimiento(Workflow, ModelSQL, ModelView):
     def default_currency_digits():
         return 2
 
+    @staticmethod
+    def default_state():
+        return 'borrador'
+
+    @staticmethod
+    def default_tipo_endoso():
+        return 'none'
+
     @fields.depends('poliza', 'currency_digits')
     def on_change_poliza(self):
         self.currency_digits = 2
@@ -339,6 +359,54 @@ class Movimiento(Workflow, ModelSQL, ModelView):
         if self.poliza:
             self.poliza.currency_digits
         return 2
+
+    def _fill_comision(self, Comision, lineas):
+        for cm in lineas:
+            new = Comision()
+            new.movimiento = self
+            new.renovacion = cm.renovacion
+            new.tipo_comision = cm.tipo_comision
+            new.re_renovacion = cm.re_renovacion
+            new.re_cuota = cm.re_cuota
+            new.active = cm.active
+            new.save()
+
+    def _prepare_comision_inicio(self):
+        pool = Pool()
+        ComisionMovimientoCia = pool.get(
+            'corseg.comision.movimiento.cia')
+        ComisionMovimientoVendedor = pool.get(
+            'corseg.comision.movimiento.vendedor')
+
+        if not self.comision_cia and \
+                self.poliza.cia_producto.comision_cia:
+            self._fill_comision(
+                ComisionMovimientoCia,
+                self.poliza.cia_producto.comision_cia.lineas)
+
+        if (not self.comision_vendedor and
+                self.poliza.cia_producto.comision_vendedor and
+                self.vendedor):
+            self._fill_comision(
+                ComisionMovimientoVendedor,
+                self.poliza.cia_producto.comision_vendedor.lineas)
+
+    def _set_comision(self):
+        pool = Pool()
+        ComisionPolizaCia = pool.get('corseg.comision.poliza.cia')
+
+        if self.comision_cia:
+            ComisionPolizaCia.delete(
+                [com for com in self.poliza.comision_cia])
+            for cm in self.comision_cia:
+                new = ComisionPolizaCia()
+                new.poliza = self.poliza
+                new.renovacion = cm.renovacion
+                new.tipo_comision = cm.tipo_comision
+                new.re_renovacion = cm.re_renovacion
+                new.re_cuota = cm.re_cuota
+                new.active = cm.active
+                new.save()
 
     @staticmethod
     def _act_field(name, obj, chg):
@@ -402,10 +470,6 @@ class Movimiento(Workflow, ModelSQL, ModelView):
                 cls.raise_user_error('delete_cancel', (mov.rec_name,))
         super(Movimiento, cls).delete(movs)
 
-    @staticmethod
-    def default_state():
-        return 'borrador'
-
     @classmethod
     @ModelView.button
     @Workflow.transition('borrador')
@@ -427,6 +491,8 @@ class Movimiento(Workflow, ModelSQL, ModelView):
                 cls.raise_user_error(
                     'poliza_un_inicia',
                     (mov.poliza.rec_name,))
+            if mov.tipo_endoso == 'iniciacion':
+                mov._prepare_comision_inicio('cia')
             set_auditoria(mov, 'processed')
             mov.save()
 
@@ -470,6 +536,8 @@ class Movimiento(Workflow, ModelSQL, ModelView):
                 cert.state = 'incluido'
                 cert.poliza = pl
                 cert.save()
+
+            mov._set_comision('cia')
 
             for cert in mov.exclusiones:
                 if cert.state != 'incluido':
@@ -537,7 +605,7 @@ class Movimiento(Workflow, ModelSQL, ModelView):
             mov.save()
 
 
-class CertificadoModificacion(Workflow, ModelSQL, ModelView):
+class CertificadoModificacion(ModelSQL, ModelView):
     'Modificacion de Certificado'
     __name__ = 'corseg.poliza.certificado.modificacion'
     movimiento = fields.Many2One('corseg.poliza.movimiento',
