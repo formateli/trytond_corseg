@@ -251,13 +251,13 @@ class Movimiento(Workflow, ModelSQL, ModelView):
         }, depends=['poliza', 'state'])
     comision_cia = fields.One2Many(
         'corseg.comision.movimiento.cia',
-        'movimiento', 'Comision Cia',
+        'parent', 'Comision Cia',
         states={
             'readonly': Not(In(Eval('state'), ['borrador',])),            
         }, depends=['state'])
     comision_vendedor = fields.One2Many(
         'corseg.comision.movimiento.vendedor',
-        'movimiento', 'Comision Vendedor',
+        'parent', 'Comision Vendedor',
         states={
             'readonly': Not(In(Eval('state'), ['borrador',])),            
         }, depends=['state'])
@@ -360,10 +360,10 @@ class Movimiento(Workflow, ModelSQL, ModelView):
             self.poliza.currency_digits
         return 2
 
-    def _fill_comision(self, Comision, lineas):
+    def _fill_comision(self, parent, Comision, lineas):
         for cm in lineas:
             new = Comision()
-            new.movimiento = self
+            new.parent = parent
             new.renovacion = cm.renovacion
             new.tipo_comision = cm.tipo_comision
             new.re_renovacion = cm.re_renovacion
@@ -381,31 +381,30 @@ class Movimiento(Workflow, ModelSQL, ModelView):
         if not self.comision_cia and \
                 self.poliza.cia_producto.comision_cia:
             self._fill_comision(
-                ComisionMovimientoCia,
+                self, ComisionMovimientoCia,
                 self.poliza.cia_producto.comision_cia.lineas)
 
-        if (not self.comision_vendedor and
-                self.vendedor):
+        if not self.comision_vendedor:
             if self.poliza.cia_producto.comision_vendedor:
                 found = False
                 for vnd in self.poliza.cia_producto.comision_vendedor:
                     if vnd.vendedor.id == self.vendedor.id:
                         self._fill_comision(
-                            ComisionMovimientoVendedor,
+                            self, ComisionMovimientoVendedor,
                             vnd.comision.lineas)
                         found = True
                         break
                 if not found:
                     self._set_comision_vendedor_defecto(
                         ComisionMovimientoVendedor)                    
-            elif:
+            else:
                 self._set_comision_vendedor_defecto(
                     ComisionMovimientoVendedor)
 
     def _set_comision_vendedor_defecto(self, ComisionMovimientoVendedor):
         if self.poliza.cia_producto.comision_vendedor_defecto:
             self._fill_comision(
-                ComisionMovimientoVendedor,
+                self, ComisionMovimientoVendedor,
                 self.poliza.cia_producto.comision_vendedor_defecto.lineas)        
 
     def _set_comision(self):
@@ -418,28 +417,14 @@ class Movimiento(Workflow, ModelSQL, ModelView):
         if self.comision_cia:
             ComisionPolizaCia.delete(
                 [com for com in self.poliza.comision_cia])
-            for cm in self.comision_cia:
-                new = ComisionPolizaCia()
-                new.poliza = self.poliza
-                new.renovacion = cm.renovacion
-                new.tipo_comision = cm.tipo_comision
-                new.re_renovacion = cm.re_renovacion
-                new.re_cuota = cm.re_cuota
-                new.active = cm.active
-                new.save()
+            self._fill_comision(self.poliza,
+                ComisionPolizaCia, self.comision_cia)
 
         if self.comision_vendedor:
             ComisionPolizaVendedor.delete(
                 [com for com in self.poliza.comision_vendedor])
-            for cm in self.comision_vendedor:
-                new = ComisionPolizaVendedor()
-                new.poliza = self.poliza
-                new.renovacion = cm.renovacion
-                new.tipo_comision = cm.tipo_comision
-                new.re_renovacion = cm.re_renovacion
-                new.re_cuota = cm.re_cuota
-                new.active = cm.active
-                new.save()
+            self._fill_comision(self.poliza,
+                ComisionPolizaVendedor, self.comision_vendedor)
 
     @staticmethod
     def _act_field(name, obj, chg):
@@ -525,7 +510,7 @@ class Movimiento(Workflow, ModelSQL, ModelView):
                     'poliza_un_inicia',
                     (mov.poliza.rec_name,))
             if mov.tipo_endoso == 'iniciacion':
-                mov._prepare_comision_inicio('cia')
+                mov._prepare_comision_inicio()
             set_auditoria(mov, 'processed')
             mov.save()
 
@@ -570,7 +555,7 @@ class Movimiento(Workflow, ModelSQL, ModelView):
                 cert.poliza = pl
                 cert.save()
 
-            mov._set_comision('cia')
+            mov._set_comision()
 
             for cert in mov.exclusiones:
                 if cert.state != 'incluido':

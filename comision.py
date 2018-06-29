@@ -69,7 +69,7 @@ class Comision(ModelSQL, ModelView):
     __name__ = 'corseg.comision'
     name = fields.Char('Nombre', required=True)
     lineas = fields.One2Many('corseg.comision.linea',
-        'comision', 'Lineas')
+        'parent', 'Lineas')
     active = fields.Boolean('Activo')
 
     @staticmethod
@@ -80,7 +80,7 @@ class Comision(ModelSQL, ModelView):
 class ComisionLinea(ComisionBaseLinea):
     'Comision Linea'
     __name__ = 'corseg.comision.linea'
-    comision = fields.Many2One('corseg.comision',
+    parent = fields.Many2One('corseg.comision',
         'Comision', required=True)
 
 
@@ -116,28 +116,28 @@ class ComisionVendedorLinea(ModelSQL, ModelView):
 class ComisionPolizaCia(ComisionBaseLinea):
     'Comision Poliza Cia'
     __name__ = 'corseg.comision.poliza.cia'
-    poliza = fields.Many2One('corseg.poliza',
+    parent = fields.Many2One('corseg.poliza',
         'Poliza', required=True)
 
 
 class ComisionPolizaVendedor(ComisionBaseLinea):
     'Comision Poliza Vendedor'
     __name__ = 'corseg.comision.poliza.vendedor'
-    poliza = fields.Many2One('corseg.poliza',
+    parent = fields.Many2One('corseg.poliza',
         'Poliza', required=True)
 
 
 class ComisionMovimientoCia(ComisionBaseLinea):
     'Comision Movimiento Cia'
     __name__ = 'corseg.comision.movimiento.cia'
-    movimiento = fields.Many2One('corseg.poliza.movimiento',
+    parent = fields.Many2One('corseg.poliza.movimiento',
         'Movimiento', required=True)
 
 
 class ComisionMovimientoVendedor(ComisionBaseLinea):
     'Comision Movimiento Vendedor'
     __name__ = 'corseg.comision.movimiento.vendedor'
-    movimiento = fields.Many2One('corseg.poliza.movimiento',
+    parent = fields.Many2One('corseg.poliza.movimiento',
         'Movimiento', required=True)
 
 

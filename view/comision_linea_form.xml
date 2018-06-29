@@ -2,8 +2,8 @@
 <!-- This file is part of trytond-corseg module. The COPYRIGHT file at the top level of
 this repository contains the full copyright notices and license terms. -->
 <form>
-    <label name="comision"/>
-    <field name="comision" colspan="3"/>
+    <label name="parent"/>
+    <field name="parent" colspan="3"/>
     <label name="renovacion"/>
     <field name="renovacion"/>
     <label name="tipo_comision"/>

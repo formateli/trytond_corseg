@@ -2,7 +2,7 @@
 <!-- This file is part of trytond-corseg module. The COPYRIGHT file at the top level of
 this repository contains the full copyright notices and license terms. -->
 <tree>
-    <field name="comision"/>
+    <field name="parent"/>
     <field name="renovacion"/>
     <field name="tipo_comision"/>
     <field name="re_renovacion"/>

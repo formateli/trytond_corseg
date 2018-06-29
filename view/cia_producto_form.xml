@@ -25,5 +25,8 @@ this repository contains the full copyright notices and license terms. -->
             <label name="comision_vendedor_defecto"/>
             <field name="comision_vendedor_defecto"/>
         </page>
+        <page string="Polizas" id="polizas">
+            <field name="polizas" colspan="4"/>
+        </page>
     </notebook>
 </form>

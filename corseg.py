@@ -74,6 +74,8 @@ class CiaProducto(ModelSQL, ModelView, CompanyMultiValueMixin):
         'Comision Vendedor por Defecto'))
     comisiones = fields.One2Many(
         'corseg.comisiones.cia.producto', 'cia_producto', 'Comisiones')
+    polizas = fields.One2Many('corseg.poliza',
+        'cia_producto', 'Polizas', readonly=True)
     es_colectiva = fields.Boolean('Colectiva')
     description = fields.Text('Descripcion', size=None)
     active = fields.Boolean('Activo')
@@ -249,9 +251,9 @@ class Poliza(ModelSQL, ModelView):
             depends=['currency_digits']),
         'get_saldo')
     comision_cia = fields.One2Many('corseg.comision.poliza.cia',
-        'poliza', 'Comision Cia', readonly=True)
+        'parent', 'Comision Cia', readonly=True)
     comision_vendedor = fields.One2Many('corseg.comision.poliza.vendedor',
-        'poliza', 'Comision Vendedor', readonly=True)
+        'parent', 'Comision Vendedor', readonly=True)
     certificados_in = fields.One2Many('corseg.poliza.certificado',
         'poliza', 'Incluidos', readonly=True,
         filter=[('state', '=', 'incluido')])
