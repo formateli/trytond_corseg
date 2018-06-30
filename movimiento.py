@@ -160,7 +160,7 @@ class Movimiento(Workflow, ModelSQL, ModelView):
             'readonly': Not(In(Eval('state'), ['borrador',])),        
         }, depends=['state'])
     tipo_endoso = fields.Selection([
-            ('none', ''),
+            (None, ''),
             ('iniciacion', 'Iniciacion'),
             ('renovacion', 'Renovacion'),
             ('otros', 'Otros'),
@@ -170,7 +170,6 @@ class Movimiento(Workflow, ModelSQL, ModelView):
         states={
             'invisible': Not(In(Eval('tipo'), ['endoso'])),
             'readonly': Not(In(Eval('state'), ['borrador'])),
-            'required': In(Eval('tipo'), ['endoso']),
         }, depends=['tipo', 'state']
     )
     contratante = fields.Many2One('party.party', 'Contratante',
@@ -346,7 +345,11 @@ class Movimiento(Workflow, ModelSQL, ModelView):
 
     @staticmethod
     def default_tipo_endoso():
-        return 'none'
+        return None
+
+    @fields.depends('tipo', 'tipo_endoso')
+    def on_change_tipo(self):
+        self.tipo_endoso = None
 
     @fields.depends('poliza', 'currency_digits')
     def on_change_poliza(self):
