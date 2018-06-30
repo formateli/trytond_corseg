@@ -361,7 +361,9 @@ class Movimiento(Workflow, ModelSQL, ModelView):
         return 2
 
     def _fill_comision(self, parent, Comision, lineas):
+        print("fill...")
         for cm in lineas:
+            print("  fill")
             new = Comision()
             new.parent = parent
             new.renovacion = cm.renovacion
@@ -372,6 +374,7 @@ class Movimiento(Workflow, ModelSQL, ModelView):
             new.save()
 
     def _prepare_comision_inicio(self):
+        print("_prepare_comision_inicio")
         pool = Pool()
         ComisionMovimientoCia = pool.get(
             'corseg.comision.movimiento.cia')
@@ -380,6 +383,7 @@ class Movimiento(Workflow, ModelSQL, ModelView):
 
         if not self.comision_cia and \
                 self.poliza.cia_producto.comision_cia:
+            print("fill_mov_cia")
             self._fill_comision(
                 self, ComisionMovimientoCia,
                 self.poliza.cia_producto.comision_cia.lineas)
@@ -387,7 +391,7 @@ class Movimiento(Workflow, ModelSQL, ModelView):
         if not self.comision_vendedor:
             if self.poliza.cia_producto.comision_vendedor:
                 found = False
-                for vnd in self.poliza.cia_producto.comision_vendedor:
+                for vnd in self.poliza.cia_producto.comision_vendedor.lineas:
                     if vnd.vendedor.id == self.vendedor.id:
                         self._fill_comision(
                             self, ComisionMovimientoVendedor,
