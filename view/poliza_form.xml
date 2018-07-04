@@ -6,16 +6,20 @@ this repository contains the full copyright notices and license terms. -->
     <field name="cia"/>
     <label name="cia_producto"/>
     <field name="cia_producto"/>
-    <label name="ramo"/>
-    <field name="ramo"/>
-    <label name="grupo"/>
-    <field name="grupo"/>
     <label name="numero"/>
     <field name="numero"/>
+    <label name="ramo"/>
+    <field name="ramo"/>
+    <label name="origen"/>
+    <field name="origen"/>
+    <label name="grupo"/>
+    <field name="grupo"/>
     <label name="contratante"/>
     <field name="contratante"/>
     <label name="vendedor"/>
     <field name="vendedor"/>
+    <label name="renovacion"/>
+    <field name="renovacion"/>
     <label name="state"/>
     <field name="state"/>
     <newline />

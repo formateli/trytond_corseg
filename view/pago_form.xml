@@ -8,21 +8,44 @@ this repository contains the full copyright notices and license terms. -->
     <field name="number"/>
     <label name="referencia"/>
     <field name="referencia"/>
+    <newline/>
     <label name="poliza"/>
     <field name="poliza"/>
     <label name="cia"/>
     <field name="cia"/>
+    <label name="renovacion"/>
+    <field name="renovacion"/>
     <label name="vendedor"/>
     <field name="vendedor"/>
-    <newline />
     <label name="monto"/>
     <field name="monto"/>
     <newline />
-    <label name="comision_cia"/>
-    <field name="comision_cia"/>
-    <label name="comision_vendedor"/>
-    <field name="comision_vendedor"/>
+    <label name="comision_cia_liq"/>
+    <field name="comision_cia_liq"/>
+    <label name="comision_vendedor_liq"/>
+    <field name="comision_vendedor_liq"/>
     <notebook colspan="4">
+        <page string="Comisiones" id="comisiones">
+            <group string="Cia" id="com_cia" colspan="2" col="2">
+                <label name="comision_cia"/>
+                <field name="comision_cia"/>
+                <label name="comision_cia_sugerida"/>
+                <field name="comision_cia_sugerida"/>
+                <label name="comision_cia_ajuste"/>
+                <field name="comision_cia_ajuste"/>
+            </group>
+            <group string="Vendedor" id="com_vendedor" colspan="2" col="2">
+                <label name="comision_vendedor"/>
+                <field name="comision_vendedor"/>
+                <label name="comision_vendedor_sugerida"/>
+                <field name="comision_vendedor_sugerida"/>
+                <label name="comision_vendedor_ajuste"/>
+                <field name="comision_vendedor_ajuste"/>
+            </group>
+            <separator string="Ajustes" id="com_ajustes" colspan="4"/>
+            <field name="ajustes_comision_cia" colspan="2"/>
+            <field name="ajustes_comision_vendedor" colspan="2"/>
+        </page>
         <page string="Comentarios" id="comentario">
             <field name="comentario" colspan="4"/>
         </page>

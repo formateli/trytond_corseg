@@ -8,7 +8,8 @@ this repository contains the full copyright notices and license terms. -->
     <field name="number"/>
     <label name="poliza"/>
     <field name="poliza"/>
-    <newline />
+    <label name="poliza_state"/>
+    <field name="poliza_state"/>
     <label name="descripcion"/>
     <field name="descripcion" colspan="3"/>
     <label name="tipo"/>

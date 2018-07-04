@@ -92,6 +92,65 @@ class CiaProducto(ModelSQL, ModelView, CompanyMultiValueMixin):
             return pool.get('corseg.comisiones.cia.producto')
         return super(CiaProducto, cls).multivalue_model(field)
 
+    def get_comision_vendedor(self, poliza, vendedor, monto):
+        result = Decimal('0.0')
+        if not monto:
+            return result
+
+        if not self.comision_vendedor and \
+                not self.comision_vendedor_defecto:
+            return result
+
+        if self.comision_vendedor:
+            for linea in self.comision_vendedor.lineas:
+                if linea.vendedor == vendedor:
+                    return self._get_comision(poliza, linea.comision, monto)
+        else:
+            return self._get_comision(poliza, self.comision_vendedor_defecto, monto)
+
+    def get_comision_cia(self, poliza, monto):
+        result = Decimal('0.0')
+        if not monto:
+            return result
+
+        if not self.comision_cia:
+            return result
+
+        return self._get_comision(poliza, self.comision_cia, monto)
+
+    def _get_comision(self, poliza, comision, monto):
+        last_linea = None
+        for linea in comision:
+            if linea.renovacion == poliza.renovacion:
+                result = self._get_comision_linea(poliza, linea)
+                break
+            elif linea.renovacion > poliza.renovacion:
+                if last_linea.tipo_comision.r_renovacion:
+                    result = self._get_comision_linea(poliza, last_linea)
+                break
+            last_linea = linea
+        return result
+
+    def _get_comision_linea(self, poliza, linea):
+        Pago = Pool().get('corseg.poliza.pago')
+        result = Decimal('0.0')
+
+        pagos = Pago.search([
+                ('poliza', '=', poliza.id),
+                ('renovacion', '=', poliza.renovacion)
+            ])
+
+        if not linea.tipo_comision.re_cuota and \
+                pagos:
+            return result
+
+        if linea.tipo_comision.tipo == 'fijo':
+            result = linea.tipo_comision.monto
+        else:
+            result = monto * (linea.tipo_comision.monto / 100)
+
+        return result
+
 
 class GrupoPoliza(ModelSQL, ModelView):
     'Grupo de Polizas'
@@ -221,15 +280,12 @@ class Poliza(ModelSQL, ModelView):
             'readonly': Not(In(Eval('state'), ['new'])),
             },
         depends=['state'])
-    origen = fields.Many2One('corseg.poliza.origen', 'Origen',
-        states={
-            'readonly': Not(In(Eval('state'), ['new'])),
-            },
-        depends=['state'])
+    origen = fields.Many2One('corseg.poliza.origen', 'Origen')
     contratante = fields.Many2One('party.party', 'Contratante', readonly=True)
     f_emision = fields.Date('Emitida el',  readonly=True)
     f_desde = fields.Date('Desde',  readonly=True)
     f_hasta = fields.Date('Hasta',  readonly=True)
+    renovacion = fields.Integer('Renovacion', readonly=True)
     suma_asegurada = fields.Numeric('Suma Asegurada',
         digits=(16, Eval('currency_digits', 2)), readonly=True,
         depends=['currency_digits'])
@@ -270,15 +326,14 @@ class Poliza(ModelSQL, ModelView):
         depends=['state'])
     comentarios = fields.One2Many('corseg.poliza.comentario',
         'poliza', 'Comentarios')
-
-    # TODO renovacion - readonly, empieza en 0 para polizas nuevas
-    
     state = fields.Selection([
             ('new', 'Nuevo'),
             ('vigente', 'Vigente'),
             ('cancelada', 'Cancelada'),
         ],
         'Estado', readonly=True, required=True)
+
+    # TODO documentos
 
     @classmethod
     def __setup__(cls):

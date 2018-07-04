@@ -144,6 +144,8 @@ class Movimiento(Workflow, ModelSQL, ModelView):
         states={
             'readonly': Not(In(Eval('state'), ['borrador',])),
         }, depends=['company', 'state'])
+    poliza_state = fields.Function(fields.Char('Estado'),
+        'get_poliza_state')
     fecha = fields.Date('Fecha', required=True,
         states={
             'readonly': In(Eval('state'), ['confirmado',]),
@@ -258,8 +260,8 @@ class Movimiento(Workflow, ModelSQL, ModelView):
         'corseg.comision.movimiento.vendedor',
         'parent', 'Comision Vendedor',
         states={
-            'readonly': Not(In(Eval('state'), ['borrador',])),            
-        }, depends=['state'])
+            'readonly': Not(In(Eval('state'), ['borrador',])),
+        }, depends=['state', 'vendedor'])
     comentario = fields.Text('Comentarios', size=None,
         states={
             'readonly': In(Eval('state'), ['confirmado',]),
@@ -363,6 +365,10 @@ class Movimiento(Workflow, ModelSQL, ModelView):
             self.poliza.currency_digits
         return 2
 
+    def get_poliza_state(self, name=None):
+        if self.poliza:
+            return self.poliza.state
+
     def _fill_comision(self, parent, Comision, lineas):
         print("fill...")
         for cm in lineas:
@@ -376,8 +382,19 @@ class Movimiento(Workflow, ModelSQL, ModelView):
             new.active = cm.active
             new.save()
 
+    def _set_default_inclusion(self):
+        if self.inclusiones:
+            return
+        Certificado = Pool().get(
+            'corseg.poliza.certificado')
+        certificado = Certificado(
+            numero='1',
+            asegurado=self.contratante,
+        )
+        certificado.save()
+        self.inclusiones = [certificado,]
+
     def _prepare_comision_inicio(self):
-        print("_prepare_comision_inicio")
         pool = Pool()
         ComisionMovimientoCia = pool.get(
             'corseg.comision.movimiento.cia')
@@ -517,6 +534,7 @@ class Movimiento(Workflow, ModelSQL, ModelView):
                     'poliza_un_inicia',
                     (mov.poliza.rec_name,))
             if mov.tipo_endoso == 'iniciacion':
+                mov._set_default_inclusion()
                 mov._prepare_comision_inicio()
             set_auditoria(mov, 'processed')
             mov.save()
@@ -538,6 +556,10 @@ class Movimiento(Workflow, ModelSQL, ModelView):
                 pl.state = 'cancelada'
             else:
                 pl.state = 'vigente'
+            if mov.tipo_endoso == 'iniciacion':
+                pl.renovacion = 0
+            elif mov.tipo_endoso == 'renovacion':
+                pl.renovacion += 1 
             pl.save()
 
             for cert in mov.inclusiones:
@@ -562,8 +584,6 @@ class Movimiento(Workflow, ModelSQL, ModelView):
                 cert.poliza = pl
                 cert.save()
 
-            mov._set_comision()
-
             for cert in mov.exclusiones:
                 if cert.state != 'incluido':
                     cls.raise_user_error(
@@ -576,6 +596,8 @@ class Movimiento(Workflow, ModelSQL, ModelView):
                 cert.state = 'excluido'
                 cert.poliza = pl
                 cert.save()
+
+            mov._set_comision()
 
             for mod in mov.modificaciones:
                 for f in fields_cert:

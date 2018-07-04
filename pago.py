@@ -5,6 +5,7 @@ from trytond.transaction import Transaction
 from trytond.pool import Pool
 from trytond.model import Workflow, ModelView, ModelSQL, fields
 from trytond.pyson import Eval, If, Not, In, Bool
+from decimal import Decimal
 from .tools import auditoria_field, get_current_date, set_auditoria
 
 __all__ = ['FormaPago', 'FrecuenciaPago', 'Pago']
@@ -70,6 +71,7 @@ class Pago(Workflow, ModelSQL, ModelView):
     cia = fields.Function(
         fields.Many2One('corseg.cia', 'Compania de Seguros'),
         'get_cia', searcher='search_cia')
+    renovacion = fields.Integer('Renovacion', readonly=True)
     fecha = fields.Date('Fecha', required=True,
         states={
             'readonly': Not(In(Eval('state'), ['borrador', 'procesado'])),
@@ -87,9 +89,29 @@ class Pago(Workflow, ModelSQL, ModelView):
     comision_cia = fields.Numeric('Comision Cia',
         digits=(16, Eval('currency_digits', 2)),
         required=True, states=_STATES, depends=['currency_digits'])
+    comision_cia_sugerida = fields.Numeric('Comision Cia Sugerida',
+        digits=(16, Eval('currency_digits', 2)), readonly=True)
+    comision_cia_ajuste = fields.Numeric('Comision Cia Ajuste',
+        digits=(16, Eval('currency_digits', 2)), readonly=True)
+    comision_cia_liq = fields.Function(
+        fields.Numeric('Comision Cia a Liquidar',
+            digits=(16, Eval('currency_digits', 2))),
+        'on_change_with_comision_cia_liq')
     comision_vendedor = fields.Numeric('Comision vendedor',
         digits=(16, Eval('currency_digits', 2)),
         required=True, states=_STATES, depends=['currency_digits'])
+    comision_vendedor_sugerida = fields.Numeric('Comision Vendedor Sugerida',
+        digits=(16, Eval('currency_digits', 2)), readonly=True)
+    comision_vendedor_ajuste = fields.Numeric('Comision Vendedor Ajuste',
+        digits=(16, Eval('currency_digits', 2)), readonly=True)
+    comision_vendedor_liq = fields.Function(
+        fields.Numeric('Comision Vendedor a Liquidar',
+            digits=(16, Eval('currency_digits', 2))),
+        'on_change_with_comision_vendedor_liq')
+
+    #TODO ajustes_comision_cia
+    #TODO ajustes_comision_vendedor
+
     comentario = fields.Text('Comentarios', size=None,
         states={
             'readonly': Not(In(Eval('state'), ['borrador', 'procesado'])),
@@ -201,19 +223,71 @@ class Pago(Workflow, ModelSQL, ModelView):
             return company.currency.digits
         return 2
 
+    @staticmethod
+    def default_comision_cia():
+        return Decimal('0.0')
+
+    @staticmethod
+    def default_comision_cia_sugerida():
+        return Decimal('0.0')
+
+    @staticmethod
+    def default_comision_cia_ajuste():
+        return Decimal('0.0')
+
+    @staticmethod
+    def default_comision_cia_liq():
+        return Decimal('0.0')
+
+    @staticmethod
+    def default_comision_vendedor():
+        return Decimal('0.0')
+
+    @staticmethod
+    def default_comision_vendedor_sugerida():
+        return Decimal('0.0')
+
+    @staticmethod
+    def default_comision_vendedor_ajuste():
+        return Decimal('0.0')
+
+    @staticmethod
+    def default_comision_vendedor_liq():
+        return Decimal('0.0')
+
+    @fields.depends('comision_cia', 'comision_cia_ajuste')
+    def on_change_with_comision_cia_liq(self, name=None):
+        return self.comision_cia + self.comision_cia_ajuste
+
+    @fields.depends('comision_vendedor', 'comision_vendedor_ajuste')
+    def on_change_with_comision_vendedor_liq(self, name=None):
+        return self.comision_vendedor + self.comision_vendedor_ajuste
+
     @fields.depends('poliza', 'cia', 'currency_digits',
-            'vendedor')
+            'vendedor', renovacion)
     def on_change_poliza(self):
         self.cia = None
         self.vendedor = None
         self.currency_digits = 2
+        self.renovacion = None
         if self.poliza:
             self.cia = self.poliza.cia
             self.currency_digits = \
                 self.poliza.currency_digits
             self.vendedor = self.poliza.vendedor
+            self.renovacion = self.poliza.renovacion
 
-
+    @fields.depends('vendedor', 'comision_cia', 'comision_vendedor')
+    def on_change_vendedor(self):
+        self.comision_cia = Decimal('0.0')
+        self.comision_vendedor = Decimal('0.0')
+        if self.vendedor:
+            self.comision_cia = \
+                self.poliza.cia_producto.get_comision_cia(
+                    self.poliza, self.monto)
+            self.comision_vendedor = \
+                self.poliza.cia_producto.get_comision_vendedor(
+                    self.poliza, self.vendedor, self.monto)
 
     def get_rec_name(self, name):
         if self.number:
