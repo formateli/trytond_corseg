@@ -7,7 +7,7 @@ this repository contains the full copyright notices and license terms. -->
     <field name="fecha"/>
     <field name="referencia"/>
     <field name="monto"/>
-    <field name="comision_cia"/>
-    <field name="comision_vendedor"/>
+    <field name="comision_cia_liq"/>
+    <field name="comision_vendedor_liq"/>
     <field name="state"/>
 </tree>

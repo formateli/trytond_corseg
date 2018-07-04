@@ -6,6 +6,7 @@ this repository contains the full copyright notices and license terms. -->
     <field name="cia_producto"/>
     <field name="numero"/>
     <field name="contratante"/>
+    <field name="renovacion"/>
     <field name="state"/>
     <field name="company"/>
 </tree>

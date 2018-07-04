@@ -88,30 +88,44 @@ class Pago(Workflow, ModelSQL, ModelView):
         states=_STATES, depends=_DEPENDS)
     comision_cia = fields.Numeric('Comision Cia',
         digits=(16, Eval('currency_digits', 2)),
-        required=True, states=_STATES, depends=['currency_digits'])
-    comision_cia_sugerida = fields.Numeric('Comision Cia Sugerida',
-        digits=(16, Eval('currency_digits', 2)), readonly=True)
-    comision_cia_ajuste = fields.Numeric('Comision Cia Ajuste',
-        digits=(16, Eval('currency_digits', 2)), readonly=True)
+        required=True, states=_STATES,
+        depends=['currency_digits'])
+    comision_cia_sugerida = fields.Numeric(
+        'Comision Cia Sugerida', readonly=True,
+        digits=(16, Eval('currency_digits', 2)),
+        depends=['currency_digits'])
+    comision_cia_ajuste = fields.Numeric(
+        'Comision Cia Ajuste', readonly=True,
+        digits=(16, Eval('currency_digits', 2)),
+        depends=['currency_digits'])
     comision_cia_liq = fields.Function(
         fields.Numeric('Comision Cia a Liquidar',
-            digits=(16, Eval('currency_digits', 2))),
+            digits=(16, Eval('currency_digits', 2)),
+            depends=['currency_digits']),
         'on_change_with_comision_cia_liq')
     comision_vendedor = fields.Numeric('Comision vendedor',
         digits=(16, Eval('currency_digits', 2)),
-        required=True, states=_STATES, depends=['currency_digits'])
-    comision_vendedor_sugerida = fields.Numeric('Comision Vendedor Sugerida',
-        digits=(16, Eval('currency_digits', 2)), readonly=True)
-    comision_vendedor_ajuste = fields.Numeric('Comision Vendedor Ajuste',
-        digits=(16, Eval('currency_digits', 2)), readonly=True)
+        required=True, states=_STATES,
+        depends=['currency_digits'])
+    comision_vendedor_sugerida = fields.Numeric(
+        'Comision Vendedor Sugerida', readonly=True,
+        digits=(16, Eval('currency_digits', 2)),
+        depends=['currency_digits'])
+    comision_vendedor_ajuste = fields.Numeric(
+        'Comision Vendedor Ajuste', readonly=True,
+        digits=(16, Eval('currency_digits', 2)),
+        depends=['currency_digits'])
     comision_vendedor_liq = fields.Function(
         fields.Numeric('Comision Vendedor a Liquidar',
-            digits=(16, Eval('currency_digits', 2))),
+            digits=(16, Eval('currency_digits', 2)),
+            depends=['currency_digits']),
         'on_change_with_comision_vendedor_liq')
-
-    #TODO ajustes_comision_cia
-    #TODO ajustes_comision_vendedor
-
+    ajustes_comision_cia = fields.One2Many(
+        'corseg.comision.ajuste.cia',
+        'pago', 'Ajustes Comision Cia', readonly=True)
+    ajustes_comision_vendedor = fields.One2Many(
+        'corseg.comision.ajuste.vendedor',
+        'pago', 'Ajustes Comision Vendedor', readonly=True)
     comentario = fields.Text('Comentarios', size=None,
         states={
             'readonly': Not(In(Eval('state'), ['borrador', 'procesado'])),
@@ -255,16 +269,81 @@ class Pago(Workflow, ModelSQL, ModelView):
     def default_comision_vendedor_liq():
         return Decimal('0.0')
 
-    @fields.depends('comision_cia', 'comision_cia_ajuste')
+    @fields.depends('monto', 'comision_cia', 'comision_cia_ajuste')
     def on_change_with_comision_cia_liq(self, name=None):
         return self.comision_cia + self.comision_cia_ajuste
 
-    @fields.depends('comision_vendedor', 'comision_vendedor_ajuste')
+    @fields.depends('monto', 'comision_vendedor', 'comision_vendedor_ajuste')
     def on_change_with_comision_vendedor_liq(self, name=None):
         return self.comision_vendedor + self.comision_vendedor_ajuste
 
+    @fields.depends('poliza', 'vendedor', 'monto',
+            'comision_cia', 'comision_vendedor',
+            'comision_cia_sugerida', 'comision_vendedor_sugerida',
+            'comision_cia_liq', 'comision_vendedor_liq')
+    def on_change_monto(self):
+        Comision = Pool().get('corseg.comision')
+        self.comision_cia = Decimal('0.0')
+        self.comision_vendedor = Decimal('0.0')
+        self.comision_cia_sugerida = Decimal('0.0')
+        self.comision_vendedor_sugerida = Decimal('0.0')
+        self.comision_cia_liq = Decimal('0.0')
+        self.comision_vendedor_liq = Decimal('0.0')
+        if self.monto:
+            if self.poliza:
+                if self.poliza.comision_cia:
+                    self.comision_cia = \
+                        Comision.get_comision(
+                            self.poliza,
+                            self.poliza.comision_cia,
+                            self.monto)
+                elif self.poliza.cia_producto.comision_cia:
+                    self.comision_cia = \
+                        Comision.get_comision(
+                            self.poliza,
+                            self.poliza.cia_producto.comision_cia.lineas,
+                            self.monto)
+
+            if self.poliza and self.vendedor:
+                if self.poliza.comision_vendedor:
+                    self.comision_vendedor = \
+                        Comision.get_comision(
+                            self.poliza,
+                            self.poliza.comision_vendedor,
+                            self.monto)
+
+                elif self.poliza.cia_producto.comision_vendedor:
+                    found = False
+                    for line in self.poliza.cia_producto.comision_vendedor:
+                        if line.vendedor.id == self.vendedor.id:
+                            self.comision_vendedor = \
+                                Comision.get_comision(
+                                    self.poliza,
+                                    line.comision.lineas,
+                                    self.monto)
+                            found = True
+                            break
+                    if not found and \
+                            self.poliza.cia_producto.comision_vendedor_defecto:
+                        self.comision_vendedor = Comision.get_comision(
+                            self.poliza,
+                            self.poliza.cia_producto.comision_vendedor_defecto.lineas,
+                            self.monto)
+
+                elif self.poliza.cia_producto.comision_vendedor_defecto:
+                    self.comision_vendedor = Comision.get_comision(
+                        self.poliza,
+                        self.poliza.cia_producto.comision_vendedor_defecto.lineas,
+                        self.monto)
+
+            self.comision_cia_sugerida = self.comision_cia
+            self.comision_vendedor_sugerida = self.comision_vendedor
+
     @fields.depends('poliza', 'cia', 'currency_digits',
-            'vendedor', renovacion)
+            'vendedor', 'renovacion', 'monto',
+            'comision_cia', 'comision_vendedor',
+            'comision_cia_sugerida', 'comision_vendedor_sugerida',
+            'comision_cia_liq', 'comision_vendedor_liq')
     def on_change_poliza(self):
         self.cia = None
         self.vendedor = None
@@ -276,18 +355,14 @@ class Pago(Workflow, ModelSQL, ModelView):
                 self.poliza.currency_digits
             self.vendedor = self.poliza.vendedor
             self.renovacion = self.poliza.renovacion
+        self.on_change_monto()
 
-    @fields.depends('vendedor', 'comision_cia', 'comision_vendedor')
+    @fields.depends('poliza', 'vendedor', 'monto',
+            'comision_cia', 'comision_vendedor',
+            'comision_cia_sugerida', 'comision_vendedor_sugerida',
+            'comision_cia_liq', 'comision_vendedor_liq')
     def on_change_vendedor(self):
-        self.comision_cia = Decimal('0.0')
-        self.comision_vendedor = Decimal('0.0')
-        if self.vendedor:
-            self.comision_cia = \
-                self.poliza.cia_producto.get_comision_cia(
-                    self.poliza, self.monto)
-            self.comision_vendedor = \
-                self.poliza.cia_producto.get_comision_vendedor(
-                    self.poliza, self.vendedor, self.monto)
+        self.on_change_monto()
 
     def get_rec_name(self, name):
         if self.number:

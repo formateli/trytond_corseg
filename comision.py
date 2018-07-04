@@ -5,6 +5,7 @@ from trytond.pool import Pool
 from trytond.model import Workflow, ModelView, ModelSQL, fields
 from trytond.pyson import Eval, If, Not, In
 from trytond.modules.company.model import CompanyValueMixin
+from decimal import Decimal
 from .tools import auditoria_field, get_current_date, set_auditoria
 
 __all__ = [
@@ -75,6 +76,46 @@ class Comision(ModelSQL, ModelView):
     @staticmethod
     def default_active():
         return True
+
+    @classmethod
+    def get_comision(cls, poliza, lineas, monto):
+        if not poliza or not monto or not lineas:
+            return Decimal('0.0')
+
+        last_linea = None
+        for linea in lineas:
+            if linea.renovacion == poliza.renovacion:
+                result = cls._get_comision_linea(
+                    poliza, linea, monto)
+                break
+            elif linea.renovacion > poliza.renovacion:
+                if last_linea.tipo_comision.r_renovacion:
+                    result = cls._get_comision_linea(
+                        poliza, last_linea, monto)
+                break
+            last_linea = linea
+        return result
+
+    @classmethod
+    def _get_comision_linea(cls, poliza, linea, monto):
+        Pago = Pool().get('corseg.poliza.pago')
+        result = Decimal('0.0')
+
+        pagos = Pago.search([
+                ('poliza', '=', poliza.id),
+                ('renovacion', '=', poliza.renovacion)
+            ])
+
+        if not linea.re_cuota and \
+                pagos:
+            return result
+
+        if linea.tipo_comision.tipo == 'fijo':
+            result = linea.tipo_comision.monto
+        else:
+            result = monto * (linea.tipo_comision.monto / 100)
+
+        return result
 
 
 class ComisionLinea(ComisionBaseLinea):
@@ -188,7 +229,6 @@ class ComisionAjusteCia(Workflow, ModelSQL, ModelView):
         states={
             'readonly': Not(In(Eval('state'), ['borrador',])),
         }, depends=['company', 'state'])
-    #TODO liq_cia -> function
     currency = fields.Many2One('currency.currency',
         'Moneda', required=False, readonly=True)
     currency_digits = fields.Function(fields.Integer('Currency Digits'),
@@ -204,7 +244,7 @@ class ComisionAjusteCia(Workflow, ModelSQL, ModelView):
         digits=(16, Eval('currency_digits', 2)),
         states={
             'readonly': Not(In(Eval('state'), ['borrador',])),
-        }, depends=['currency_digits'])
+        }, depends=['state', 'currency_digits'])
     monto_compensado = fields.Function(fields.Numeric('Monto',
         digits=(16, Eval('currency_digits', 2)),
         depends=['currency_digits']), 'get_monto_compensado')
@@ -319,7 +359,8 @@ class ComisionAjusteCiaCompensacion(ModelSQL, ModelView):
     ajuste = fields.Many2One('corseg.comision.ajuste.cia',
         'Ajuste', ondelete='CASCADE', select=True, required=True)
     monto = fields.Numeric('Monto', required=True,
-        digits=(16, Eval('_parent_currency_digits', 2)))
+            digits=(16, Eval('_parent_currency_digits', 2))
+        )
 
 
 class ComisionAjusteVendedor(Workflow, ModelSQL, ModelView):
@@ -352,7 +393,6 @@ class ComisionAjusteVendedor(Workflow, ModelSQL, ModelView):
         states={
             'readonly': Not(In(Eval('state'), ['borrador',])),
         }, depends=['company', 'state'])
-    #TODO liq_vendedor -> function
     currency = fields.Many2One('currency.currency',
         'Moneda', required=False, readonly=True)
     currency_digits = fields.Function(fields.Integer('Currency Digits'),
@@ -365,7 +405,7 @@ class ComisionAjusteVendedor(Workflow, ModelSQL, ModelView):
         digits=(16, Eval('currency_digits', 2)),
         states={
             'readonly': Not(In(Eval('state'), ['borrador',])),
-        }, depends=['currency_digits'])
+        }, depends=['state', 'currency_digits'])
     state = fields.Selection([
             ('borrador', 'Borrador'),
             ('procesado', 'Procesado'),

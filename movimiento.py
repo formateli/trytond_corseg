@@ -174,6 +174,10 @@ class Movimiento(Workflow, ModelSQL, ModelView):
             'readonly': Not(In(Eval('state'), ['borrador'])),
         }, depends=['tipo', 'state']
     )
+    numero = fields.Char('Numero de Poliza',
+        states={
+            'readonly': Not(In(Eval('state'), ['borrador',])),
+        }, depends=['state'])
     contratante = fields.Many2One('party.party', 'Contratante',
         states={
             'required': In(Eval('tipo_endoso'), ['iniciacion',]),
@@ -353,12 +357,14 @@ class Movimiento(Workflow, ModelSQL, ModelView):
     def on_change_tipo(self):
         self.tipo_endoso = None
 
-    @fields.depends('poliza', 'currency_digits')
+    @fields.depends('poliza', 'currency_digits', 'poliza_state')
     def on_change_poliza(self):
+        self.poliza_state = None
         self.currency_digits = 2
         if self.poliza:
             self.currency_digits = \
                 self.poliza.currency_digits
+            self.poliza_state = self.poliza.state
 
     def get_currency_digits(self, name=None):
         if self.poliza:
@@ -463,7 +469,7 @@ class Movimiento(Workflow, ModelSQL, ModelView):
             
     @classmethod
     def _get_poliza_fields(cls):
-        fields = ['contratante', 'f_emision',
+        fields = ['numero', 'contratante', 'f_emision',
             'f_desde', 'f_hasta', 'suma_asegurada',
             'prima', 'forma_pago', 'frecuencia_pago',
             'no_cuotas', 'vendedor']

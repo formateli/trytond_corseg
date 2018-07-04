@@ -127,10 +127,10 @@ class LiquidacionBase(Workflow, ModelSQL, ModelView):
             return self.id
 
     def _get_total(self, pagos, ente):
-        total = Decimal(0.0)
+        total = Decimal('0.0')
         if pagos:
             for pago in pagos:
-                total += getattr(pago, 'comision_' + ente)
+                total += getattr(pago, 'comision_' + ente + '_liq')
         return total
 
     def get_currency_digits(self, name=None):

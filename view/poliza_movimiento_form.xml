@@ -10,6 +10,9 @@ this repository contains the full copyright notices and license terms. -->
     <field name="poliza"/>
     <label name="poliza_state"/>
     <field name="poliza_state"/>
+    <label name="numero"/>
+    <field name="numero"/>
+    <newline/>
     <label name="descripcion"/>
     <field name="descripcion" colspan="3"/>
     <label name="tipo"/>
