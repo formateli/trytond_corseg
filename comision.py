@@ -1,6 +1,7 @@
 #This file is part of tryton-corseg project. The COPYRIGHT file at the top level of
 #this repository contains the full copyright notices and license terms.
 
+from trytond.transaction import Transaction
 from trytond.pool import Pool
 from trytond.model import Workflow, ModelView, ModelSQL, fields
 from trytond.pyson import Eval, If, Not, In
@@ -108,6 +109,7 @@ class Comision(ModelSQL, ModelView):
 
         if not linea.re_cuota and \
                 pagos:
+            # solo un solo pago
             return result
 
         if linea.tipo_comision.tipo == 'fijo':
@@ -261,12 +263,15 @@ class ComisionAjusteCia(Workflow, ModelSQL, ModelView):
             ('borrador', 'Borrador'),
             ('procesado', 'Procesado'),
             ('confirmado', 'Confirmado'),
+            ('cancelado', 'Cancelado'),
             ('pendiente', 'Pendiente'),
             ('compensado', 'Compensado'),
             ('finalizado', 'Finalizado'),
         ], 'Estado', required=True, readonly=True)
     made_by = auditoria_field('user', 'Creado por')
     made_date = auditoria_field('date', 'fecha')
+    canceled_by = auditoria_field('user', 'Cancelado por')
+    canceled_date = auditoria_field('date', 'fecha')
     finalizado_by = auditoria_field('user', 'Finalizado por')
     finalizado_date = auditoria_field('date', 'fecha')
 
@@ -274,19 +279,27 @@ class ComisionAjusteCia(Workflow, ModelSQL, ModelView):
     def __setup__(cls):
         super(ComisionAjusteCia, cls).__setup__()
         cls._order = [
-                ('fecha', 'DESC'),
                 ('number', 'DESC'),
+                ('fecha', 'DESC'),
             ]
         cls._error_messages.update({
                 'delete_borrador': ('El Ajuste "%s" debe estar '
                     'en "Borrador" antes de eliminarse.'),
                 })
+
         cls._transitions |= set(
             (
+                ('cancelado', 'borrador'),
                 ('pendiente', 'finalizado'),
             )
         )
+
         cls._buttons.update({
+            'borrador': {
+                'invisible': ~Eval('state').in_(['cancelado']),
+                'icon': If(Eval('state') == 'cancelado',
+                    'tryton-clear', 'tryton-go-previous'),
+                },
             'finalizar': {
                 'invisible': Not(In(Eval('state'), ['pendiente'])),
                 },
@@ -334,6 +347,7 @@ class ComisionAjusteCia(Workflow, ModelSQL, ModelView):
                 values['made_by'] = Transaction().user
                 values['made_date'] = get_current_date()
         ajustes = super(ComisionAjusteCia, cls).create(vlist)
+        cls.set_number(ajustes)
         return ajustes
 
     @classmethod
@@ -342,6 +356,12 @@ class ComisionAjusteCia(Workflow, ModelSQL, ModelView):
             if ajuste.state not in ['borrador',]:
                 cls.raise_user_error('delete_borrador', (ajuste.rec_name,))
         super(ComisionAjusteCia, cls).delete(ajustes)
+
+    @classmethod
+    @ModelView.button
+    @Workflow.transition('borrador')
+    def borrador(cls, movs):
+        pass
 
     @classmethod
     @ModelView.button
@@ -358,6 +378,8 @@ class ComisionAjusteCiaCompensacion(ModelSQL, ModelView):
 
     ajuste = fields.Many2One('corseg.comision.ajuste.cia',
         'Ajuste', ondelete='CASCADE', select=True, required=True)
+    ajuste_compensa = fields.Many2One('corseg.comision.ajuste.cia',
+        'Compensado por', required=True)
     monto = fields.Numeric('Monto', required=True,
             digits=(16, Eval('_parent_currency_digits', 2))
         )

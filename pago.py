@@ -94,10 +94,11 @@ class Pago(Workflow, ModelSQL, ModelView):
         'Comision Cia Sugerida', readonly=True,
         digits=(16, Eval('currency_digits', 2)),
         depends=['currency_digits'])
-    comision_cia_ajuste = fields.Numeric(
-        'Comision Cia Ajuste', readonly=True,
-        digits=(16, Eval('currency_digits', 2)),
-        depends=['currency_digits'])
+    comision_cia_ajuste = fields.Function(
+        fields.Numeric('Comision Cia Ajuste',
+            digits=(16, Eval('currency_digits', 2)),
+            depends=['currency_digits']),
+        'on_change_with_comision_cia_ajuste')
     comision_cia_liq = fields.Function(
         fields.Numeric('Comision Cia a Liquidar',
             digits=(16, Eval('currency_digits', 2)),
@@ -111,10 +112,11 @@ class Pago(Workflow, ModelSQL, ModelView):
         'Comision Vendedor Sugerida', readonly=True,
         digits=(16, Eval('currency_digits', 2)),
         depends=['currency_digits'])
-    comision_vendedor_ajuste = fields.Numeric(
-        'Comision Vendedor Ajuste', readonly=True,
-        digits=(16, Eval('currency_digits', 2)),
-        depends=['currency_digits'])
+    comision_vendedor_ajuste = fields.Function(
+        fields.Numeric('Comision Vendedor Ajuste',
+            digits=(16, Eval('currency_digits', 2)),
+            depends=['currency_digits']),
+        'on_change_with_comision_vendedor_ajuste')
     comision_vendedor_liq = fields.Function(
         fields.Numeric('Comision Vendedor a Liquidar',
             digits=(16, Eval('currency_digits', 2)),
@@ -273,9 +275,25 @@ class Pago(Workflow, ModelSQL, ModelView):
     def on_change_with_comision_cia_liq(self, name=None):
         return self.comision_cia + self.comision_cia_ajuste
 
+    @fields.depends('ajustes_comision_cia')
+    def on_change_with_comision_cia_ajuste(self, name=None):
+        result = Decimal('0.0')
+        if self.ajustes_comision_cia:
+            for ajuste in self.ajustes_comision_cia:
+                result += ajuste.monto
+        return result
+
     @fields.depends('monto', 'comision_vendedor', 'comision_vendedor_ajuste')
     def on_change_with_comision_vendedor_liq(self, name=None):
         return self.comision_vendedor + self.comision_vendedor_ajuste
+
+    @fields.depends('ajustes_comision_vendedor')
+    def on_change_with_comision_vendedor_ajuste(self, name=None):
+        result = Decimal('0.0')
+        if self.ajustes_comision_vendedor:
+            for ajuste in self.ajustes_comision_vendedor:
+                result += ajuste.monto
+        return result
 
     @fields.depends('poliza', 'vendedor', 'monto',
             'comision_cia', 'comision_vendedor',

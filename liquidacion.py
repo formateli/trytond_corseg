@@ -77,6 +77,12 @@ class LiquidacionBase(Workflow, ModelSQL, ModelView):
         cls._error_messages.update({
                 'delete_cancel': ('La Liquidacion "%s" debe estar '
                     'cancelada antes de eliminarse.'),
+                'ajuste_state': ('El Estado del Ajuste "%s" '
+                    'es invalido.'),
+                'pago_confirmado': ('El Estado del Pago "%s" '
+                    'debe ser "Confirmado".'),
+                'pago_liq_cia': ('El Estado del Pago "%s" '
+                    'debe ser "Liquidado por la Cia".'),
                 })
         cls._transitions |= set(
             (
@@ -210,6 +216,28 @@ class LiquidacionCia(LiquidacionBase):
             self.pagos, 'cia')
 
     @classmethod
+    def _update_ajustes(cls, pago):
+        Ajuste = Pool().get('corseg.comision.ajuste.cia')
+        for ajuste in pago.ajustes_comision_cia:
+            if ajuste.state != 'procesado':
+                cls.raise_user_error(
+                    'ajuste_state', (ajuste.rec_name,))
+            ajuste.state = 'pendiente'
+            ajuste.save()
+
+        ajs = Ajuste.search([
+                ('pago.poliza', '=', pago.poliza.id),
+                ('state', '=', 'pendiente'),
+            ], order=[('number', 'ASC')])
+
+        if len(ajs) == 1:
+            return
+
+        for ajuste in ajs:
+            
+
+
+    @classmethod
     def set_number(cls, liqs):
         super(LiquidacionCia, cls).set_number(
             liqs, seq_name='liq_cia_seq')
@@ -225,6 +253,13 @@ class LiquidacionCia(LiquidacionBase):
     @Workflow.transition('procesado')
     def procesar(cls, liqs):
         for liq in liqs:
+            for pago in liq.pagos:
+                for ajuste in pago.ajustes_comision_cia:
+                    if ajuste.state != 'borrador': 
+                        cls.raise_user_error(
+                            'ajuste_state', (ajuste.rec_name,))
+                    ajuste.state = 'procesado'
+                    ajuste.save()
             set_auditoria(liq, 'processed')
             liq.save()
         cls.store_cache(liqs)
@@ -235,7 +270,18 @@ class LiquidacionCia(LiquidacionBase):
     def confirmar(cls, liqs):
         for liq in liqs:
             for pago in liq.pagos:
-                # TODO verificar el state del pago
+                if pago.state != 'confirmado':
+                    cls.raise_user_error(
+                        'pago_confirmado', (pago.rec_name,))
+                for ajuste in pago.ajustes_comision_cia:
+                    if ajuste.state != 'procesado': 
+                        cls.raise_user_error(
+                            'ajuste_state', (ajuste.rec_name,))
+                    #TODO validar si el estado es pendiente o compensado
+                    #probablemente 'confirmado' no sea necesario
+                    ajuste.state = 'confirmado'
+                    ajuste.save()
+
                 pago.liq_cia = liq
                 pago.state = 'liq_cia'
                 pago.save()
@@ -314,7 +360,9 @@ class LiquidacionVendedor(LiquidacionBase):
     def confirmar(cls, liqs):
         for liq in liqs:
             for pago in liq.pagos:
-                # TODO verificar el state del pago
+                if pago.state != 'liq_cia':
+                    cls.raise_user_error(
+                        'pago_liq_cia', (pago.rec_name,))
                 pago.liq_vendedor = liq
                 pago.state = 'liq_vendedor'
                 pago.save()
