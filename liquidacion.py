@@ -217,7 +217,10 @@ class LiquidacionCia(LiquidacionBase):
 
     @classmethod
     def _update_ajustes(cls, pago):
-        Ajuste = Pool().get('corseg.comision.ajuste.cia')
+        pool = Pool()
+        Ajuste = pool.get('corseg.comision.ajuste.cia')
+        Compensacion = pool.get('corseg.comision.ajuste.cia.compensacion')
+
         for ajuste in pago.ajustes_comision_cia:
             if ajuste.state != 'procesado':
                 cls.raise_user_error(
@@ -233,8 +236,62 @@ class LiquidacionCia(LiquidacionBase):
         if len(ajs) == 1:
             return
 
+        first = None
+        factor = None
         for ajuste in ajs:
-            
+            if first is None:
+                first = ajuste
+                if first.monto_pendiente > 0:
+                    factor = 1
+                else:
+                    factor = -1
+            else
+                if factor == 1 and ajuste.monto_pendiente < 0:
+                    saldo = first.monto_pendiente + ajuste.monto_pendiente
+                    compensar = False
+                    if saldo == 0:
+                        res = ajuste.monto_pendiente
+                        compensar = True
+                    elif saldo > 0:
+                        res = ajuste.monto_pendiente
+                    else:
+                        res = -first.monto_pendiente
+                        compensar = True
+
+                    compensacion = Compensacion(
+                            ajuste=first,
+                            ajuste_compensa=ajuste,
+                            monto = res
+                        )
+                    compensacion.save()
+
+                    if compensar:
+                        first.state = 'compensado'
+                        firsr.save()
+
+                elif factor == -1 and ajuste.monto_pendiente > 0:
+                    saldo = first.monto_pendiente + ajuste.monto_pendiente
+                    compensar = False
+                    if saldo == 0:
+                        res = ajuste.monto_pendiente
+                        compensar = True
+                    elif saldo < 0:
+                        res = ajuste.monto_pendiente
+                    else:
+                        res = -first.monto_pendiente
+                        compensar = True
+
+                    compensacion = Compensacion(
+                            ajuste=first,
+                            ajuste_compensa=ajuste,
+                            monto = res
+                        )
+                    compensacion.save()
+
+                    if compensar:
+                        first.state = 'compensado'
+                        firsr.save()
+
 
 
     @classmethod
@@ -273,20 +330,15 @@ class LiquidacionCia(LiquidacionBase):
                 if pago.state != 'confirmado':
                     cls.raise_user_error(
                         'pago_confirmado', (pago.rec_name,))
-                for ajuste in pago.ajustes_comision_cia:
-                    if ajuste.state != 'procesado': 
-                        cls.raise_user_error(
-                            'ajuste_state', (ajuste.rec_name,))
-                    #TODO validar si el estado es pendiente o compensado
-                    #probablemente 'confirmado' no sea necesario
-                    ajuste.state = 'confirmado'
-                    ajuste.save()
+
+                cls._update_ajustes(pago)
 
                 pago.liq_cia = liq
                 pago.state = 'liq_cia'
                 pago.save()
             set_auditoria(liq, 'confirmed')
             liq.save()
+
         cls.set_number(liqs)
         cls.store_cache(liqs)
         # TODO crear el account_move
