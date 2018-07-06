@@ -217,6 +217,9 @@ class LiquidacionCia(LiquidacionBase):
 
     @classmethod
     def _compensar_ajuste(cls, factor, first, ajuste):
+        Compensacion = pool.get(
+            'corseg.comision.ajuste.cia.compensacion')
+
         saldo = first.monto_pendiente + ajuste.monto_pendiente
         compensar_first = False
         compensar_ajuste = False
@@ -250,7 +253,6 @@ class LiquidacionCia(LiquidacionBase):
     def _update_ajustes(cls, pago):
         pool = Pool()
         Ajuste = pool.get('corseg.comision.ajuste.cia')
-        Compensacion = pool.get('corseg.comision.ajuste.cia.compensacion')
 
         for ajuste in pago.ajustes_comision_cia:
             if ajuste.state != 'procesado':
