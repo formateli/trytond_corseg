@@ -4,6 +4,7 @@ this repository contains the full copyright notices and license terms. -->
 <tree>
     <field name="number"/>
     <field name="poliza"/>
+    <field name="contratante"/>
     <field name="fecha"/>
     <field name="referencia"/>
     <field name="monto"/>

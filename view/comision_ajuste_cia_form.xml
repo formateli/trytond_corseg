@@ -8,9 +8,16 @@ this repository contains the full copyright notices and license terms. -->
     <field name="number"/>
     <label name="pago"/>
     <field name="pago"/>
+    <newline/>
     <label name="monto"/>
     <field name="monto"/>
+    <label name="monto_pendiente"/>
+    <field name="monto_pendiente"/>
     <notebook colspan="4">
+        <page string="Compensaciones" id="compensaciones">
+            <field name="compensaciones_recibidas" colspan="2"/>
+            <field name="compensaciones_dadas" colspan="2"/>
+        </page>
         <page string="Comentarios" id="comentario">
             <field name="comentario" colspan="4"/>
         </page>
@@ -33,13 +40,7 @@ this repository contains the full copyright notices and license terms. -->
     <group col="6" colspan="4" id="buttons" yfill="1">
         <label name="state"/>
         <field name="state"/>
-        <button name="cancelar" string="Cancelado"
-            icon="tryton-cancel"/>
         <button name="borrador" string="Borrador"/>
-        <button name="procesar" string="Procesar"
-            icon="tryton-ok"/>
-        <button name="confirmar" string="Confirmar"
-            icon="tryton-go-next"/>
         <button name="finalizar" string="Finalizar"
             icon="tryton-go-next"/>
     </group>

@@ -196,7 +196,7 @@ contains the full copyright notices and license terms. -->
             <field name="act_window" ref="act_liquidacion_cia_form"/>
         </record>
 
-        <menuitem name="Cia de Seguros" parent="menu_liq_comision" sequence="30"
+        <menuitem name="Liquidacion Cia" parent="menu_liq_comision" sequence="30"
             action="act_liquidacion_cia_form" id="menu_liquidacion_cia_tree"/>
 
         <record model="ir.model.access" id="access_liquidacion_cia">
@@ -290,7 +290,7 @@ contains the full copyright notices and license terms. -->
             <field name="act_window" ref="act_liquidacion_vendedor_form"/>
         </record>
 
-        <menuitem name="Vendedores" parent="menu_liq_comision" sequence="40"
+        <menuitem name="Liquidacion Vendedores" parent="menu_liq_comision" sequence="40"
             action="act_liquidacion_vendedor_form" id="menu_liquidacion_vendedor_tree"/>
 
         <record model="ir.model.access" id="access_liquidacion_vendedor">

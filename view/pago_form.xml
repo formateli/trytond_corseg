@@ -13,10 +13,13 @@ this repository contains the full copyright notices and license terms. -->
     <field name="poliza"/>
     <label name="cia"/>
     <field name="cia"/>
+    <label name="contratante"/>
+    <field name="contratante"/>
     <label name="renovacion"/>
     <field name="renovacion"/>
     <label name="vendedor"/>
     <field name="vendedor"/>
+    <newline />
     <label name="monto"/>
     <field name="monto"/>
     <newline />

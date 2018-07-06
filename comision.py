@@ -239,26 +239,22 @@ class ComisionAjusteCia(Workflow, ModelSQL, ModelView):
         states={
             'readonly': Not(In(Eval('state'), ['borrador', 'procesado'])),
         }, depends=['state'])
-    compensaciones = fields.One2Many(
+    compensaciones_recibidas = fields.One2Many(
         'corseg.comision.ajuste.cia.compensacion',
-        'ajuste', 'Compensaciones', readonly=True)
+        'ajuste', 'Compensaciones Recibidas', readonly=True)
+    compensaciones_dadas = fields.One2Many(
+        'corseg.comision.ajuste.cia.compensacion',
+        'ajuste_compensa', 'Compensaciones Dadas', readonly=True)
     monto = fields.Numeric('Monto', required=True,
         digits=(16, Eval('currency_digits', 2)),
         states={
             'readonly': Not(In(Eval('state'), ['borrador',])),
         }, depends=['state', 'currency_digits'])
-    monto_compensado = fields.Function(fields.Numeric('Monto',
-        digits=(16, Eval('currency_digits', 2)),
-        depends=['currency_digits']), 'get_monto_compensado')
-    monto_pendiente = fields.Function(fields.Numeric('Monto',
-        digits=(16, Eval('currency_digits', 2)),
-        depends=['currency_digits']), 'get_monto_pendiente')
-    monto_compensado_cache = fields.Numeric('Monto Compensado',
-        digits=(16, Eval('currency_digits', 2)),
-        depends=['currency_digits'])
-    monto_pendiente_cache = fields.Numeric('Monto Pendiente',
-        digits=(16, Eval('currency_digits', 2)),
-        depends=['currency_digits'])
+    monto_pendiente = fields.Function(
+        fields.Numeric('Pendiente',
+            digits=(16, Eval('currency_digits', 2)),
+        depends=['currency_digits']),
+        'on_change_with_monto_pendiente')
     state = fields.Selection([
             ('borrador', 'Borrador'),
             ('procesado', 'Procesado'),
@@ -325,6 +321,17 @@ class ComisionAjusteCia(Workflow, ModelSQL, ModelView):
         if self.pago:
             self.currency = self.pago.currency
             self.currency_digits = self.pago.currency_digits
+
+    @fields.depends('compensaciones_recibidas', 'compensaciones_dadas')
+    def on_change_with_monto_pendiente(self, name=None):
+        result = self.monto
+        if self.compensaciones_recibidas:
+            for comp in self.compensaciones_recibidas:
+                result += comp.monto
+        if self.compensaciones_dadas:
+            for comp in self.compensaciones_dadas:
+                result -= comp.monto
+        return result
 
     @classmethod
     def set_number(cls, ajustes):

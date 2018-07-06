@@ -71,6 +71,9 @@ class Pago(Workflow, ModelSQL, ModelView):
     cia = fields.Function(
         fields.Many2One('corseg.cia', 'Compania de Seguros'),
         'get_cia', searcher='search_cia')
+    contratante = fields.Function(
+        fields.Many2One('party.party', 'Contratante'),
+        'get_contratante')
     renovacion = fields.Integer('Renovacion', readonly=True)
     fecha = fields.Date('Fecha', required=True,
         states={
@@ -391,6 +394,10 @@ class Pago(Workflow, ModelSQL, ModelView):
     def get_cia(self, name):
         if self.poliza:
             return self.poliza.cia.id
+
+    def get_contratante(self, name):
+        if self.poliza and self.poliza.contratante:
+            return self.poliza.contratante.id
 
     def get_currency_digits(self, name=None):
         if self.poliza:

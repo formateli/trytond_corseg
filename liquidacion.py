@@ -216,6 +216,37 @@ class LiquidacionCia(LiquidacionBase):
             self.pagos, 'cia')
 
     @classmethod
+    def _compensar_ajuste(cls, factor, first, ajuste):
+        saldo = first.monto_pendiente + ajuste.monto_pendiente
+        compensar_first = False
+        compensar_ajuste = False
+        if saldo == 0:
+            res = ajuste.monto_pendiente
+            compensar_first = True
+            compensar_ajuste = True
+        elif (factor == 1 and saldo > 0) or \
+                (factor == -1 and saldo < 0):
+            res = ajuste.monto_pendiente
+            compensar_ajuste = True
+        else:
+            res = -first.monto_pendiente
+            compensar_first = True
+
+        compensacion = Compensacion(
+                ajuste=first,
+                ajuste_compensa=ajuste,
+                monto = res
+            )
+        compensacion.save()
+
+        if compensar_first:
+            first.state = 'compensado'
+            first.save()
+        if compensar_ajuste:
+            ajuste.state = 'compensado'
+            ajuste.save()
+
+    @classmethod
     def _update_ajustes(cls, pago):
         pool = Pool()
         Ajuste = pool.get('corseg.comision.ajuste.cia')
@@ -228,71 +259,29 @@ class LiquidacionCia(LiquidacionBase):
             ajuste.state = 'pendiente'
             ajuste.save()
 
-        ajs = Ajuste.search([
-                ('pago.poliza', '=', pago.poliza.id),
-                ('state', '=', 'pendiente'),
-            ], order=[('number', 'ASC')])
+        requery = True
+        while requery:
+            ajs = Ajuste.search([
+                    ('pago.poliza', '=', pago.poliza.id),
+                    ('state', '=', 'pendiente'),
+                ], order=[('number', 'ASC')])
 
-        if len(ajs) == 1:
-            return
-
-        first = None
-        factor = None
-        for ajuste in ajs:
-            if first is None:
-                first = ajuste
-                if first.monto_pendiente > 0:
-                    factor = 1
+            requery = False
+            first = None
+            factor = None
+            for ajuste in ajs:
+                if first is None:
+                    first = ajuste
+                    if first.monto_pendiente > 0:
+                        factor = 1
+                    else:
+                        factor = -1
                 else:
-                    factor = -1
-            else
-                if factor == 1 and ajuste.monto_pendiente < 0:
-                    saldo = first.monto_pendiente + ajuste.monto_pendiente
-                    compensar = False
-                    if saldo == 0:
-                        res = ajuste.monto_pendiente
-                        compensar = True
-                    elif saldo > 0:
-                        res = ajuste.monto_pendiente
-                    else:
-                        res = -first.monto_pendiente
-                        compensar = True
-
-                    compensacion = Compensacion(
-                            ajuste=first,
-                            ajuste_compensa=ajuste,
-                            monto = res
-                        )
-                    compensacion.save()
-
-                    if compensar:
-                        first.state = 'compensado'
-                        firsr.save()
-
-                elif factor == -1 and ajuste.monto_pendiente > 0:
-                    saldo = first.monto_pendiente + ajuste.monto_pendiente
-                    compensar = False
-                    if saldo == 0:
-                        res = ajuste.monto_pendiente
-                        compensar = True
-                    elif saldo < 0:
-                        res = ajuste.monto_pendiente
-                    else:
-                        res = -first.monto_pendiente
-                        compensar = True
-
-                    compensacion = Compensacion(
-                            ajuste=first,
-                            ajuste_compensa=ajuste,
-                            monto = res
-                        )
-                    compensacion.save()
-
-                    if compensar:
-                        first.state = 'compensado'
-                        firsr.save()
-
-
+                    if (factor == 1 and ajuste.monto_pendiente < 0) or \
+                            (factor == -1 and ajuste.monto_pendiente > 0):
+                        cls._compensar_ajuste(factor, first, ajuste)
+                        requery = True
+                        break
 
     @classmethod
     def set_number(cls, liqs):
