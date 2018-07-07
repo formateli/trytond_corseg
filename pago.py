@@ -388,8 +388,11 @@ class Pago(Workflow, ModelSQL, ModelView):
     def get_rec_name(self, name):
         if self.number:
             return self.number
-        else:
-            return self.id
+        return str(self.id)
+
+    @classmethod
+    def search_rec_name(cls, name, clause):
+        return [('number',) + tuple(clause[1:])]
 
     def get_cia(self, name):
         if self.poliza:

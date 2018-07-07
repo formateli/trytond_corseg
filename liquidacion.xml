@@ -52,14 +52,6 @@ contains the full copyright notices and license terms. -->
             <field name="act_window" ref="act_comision_ajuste_cia_form"/>
         </record>
         <record model="ir.action.act_window.domain"
-                id="act_comision_ajuste_cia_form_domain_confirmado">
-            <field name="name">Confirmados</field>
-            <field name="sequence" eval="30"/>
-            <field name="domain" eval="[('state', '=', 'confirmado')]" pyson="1"/>
-            <field name="count" eval="True"/>
-            <field name="act_window" ref="act_comision_ajuste_cia_form"/>
-        </record>
-        <record model="ir.action.act_window.domain"
                 id="act_comision_ajuste_cia_form_domain_compensado">
             <field name="name">Compensados</field>
             <field name="sequence" eval="40"/>

@@ -217,7 +217,7 @@ class LiquidacionCia(LiquidacionBase):
 
     @classmethod
     def _compensar_ajuste(cls, factor, first, ajuste):
-        Compensacion = pool.get(
+        Compensacion = Pool().get(
             'corseg.comision.ajuste.cia.compensacion')
 
         saldo = first.monto_pendiente + ajuste.monto_pendiente
@@ -294,7 +294,11 @@ class LiquidacionCia(LiquidacionBase):
     @ModelView.button
     @Workflow.transition('borrador')
     def borrador(cls, liqs):
-        pass
+        for liq in liqs:
+            for pago in liq.pagos:
+                for ajuste in pago.ajustes_comision_cia:
+                    ajuste.state = 'borrador'
+                    ajuste.save()
 
     @classmethod
     @ModelView.button
@@ -339,6 +343,10 @@ class LiquidacionCia(LiquidacionBase):
     @Workflow.transition('cancelado')
     def cancelar(cls, liqs):
         for liq in liqs:
+            for pago in liq.pagos:
+                for ajuste in pago.ajustes_comision_cia:
+                    ajuste.state = 'cancelado'
+                    ajuste.save()
             set_auditoria(liq, 'canceled')
             liq.save()
         cls.store_cache(liqs)

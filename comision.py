@@ -255,10 +255,10 @@ class ComisionAjusteCia(Workflow, ModelSQL, ModelView):
             digits=(16, Eval('currency_digits', 2)),
         depends=['currency_digits']),
         'on_change_with_monto_pendiente')
+    ajustar_vendedor = fields.Boolean('Crear Ajuste al Vendedor')
     state = fields.Selection([
             ('borrador', 'Borrador'),
             ('procesado', 'Procesado'),
-            ('confirmado', 'Confirmado'),
             ('cancelado', 'Cancelado'),
             ('pendiente', 'Pendiente'),
             ('compensado', 'Compensado'),
@@ -333,17 +333,20 @@ class ComisionAjusteCia(Workflow, ModelSQL, ModelView):
                 result -= comp.monto
         return result
 
+
     @classmethod
     def set_number(cls, ajustes):
         pool = Pool()
         Sequence = pool.get('ir.sequence')
         Config = pool.get('corseg.configuration')
+
         config = Config(1)
         for ajuste in ajustes:
             if ajuste.number:
                 continue
             ajuste.number = Sequence.get_id(
                 config.ajuste_comision_cia_seq.id)
+
         cls.save(ajustes)
 
     @classmethod
