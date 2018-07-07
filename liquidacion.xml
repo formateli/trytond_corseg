@@ -114,6 +114,92 @@ contains the full copyright notices and license terms. -->
         </record>
 
 
+        <!-- Ajuste Comision Vendedor -->
+        <record model="ir.ui.view" id="comision_ajuste_vendedor_view_form">
+            <field name="model">corseg.comision.ajuste.vendedor</field>
+            <field name="type">form</field>
+            <field name="name">comision_ajuste_vendedor_form</field>
+        </record>
+        <record model="ir.ui.view" id="comision_ajuste_vendedor_view_tree">
+            <field name="model">corseg.comision.ajuste.vendedor</field>
+            <field name="type">tree</field>
+            <field name="name">comision_ajuste_vendedor_tree</field>
+        </record>
+        <record model="ir.action.act_window" id="act_comision_ajuste_vendedor_form">
+            <field name="name">Ajuste Comision Vendedor</field>
+            <field name="res_model">corseg.comision.ajuste.vendedor</field>
+        </record>
+        <record model="ir.action.act_window.view" id="act_comision_ajuste_vendedor_form_view1">
+            <field name="sequence" eval="10"/>
+            <field name="view" ref="comision_ajuste_vendedor_view_tree"/>
+            <field name="act_window" ref="act_comision_ajuste_vendedor_form"/>
+        </record>
+        <record model="ir.action.act_window.view" id="act_comision_ajuste_vendedor_form_view2">
+            <field name="sequence" eval="20"/>
+            <field name="view" ref="comision_ajuste_vendedor_view_form"/>
+            <field name="act_window" ref="act_comision_ajuste_vendedor_form"/>
+        </record>
+
+        <record model="ir.action.act_window.domain"
+                id="act_comision_ajuste_vendedor_form_domain_borrador">
+            <field name="name">Borradores</field>
+            <field name="sequence" eval="10"/>
+            <field name="domain" eval="[('state', '=', 'borrador')]" pyson="1"/>
+            <field name="count" eval="True"/>
+            <field name="act_window" ref="act_comision_ajuste_vendedor_form"/>
+        </record>
+        <record model="ir.action.act_window.domain"
+                id="act_comision_ajuste_vendedor_form_domain_procesado">
+            <field name="name">Procesados</field>
+            <field name="sequence" eval="20"/>
+            <field name="domain" eval="[('state', '=', 'procesado')]" pyson="1"/>
+            <field name="count" eval="True"/>
+            <field name="act_window" ref="act_comision_ajuste_vendedor_form"/>
+        </record>
+        <record model="ir.action.act_window.domain"
+                id="act_comision_ajuste_vendedor_form_domain_confirmado">
+            <field name="name">Confirmados</field>
+            <field name="sequence" eval="40"/>
+            <field name="domain" eval="[('state', '=', 'compensado')]" pyson="1"/>
+            <field name="count" eval="True"/>
+            <field name="act_window" ref="act_comision_ajuste_vendedor_form"/>
+        </record>
+        <record model="ir.action.act_window.domain"
+                id="act_comision_ajuste_vendedor_form_domain_cancelado">
+            <field name="name">Cancelados</field>
+            <field name="sequence" eval="40"/>
+            <field name="domain" eval="[('state', '=', 'cancelado')]" pyson="1"/>
+            <field name="count" eval="True"/>
+            <field name="act_window" ref="act_comision_ajuste_vendedor_form"/>
+        </record>
+        <record model="ir.action.act_window.domain"
+                id="act_comision_ajuste_vendedor_form_domain_all">
+            <field name="name">Todos</field>
+            <field name="sequence" eval="9999"/>
+            <field name="domain"></field>
+            <field name="act_window" ref="act_comision_ajuste_vendedor_form"/>
+        </record>
+
+        <menuitem name="Ajuste Comision Vendedor" parent="menu_liq_comision" sequence="20"
+            action="act_comision_ajuste_vendedor_form" id="menu_comision_ajuste_vendedor_tree"/>
+
+        <record model="ir.model.access" id="access_comision_ajuste_vendedor">
+            <field name="model" search="[('model', '=', 'corseg.comision.ajuste.vendedor')]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_delete" eval="False"/>
+        </record>
+        <record model="ir.model.access" id="access_comision_ajuste_vendedor_admin">
+            <field name="model" search="[('model', '=', 'corseg.comision.ajuste.vendedor')]"/>
+            <field name="group" ref="group_corseg_admin"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_delete" eval="True"/>
+        </record>
+
+
         <!-- Liquidacion Cia -->
         <record model="ir.ui.view" id="liquidacion_cia_view_form">
             <field name="model">corseg.liquidacion.cia</field>

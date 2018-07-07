@@ -9,20 +9,9 @@ this repository contains the full copyright notices and license terms. -->
     <label name="pago"/>
     <field name="pago"/>
     <newline/>
-    <label name="ajustar_vendedor"/>
-    <field name="ajustar_vendedor"/>
-    <label name="ajuste_vendedor"/>
-    <field name="ajuste_vendedor"/>
-    <newline/>
     <label name="monto"/>
     <field name="monto"/>
-    <label name="monto_pendiente"/>
-    <field name="monto_pendiente"/>
     <notebook colspan="4">
-        <page string="Compensaciones" id="compensaciones">
-            <field name="compensaciones_recibidas" colspan="2"/>
-            <field name="compensaciones_dadas" colspan="2"/>
-        </page>
         <page string="Comentarios" id="comentario">
             <field name="comentario" colspan="4"/>
         </page>
@@ -36,10 +25,6 @@ this repository contains the full copyright notices and license terms. -->
             <field name="made_by"/>
             <label name="made_date"/>
             <field name="made_date"/>
-            <label name="finalizado_by"/>
-            <field name="finalizado_by"/>
-            <label name="finalizado_date"/>
-            <field name="finalizado_date"/>
         </page>
     </notebook>
     <group col="6" colspan="4" id="buttons" yfill="1">

@@ -4,7 +4,7 @@
 from trytond.transaction import Transaction
 from trytond.pool import Pool
 from trytond.model import Workflow, ModelView, ModelSQL, fields
-from trytond.pyson import Eval, If, Not, In
+from trytond.pyson import Eval, If, Not, In, Or, Bool
 from trytond.modules.company.model import CompanyValueMixin
 from decimal import Decimal
 from .tools import auditoria_field, get_current_date, set_auditoria
@@ -255,7 +255,18 @@ class ComisionAjusteCia(Workflow, ModelSQL, ModelView):
             digits=(16, Eval('currency_digits', 2)),
         depends=['currency_digits']),
         'on_change_with_monto_pendiente')
-    ajustar_vendedor = fields.Boolean('Crear Ajuste al Vendedor')
+    ajustar_vendedor = fields.Boolean('Crear Ajuste al Vendedor',
+        states={
+            'readonly': Or(
+                    Bool(Eval('ajuste_vendedor')),
+                    Not(In(Eval('state'), ['borrador',])),
+                ),
+        }, depends=['ajuste_vendedor', 'state'])
+    ajuste_vendedor = fields.Many2One(
+        'corseg.comision.ajuste.cia', 'Ajuste Vendedor', readonly=True,
+        states={
+            'invisible': Not(Bool(Eval('ajustar_vendedor'))),
+        }, depends=['ajustar_vendedor'])
     state = fields.Selection([
             ('borrador', 'Borrador'),
             ('procesado', 'Procesado'),
@@ -418,7 +429,10 @@ class ComisionAjusteVendedor(Workflow, ModelSQL, ModelView):
             ('company', '=', Eval('company')),
             If(
                 In(Eval('state'), ['borrador',]),
-                ('state', '=', 'liq_cia'),
+                ('OR',[
+                        ('state', '=', 'confirmado'),
+                        ('state', '=', 'liq_cia'),
+                    ]),
                 ('state', '!=', '')
             )
         ],
