@@ -395,6 +395,8 @@ class Movimiento(Workflow, ModelSQL, ModelView):
         certificado = Certificado(
             numero='1',
             asegurado=self.contratante,
+            suma_asegurada=self.suma_asegurada,
+            prima=self.prima,
         )
         certificado.save()
         self.inclusiones = [certificado,]

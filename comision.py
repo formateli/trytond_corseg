@@ -117,7 +117,7 @@ class Comision(ModelSQL, ModelView):
 
         if not linea.re_cuota and \
                 pagos:
-            # solo un solo pago
+            # un solo pago
             return result
 
         if linea.tipo_comision.tipo == 'fijo':

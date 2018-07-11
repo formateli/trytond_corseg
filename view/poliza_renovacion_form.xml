@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<!-- This file is part of trytond-corseg module. The COPYRIGHT file at the top level of
+this repository contains the full copyright notices and license terms. -->
+<form>
+    <label name="poliza"/>
+    <field name="poliza" colspan="3"/>
+    <label name="renovacion"/>
+    <field name="renovacion"/>
+    <label name="f_emision"/>
+    <field name="f_emision"/>
+    <label name="f_desde"/>
+    <field name="f_desde"/>
+    <label name="f_hasta"/>
+    <field name="f_hasta"/>
+    <label name="suma_asegurada"/>
+    <field name="suma_asegurada"/>
+    <label name="prima"/>
+    <field name="prima"/>
+</form>

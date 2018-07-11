@@ -8,10 +8,4 @@ this repository contains the full copyright notices and license terms. -->
     <field name="alias"/>
     <label name="active"/>
     <field name="active"/>
-    <newline />
-    <notebook colspan="4">
-        <page string="Tabla Comision" id="comision">
-            <field name="comision" colspan="4"/>
-        </page>
-    </notebook>
 </form>

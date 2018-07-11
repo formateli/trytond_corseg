@@ -193,6 +193,8 @@ class Pago(Workflow, ModelSQL, ModelView):
                     'cancelado antes de eliminarse.'),
                 'pago_confirmado': ('El Pago a sustiruir en el Pago "%s" '
                     'debe tener un estado de "Confirmado".'),
+                'pago_cero': ('El monto del Pago "%s" '
+                    'debe ser mayor que cero.'),
                 })
         cls._transitions |= set(
             (
@@ -344,7 +346,6 @@ class Pago(Workflow, ModelSQL, ModelView):
                             self.poliza,
                             self.poliza.comision_vendedor,
                             self.monto)
-
                 elif self.poliza.cia_producto.comision_vendedor:
                     found = False
                     for line in self.poliza.cia_producto.comision_vendedor:
@@ -362,7 +363,6 @@ class Pago(Workflow, ModelSQL, ModelView):
                             self.poliza,
                             self.poliza.cia_producto.comision_vendedor_defecto.lineas,
                             self.monto)
-
                 elif self.poliza.cia_producto.comision_vendedor_defecto:
                     self.comision_vendedor = Comision.get_comision(
                         self.poliza,
@@ -465,6 +465,9 @@ class Pago(Workflow, ModelSQL, ModelView):
     @Workflow.transition('procesado')
     def procesar(cls, pagos):
         for pago in pagos:
+            #if pago.monto <= 0:
+            #    cls.raise_user_error(
+            #        'pago_cero', (pago.rec_name,))            
             set_auditoria(pago, 'processed')
             pago.currency = pago.company.currency #TODO borrar despues de migrar
             pago.save()

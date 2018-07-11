@@ -392,6 +392,34 @@ contains the full copyright notices and license terms. -->
         </record>
 
 
+        <!-- Poliza Renovacion -->
+        <record model="ir.ui.view" id="poliza_renovacion_view_form">
+            <field name="model">corseg.poliza.renovacion</field>
+            <field name="type">form</field>
+            <field name="name">poliza_renovacion_form</field>
+        </record>
+        <record model="ir.ui.view" id="poliza_renovacion_view_tree">
+            <field name="model">corseg.poliza.renovacion</field>
+            <field name="type">tree</field>
+            <field name="name">poliza_renovacion_tree</field>
+        </record>
+        <record model="ir.model.access" id="access_poliza_renovacion">
+            <field name="model" search="[('model', '=', 'corseg.poliza.renovacion')]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_delete" eval="False"/>
+        </record>
+        <record model="ir.model.access" id="access_poliza_renovacion_admin">
+            <field name="model" search="[('model', '=', 'corseg.poliza.renovacion')]"/>
+            <field name="group" ref="group_corseg_admin"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_delete" eval="True"/>
+        </record>
+
+
         <!-- Vendedor -->
         <record model="ir.ui.view" id="vendedor_view_form">
             <field name="model">corseg.vendedor</field>
