@@ -89,6 +89,8 @@ class Pago(Workflow, ModelSQL, ModelView):
     vendedor = fields.Many2One('corseg.vendedor',
         'Vendedor', required=True,
         states=_STATES, depends=_DEPENDS)
+    vendedor_sugerido = fields.Many2One('corseg.vendedor',
+        'Vendedor Sugerido', readonly=True)
     comision_cia = fields.Numeric('Comision Cia',
         digits=(16, Eval('currency_digits', 2)),
         required=True, states=_STATES,
@@ -276,7 +278,12 @@ class Pago(Workflow, ModelSQL, ModelView):
 
     @fields.depends('monto', 'comision_cia', 'comision_cia_ajuste')
     def on_change_with_comision_cia_liq(self, name=None):
-        return self.comision_cia + self.comision_cia_ajuste
+        result = Decimal('0.0')
+        if self.comision_cia is not None:
+            result += self.comision_cia
+        if self.comision_cia_ajuste is not None:
+            result += self.comision_cia_ajuste
+        return result
 
     @fields.depends('ajustes_comision_cia')
     def on_change_with_comision_cia_ajuste(self, name=None):
@@ -288,7 +295,12 @@ class Pago(Workflow, ModelSQL, ModelView):
 
     @fields.depends('monto', 'comision_vendedor', 'comision_vendedor_ajuste')
     def on_change_with_comision_vendedor_liq(self, name=None):
-        return self.comision_vendedor + self.comision_vendedor_ajuste
+        result = Decimal('0.0')
+        if self.comision_vendedor is not None:
+            result += self.comision_vendedor
+        if self.comision_vendedor_ajuste is not None:
+            result += self.comision_vendedor_ajuste
+        return result
 
     @fields.depends('ajustes_comision_vendedor')
     def on_change_with_comision_vendedor_ajuste(self, name=None):
@@ -361,7 +373,7 @@ class Pago(Workflow, ModelSQL, ModelView):
             self.comision_vendedor_sugerida = self.comision_vendedor
 
     @fields.depends('poliza', 'cia', 'currency_digits',
-            'vendedor', 'renovacion', 'monto',
+            'vendedor', 'vendedor_sugerido', 'renovacion', 'monto',
             'comision_cia', 'comision_vendedor',
             'comision_cia_sugerida', 'comision_vendedor_sugerida',
             'comision_cia_liq', 'comision_vendedor_liq')
@@ -370,11 +382,13 @@ class Pago(Workflow, ModelSQL, ModelView):
         self.vendedor = None
         self.currency_digits = 2
         self.renovacion = None
+        self.vendedor_sugerido = None
         if self.poliza:
             self.cia = self.poliza.cia
             self.currency_digits = \
                 self.poliza.currency_digits
             self.vendedor = self.poliza.vendedor
+            self.vendedor_sugerido = self.poliza.vendedor
             self.renovacion = self.poliza.renovacion
         self.on_change_monto()
 

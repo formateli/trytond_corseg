@@ -192,10 +192,6 @@ contains the full copyright notices and license terms. -->
         <menuitem parent="menu_corseg_poliza" sequence="50"
             action="act_pago_form" id="menu_pago_tree"/>
 
-        <record model="res.group" id="group_corseg_pago">
-            <field name="name">Corseg Pagos</field>
-        </record>
-
         <record model="ir.model.access" id="access_pago">
             <field name="model" search="[('model', '=', 'corseg.poliza.pago')]"/>
             <field name="perm_read" eval="True"/>
@@ -211,13 +207,49 @@ contains the full copyright notices and license terms. -->
             <field name="perm_create" eval="True"/>
             <field name="perm_delete" eval="True"/>
         </record>
-        <record model="ir.model.access" id="access_corseg_pago">
-            <field name="model" search="[('model', '=', 'corseg.poliza.pago')]"/>
-            <field name="group" ref="group_corseg_pago"/>
-            <field name="perm_read" eval="True"/>
-            <field name="perm_write" eval="True"/>
-            <field name="perm_create" eval="True"/>
-            <field name="perm_delete" eval="True"/>
+
+        <record model="ir.model.button" id="pago_cancel_button">
+            <field name="name">cancelar</field>
+            <field name="model"
+                search="[('model', '=', 'corseg.poliza.pago')]"/>
+        </record>
+        <record model="ir.model.button-res.group"
+            id="pago_cancel_button_group_corseg_admin">
+            <field name="button" ref="pago_cancel_button"/>
+            <field name="group" ref="group_corseg_admin"/>
+        </record>
+
+        <record model="ir.model.button" id="pago_procesar_button">
+            <field name="name">procesar</field>
+            <field name="model"
+                search="[('model', '=', 'corseg.poliza.pago')]"/>
+        </record>
+        <record model="ir.model.button-res.group"
+            id="pago_procesar_button_group_corseg_admin">
+            <field name="button" ref="pago_procesar_button"/>
+            <field name="group" ref="group_corseg_admin"/>
+        </record>
+
+        <record model="ir.model.button" id="pago_confirmar_button">
+            <field name="name">confirmar</field>
+            <field name="model"
+                search="[('model', '=', 'corseg.poliza.pago')]"/>
+        </record>
+        <record model="ir.model.button-res.group"
+            id="pago_confirmar_button_group_corseg_admin">
+            <field name="button" ref="pago_confirmar_button"/>
+            <field name="group" ref="group_corseg_admin"/>
+        </record>
+
+        <record model="ir.model.button" id="pago_borrador_button">
+            <field name="name">borrador</field>
+            <field name="model"
+                search="[('model', '=', 'corseg.poliza.pago')]"/>
+        </record>
+        <record model="ir.model.button-res.group"
+            id="pago_borrador_button_group_corseg_admin">
+            <field name="button" ref="pago_borrador_button"/>
+            <field name="group" ref="group_corseg_admin"/>
         </record>
     </data>
 </tryton>

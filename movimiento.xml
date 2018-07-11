@@ -89,6 +89,50 @@ contains the full copyright notices and license terms. -->
             <field name="perm_delete" eval="True"/>
         </record>
 
+        <record model="ir.model.button" id="movimiento_cancel_button">
+            <field name="name">cancelar</field>
+            <field name="model"
+                search="[('model', '=', 'corseg.poliza.movimiento')]"/>
+        </record>
+        <record model="ir.model.button-res.group"
+            id="movimiento_cancel_button_group_corseg_admin">
+            <field name="button" ref="movimiento_cancel_button"/>
+            <field name="group" ref="group_corseg_admin"/>
+        </record>
+
+        <record model="ir.model.button" id="movimiento_procesar_button">
+            <field name="name">procesar</field>
+            <field name="model"
+                search="[('model', '=', 'corseg.poliza.movimiento')]"/>
+        </record>
+        <record model="ir.model.button-res.group"
+            id="movimiento_procesar_button_group_corseg_admin">
+            <field name="button" ref="movimiento_procesar_button"/>
+            <field name="group" ref="group_corseg_admin"/>
+        </record>
+
+        <record model="ir.model.button" id="movimiento_confirmar_button">
+            <field name="name">confirmar</field>
+            <field name="model"
+                search="[('model', '=', 'corseg.poliza.movimiento')]"/>
+        </record>
+        <record model="ir.model.button-res.group"
+            id="movimiento_confirmar_button_group_corseg_admin">
+            <field name="button" ref="movimiento_confirmar_button"/>
+            <field name="group" ref="group_corseg_admin"/>
+        </record>
+
+        <record model="ir.model.button" id="movimiento_borrador_button">
+            <field name="name">borrador</field>
+            <field name="model"
+                search="[('model', '=', 'corseg.poliza.movimiento')]"/>
+        </record>
+        <record model="ir.model.button-res.group"
+            id="movimiento_borrador_button_group_corseg_admin">
+            <field name="button" ref="movimiento_borrador_button"/>
+            <field name="group" ref="group_corseg_admin"/>
+        </record>
+
 
         <!-- Certificado -->
         <record model="ir.ui.view" id="certificado_view_form">

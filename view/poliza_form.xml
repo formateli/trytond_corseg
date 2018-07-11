@@ -52,9 +52,12 @@ this repository contains the full copyright notices and license terms. -->
             <separator string="Notas" colspan="6" id="notas"/>
             <field name="notas" colspan="6"/>
         </page>
+        <page string="Renovaciones" id="renovaciones">
+            <field name="renovaciones" colspan="4"/>
+        </page>
         <page string="Certificados" id="certificados">
-            <field name="certificados_in"/>
-            <field name="certificados_ex"/>
+            <field name="certificados_in" colspan="2"/>
+            <field name="certificados_ex" colspan="2"/>
         </page>
         <page string="Movimientos" id="movimientos">
             <field name="movimientos"/>

@@ -16,6 +16,7 @@ __all__ = [
         'GrupoPoliza',
         'ComentarioPoliza',
         'Poliza',
+        'Renovacion',
         'Vendedor',
     ]
 
@@ -223,16 +224,36 @@ class Poliza(ModelSQL, ModelView):
         depends=['state'])
     origen = fields.Many2One('corseg.poliza.origen', 'Origen')
     contratante = fields.Many2One('party.party', 'Contratante', readonly=True)
-    f_emision = fields.Date('Emitida el',  readonly=True)
-    f_desde = fields.Date('Desde',  readonly=True)
-    f_hasta = fields.Date('Hasta',  readonly=True)
-    renovacion = fields.Integer('Renovacion', readonly=True)
-    suma_asegurada = fields.Numeric('Suma Asegurada',
-        digits=(16, Eval('currency_digits', 2)), readonly=True,
-        depends=['currency_digits'])
-    prima = fields.Numeric('Prima',
-        digits=(16, Eval('currency_digits', 2)), readonly=True,
-        depends=['currency_digits'])
+
+#    renovacion = fields.Integer('Renovacion actual', readonly=True)
+#    f_emision = fields.Date('Emitida el',  readonly=True)
+#    f_desde = fields.Date('Desde',  readonly=True)
+#    f_hasta = fields.Date('Hasta',  readonly=True)
+#    suma_asegurada = fields.Numeric('Suma Asegurada',
+#        digits=(16, Eval('currency_digits', 2)), readonly=True,
+#        depends=['currency_digits'])
+#    prima = fields.Numeric('Prima',
+#        digits=(16, Eval('currency_digits', 2)), readonly=True,
+#        depends=['currency_digits'])
+
+
+    renovacion = fields.Function(fields.Integer('Renovacion actual'),
+        'get_renovacion')
+    f_emision = fields.Function(fields.Date('Emitida el'),
+        'get_renovacion')
+    f_desde = fields.Function(fields.Date('Desde:'),
+        'get_renovacion')
+    f_hasta = fields.Function(fields.Date('Hasta:'),
+        'get_renovacion')
+    suma_asegurada = fields.Function(fields.Numeric('Suma Asegurada',
+            digits=(16, Eval('currency_digits', 2))),
+        'get_renovacion')
+    prima = fields.Function(fields.Numeric('Prima',
+            digits=(16, Eval('currency_digits', 2))),
+        'get_renovacion')
+    renovaciones = fields.One2Many('corseg.poliza.renovacion',
+        'poliza', 'Renovaciones', readonly=True)
+
     vendedor = fields.Many2One('corseg.vendedor', 'Vendedor', readonly=True)
     notas = fields.Text('Notas', size=None)
     forma_pago = fields.Many2One('corseg.forma_pago', 'Forma pago',  readonly=True)
@@ -355,6 +376,12 @@ class Poliza(ModelSQL, ModelView):
             return self.currency.digits
         return 2
 
+    def get_renovacion(self, name):
+        result = None
+        if self.renovaciones:
+            result = getattr(self.renovaciones[0], name)
+        return result
+
     def get_ramo(self, name):
         if self.cia_producto:
             return self.cia_producto.ramo.rec_name
@@ -373,6 +400,29 @@ class Poliza(ModelSQL, ModelView):
         if self.prima:
             return self.prima - self.monto_pago
         return res
+
+
+class Renovacion(ModelSQL, ModelView):
+    'Poliza Renovacion'
+    __name__ = 'corseg.poliza.renovacion'
+
+    poliza = fields.Many2One('corseg.poliza',
+        'Poliza', required=True)
+    renovacion = fields.Integer('Renovacion', readonly=True)
+    f_emision = fields.Date('Emitida el',  readonly=True)
+    f_desde = fields.Date('Desde', readonly=True)
+    f_hasta = fields.Date('Hasta', readonly=True)
+    suma_asegurada = fields.Numeric('Suma Asegurada',
+        digits=(16, Eval('_parent_currency_digits', 2)), readonly=True)
+    prima = fields.Numeric('Prima',
+        digits=(16, Eval('_parent_currency_digits', 2)), readonly=True)
+
+    @classmethod
+    def __setup__(cls):
+        super(Renovacion, cls).__setup__()
+        cls._order = [
+                ('renovacion', 'DESC'),
+            ]
 
 
 class Vendedor(ModelSQL, ModelView):

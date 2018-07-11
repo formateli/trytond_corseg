@@ -45,6 +45,9 @@ this repository contains the full copyright notices and license terms. -->
                 <label name="comision_vendedor_ajuste"/>
                 <field name="comision_vendedor_ajuste"/>
             </group>
+            <label name="vendedor_sugerido"/>
+            <field name="vendedor_sugerido"/>
+            <newline/>
             <separator string="Ajustes" id="com_ajustes" colspan="4"/>
             <field name="ajustes_comision_cia" colspan="2"/>
             <field name="ajustes_comision_vendedor" colspan="2"/>

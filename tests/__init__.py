@@ -6,4 +6,5 @@ try:
 except ImportError:
     from .test_corseg import suite
 
+
 __all__ = ['suite']

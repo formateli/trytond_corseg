@@ -5,7 +5,7 @@ contains the full copyright notices and license terms. -->
 <tryton>
     <data>
         <menuitem parent="menu_corseg_configuration" sequence="25"
-            name="Comisiones" id="menu_comision"/>
+            name="Planes de Comision" id="menu_comision"/>
 
         <!-- Tipo Comision -->
         <record model="ir.ui.view" id="tipo_comision_view_form">

@@ -75,7 +75,6 @@ contains the full copyright notices and license terms. -->
             <field name="count" eval="True"/>
             <field name="act_window" ref="act_comision_ajuste_cia_form"/>
         </record>
-
         <record model="ir.action.act_window.domain"
                 id="act_comision_ajuste_cia_form_domain_cancelado">
             <field name="name">Cancelados</field>
@@ -84,8 +83,6 @@ contains the full copyright notices and license terms. -->
             <field name="count" eval="True"/>
             <field name="act_window" ref="act_comision_ajuste_cia_form"/>
         </record>
-
-
         <record model="ir.action.act_window.domain"
                 id="act_comision_ajuste_cia_form_domain_all">
             <field name="name">Todos</field>
@@ -111,6 +108,28 @@ contains the full copyright notices and license terms. -->
             <field name="perm_write" eval="True"/>
             <field name="perm_create" eval="True"/>
             <field name="perm_delete" eval="True"/>
+        </record>
+
+        <record model="ir.model.button" id="comision_ajuste_cia_borrador_button">
+            <field name="name">borrador</field>
+            <field name="model"
+                search="[('model', '=', 'corseg.comision.ajuste.cia')]"/>
+        </record>
+        <record model="ir.model.button-res.group"
+            id="comision_ajuste_cia_borrador_button_group_corseg_admin">
+            <field name="button" ref="comision_ajuste_cia_borrador_button"/>
+            <field name="group" ref="group_corseg_admin"/>
+        </record>
+
+        <record model="ir.model.button" id="comision_ajuste_cia_finalizar_button">
+            <field name="name">finalizar</field>
+            <field name="model"
+                search="[('model', '=', 'corseg.comision.ajuste.cia')]"/>
+        </record>
+        <record model="ir.model.button-res.group"
+            id="comision_ajuste_cia_finalizar_button_group_corseg_admin">
+            <field name="button" ref="comision_ajuste_cia_finalizar_button"/>
+            <field name="group" ref="group_corseg_admin"/>
         </record>
 
 
@@ -293,6 +312,50 @@ contains the full copyright notices and license terms. -->
             <field name="perm_delete" eval="True"/>
         </record>
 
+        <record model="ir.model.button" id="liquidacion_cia_cancel_button">
+            <field name="name">cancelar</field>
+            <field name="model"
+                search="[('model', '=', 'corseg.liquidacion.cia')]"/>
+        </record>
+        <record model="ir.model.button-res.group"
+            id="liquidacion_cia_cancel_button_group_corseg_admin">
+            <field name="button" ref="liquidacion_cia_cancel_button"/>
+            <field name="group" ref="group_corseg_admin"/>
+        </record>
+
+        <record model="ir.model.button" id="liquidacion_cia_procesar_button">
+            <field name="name">procesar</field>
+            <field name="model"
+                search="[('model', '=', 'corseg.liquidacion.cia')]"/>
+        </record>
+        <record model="ir.model.button-res.group"
+            id="liquidacion_cia_procesar_button_group_corseg_admin">
+            <field name="button" ref="liquidacion_cia_procesar_button"/>
+            <field name="group" ref="group_corseg_admin"/>
+        </record>
+
+        <record model="ir.model.button" id="liquidacion_cia_confirmar_button">
+            <field name="name">confirmar</field>
+            <field name="model"
+                search="[('model', '=', 'corseg.liquidacion.cia')]"/>
+        </record>
+        <record model="ir.model.button-res.group"
+            id="liquidacion_cia_confirmar_button_group_corseg_admin">
+            <field name="button" ref="liquidacion_cia_confirmar_button"/>
+            <field name="group" ref="group_corseg_admin"/>
+        </record>
+
+        <record model="ir.model.button" id="liquidacion_cia_borrador_button">
+            <field name="name">borrador</field>
+            <field name="model"
+                search="[('model', '=', 'corseg.liquidacion.cia')]"/>
+        </record>
+        <record model="ir.model.button-res.group"
+            id="liquidacion_cia_borrador_button_group_corseg_admin">
+            <field name="button" ref="liquidacion_cia_borrador_button"/>
+            <field name="group" ref="group_corseg_admin"/>
+        </record>
+
 
         <!-- Liquidacion Vendedor -->
         <record model="ir.ui.view" id="liquidacion_vendedor_view_form">
@@ -387,5 +450,48 @@ contains the full copyright notices and license terms. -->
             <field name="perm_delete" eval="True"/>
         </record>
 
+        <record model="ir.model.button" id="liquidacion_vendedor_cancel_button">
+            <field name="name">cancelar</field>
+            <field name="model"
+                search="[('model', '=', 'corseg.liquidacion.vendedor')]"/>
+        </record>
+        <record model="ir.model.button-res.group"
+            id="liquidacion_vendedor_cancel_button_group_corseg_admin">
+            <field name="button" ref="liquidacion_vendedor_cancel_button"/>
+            <field name="group" ref="group_corseg_admin"/>
+        </record>
+
+        <record model="ir.model.button" id="liquidacion_vendedor_procesar_button">
+            <field name="name">procesar</field>
+            <field name="model"
+                search="[('model', '=', 'corseg.liquidacion.vendedor')]"/>
+        </record>
+        <record model="ir.model.button-res.group"
+            id="liquidacion_vendedor_procesar_button_group_corseg_admin">
+            <field name="button" ref="liquidacion_vendedor_procesar_button"/>
+            <field name="group" ref="group_corseg_admin"/>
+        </record>
+
+        <record model="ir.model.button" id="liquidacion_vendedor_confirmar_button">
+            <field name="name">confirmar</field>
+            <field name="model"
+                search="[('model', '=', 'corseg.liquidacion.vendedor')]"/>
+        </record>
+        <record model="ir.model.button-res.group"
+            id="liquidacion_vendedor_confirmar_button_group_corseg_admin">
+            <field name="button" ref="liquidacion_vendedor_confirmar_button"/>
+            <field name="group" ref="group_corseg_admin"/>
+        </record>
+
+        <record model="ir.model.button" id="liquidacion_vendedor_borrador_button">
+            <field name="name">borrador</field>
+            <field name="model"
+                search="[('model', '=', 'corseg.liquidacion.vendedor')]"/>
+        </record>
+        <record model="ir.model.button-res.group"
+            id="liquidacion_vendedor_borrador_button_group_corseg_admin">
+            <field name="button" ref="liquidacion_vendedor_borrador_button"/>
+            <field name="group" ref="group_corseg_admin"/>
+        </record>
     </data>
 </tryton>

@@ -144,6 +144,7 @@ class Movimiento(Workflow, ModelSQL, ModelView):
         states={
             'readonly': Not(In(Eval('state'), ['borrador',])),
         }, depends=['company', 'state'])
+    renovacion = fields.Integer('Renovacion', readonly=True)
     poliza_state = fields.Function(fields.Char('Estado'),
         'get_poliza_state')
     fecha = fields.Date('Fecha', required=True,
@@ -376,9 +377,7 @@ class Movimiento(Workflow, ModelSQL, ModelView):
             return self.poliza.state
 
     def _fill_comision(self, parent, Comision, lineas):
-        print("fill...")
         for cm in lineas:
-            print("  fill")
             new = Comision()
             new.parent = parent
             new.renovacion = cm.renovacion
@@ -466,12 +465,18 @@ class Movimiento(Workflow, ModelSQL, ModelView):
             except:
                 pass
             setattr(obj, name, v)
+
+    @classmethod
+    def _get_renovacion_fields(cls):
+        fields = ['renovacion', 'f_emision',
+            'f_desde', 'f_hasta', 
+            'suma_asegurada', 'prima']
+        return fields
             
     @classmethod
     def _get_poliza_fields(cls):
-        fields = ['numero', 'contratante', 'f_emision',
-            'f_desde', 'f_hasta', 'suma_asegurada',
-            'prima', 'forma_pago', 'frecuencia_pago',
+        fields = ['numero', 'contratante',
+            'forma_pago', 'frecuencia_pago',
             'no_cuotas', 'vendedor']
         return fields
 
@@ -488,6 +493,22 @@ class Movimiento(Workflow, ModelSQL, ModelView):
             'ano', 's_motor', 's_carroceria',
             'color', 'transmision', 'uso', 'tipo']
         return fields
+
+    @classmethod
+    def _get_renovacion(cls, poliza, no, tipo):
+        Renovacion = Pool().get('corseg.poliza.renovacion')
+        if tipo in ['iniciacion', 'renovacion']:
+            renovacion = Renovacion(
+                    poliza=poliza,
+                    renovacion=no
+                )
+            renovacion.save()
+        else:
+            renovacion = Renovacion.search([
+                    ('poliza', '=', poliza.id),
+                    ('renovacion', '=', no),
+                ])[0]
+        return renovacion
 
     @classmethod
     def set_number(cls, movs):
@@ -552,20 +573,31 @@ class Movimiento(Workflow, ModelSQL, ModelView):
         pool = Pool()
         Vehiculo = pool.get('corseg.vehiculo')
         fields = cls._get_poliza_fields()
+        fields_renovacion = cls._get_renovacion_fields()
         fields_cert = cls._get_cert_fields()
         fields_vehiculo = cls._get_vehiculo_fields()
         for mov in movs:
             pl = mov.poliza
+            if mov.tipo_endoso == 'iniciacion':
+                renovacion_no = 0
+            elif mov.tipo_endoso == 'renovacion':
+                renovacion_no = pl.renovacion + 1
+            else:
+                renovacion_no = pl.renovacion
+
+            renovacion = cls._get_renovacion(
+                pl, renovacion_no, mov.tipo_endoso)
+            for f in fields_renovacion:
+                cls._act_field(f, renovacion, mov)
+            renovacion.save()
+
             for f in fields:
                 cls._act_field(f, pl, mov)
+
             if mov.tipo_endoso == 'cancelacion':
                 pl.state = 'cancelada'
             else:
                 pl.state = 'vigente'
-            if mov.tipo_endoso == 'iniciacion':
-                pl.renovacion = 0
-            elif mov.tipo_endoso == 'renovacion':
-                pl.renovacion += 1 
             pl.save()
 
             for cert in mov.inclusiones:
@@ -645,6 +677,7 @@ class Movimiento(Workflow, ModelSQL, ModelView):
                 mod.save()
 
             set_auditoria(mov, 'confirmed')
+            mov.renovacion = renovacion_no
             mov.save()
 
         cls.set_number(movs)

@@ -60,13 +60,13 @@ class Vehiculo(ModelSQL, ModelView):
     s_carroceria = fields.Char('Carroceria')
     color = fields.Char('Color')
     transmision = fields.Selection([
-            ('none', ''),
+            (None, ''),
             ('automatica', 'Automatica'),
             ('manual', 'Manual'),
         ], 'Transmision'
     )
     uso = fields.Selection([
-            ('none', ''),
+            (None, ''),
             ('particular', 'Particular'),
             ('comercial', 'Comercial'),
         ], 'Uso'
@@ -85,18 +85,6 @@ class Vehiculo(ModelSQL, ModelView):
         domain.append(('modelo.rec_name', clause[1], clause[2]))
         domain.append(('placa', clause[1], clause[2]))
         return domain
-
-    @staticmethod
-    def default_active():
-        return True
-
-    @staticmethod
-    def default_transmision():
-        return 'none'
-
-    @staticmethod
-    def default_uso():
-        return 'none'
 
 
 class VehiculoModificacion(ModelSQL, ModelView):
@@ -112,13 +100,13 @@ class VehiculoModificacion(ModelSQL, ModelView):
     s_carroceria = fields.Char('Carroceria')
     color = fields.Char('Color')
     transmision = fields.Selection([
-            ('none', ''),
+            (None, ''),
             ('automatica', 'Automatica'),
             ('manual', 'Manual'),
         ], 'Transmision'
     )
     uso = fields.Selection([
-            ('none', ''),
+            (None, ''),
             ('particular', 'Particular'),
             ('comercial', 'Comercial'),
         ], 'Uso'
@@ -137,11 +125,3 @@ class VehiculoModificacion(ModelSQL, ModelView):
         domain.append(('modelo.rec_name', clause[1], clause[2]))
         domain.append(('placa', clause[1], clause[2]))
         return domain
-
-    @staticmethod
-    def default_transmision():
-        return 'none'
-
-    @staticmethod
-    def default_uso():
-        return 'none'

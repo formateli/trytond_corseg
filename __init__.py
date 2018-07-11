@@ -44,6 +44,7 @@ def register():
         ComentarioPoliza,
         OrigenPoliza,
         Poliza,
+        Renovacion,
         Ramo,
         VehiculoMarca,
         VehiculoModelo,

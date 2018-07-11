@@ -65,6 +65,14 @@ class ComisionBaseLinea(ModelSQL, ModelView):
     def default_active():
         return True
 
+    @staticmethod
+    def default_re_renovacion():
+        return True
+
+    @staticmethod
+    def default_re_cuota():
+        return True
+
 
 class Comision(ModelSQL, ModelView):
     'Comision'
@@ -308,7 +316,7 @@ class ComisionAjusteCia(Workflow, ModelSQL, ModelView):
                     'tryton-clear', 'tryton-go-previous'),
                 },
             'finalizar': {
-                'invisible': Not(In(Eval('state'), ['pendiente'])),
+                'invisible': Not(In(Eval ('state'), ['pendiente'])),
                 },
             })
 
@@ -333,7 +341,7 @@ class ComisionAjusteCia(Workflow, ModelSQL, ModelView):
             self.currency = self.pago.currency
             self.currency_digits = self.pago.currency_digits
 
-    @fields.depends('compensaciones_recibidas', 'compensaciones_dadas')
+    @fields.depends('monto', 'compensaciones_recibidas', 'compensaciones_dadas')
     def on_change_with_monto_pendiente(self, name=None):
         result = self.monto
         if self.compensaciones_recibidas:

@@ -11,8 +11,7 @@ this repository contains the full copyright notices and license terms. -->
     <newline />
     <notebook colspan="4">
         <page string="Tabla Comision" id="comision">
-            <field name="comision" colspan="4"
-                view_ids="corseg.comision_vendedor2_view_tree,corseg.comision_vendedor2_view_form"/>
+            <field name="comision" colspan="4"/>
         </page>
     </notebook>
 </form>
