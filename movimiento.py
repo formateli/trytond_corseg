@@ -418,6 +418,7 @@ class Movimiento(Workflow, ModelSQL, ModelView):
             'corseg.poliza.certificado')
         certificado = Certificado(
             numero='1',
+            tipo='otro',
             asegurado=self.contratante,
             suma_asegurada=self.suma_asegurada,
             prima=self.prima,
@@ -587,6 +588,7 @@ class Movimiento(Workflow, ModelSQL, ModelView):
                     'poliza_un_inicia',
                     (mov.poliza.rec_name,))
             if mov.tipo_endoso == 'iniciacion':
+                # Mejor es advertir que el certificado no fue creado
                 mov._set_default_inclusion()
                 mov._prepare_comision_inicio()
             set_auditoria(mov, 'processed')
