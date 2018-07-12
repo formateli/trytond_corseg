@@ -4,7 +4,7 @@
 from trytond.pool import Pool, PoolMeta
 from trytond.transaction import Transaction
 from trytond.model import Workflow, ModelView, ModelSQL, fields
-from trytond.pyson import Eval, If, Not, In, Bool
+from trytond.pyson import Eval, If, Not, In, Bool, Or
 from .tools import auditoria_field, get_current_date, set_auditoria
 
 __all__ = [
@@ -48,6 +48,15 @@ class Certificado(ModelSQL, ModelView):
         states={
             'readonly': Not(In(Eval('state'), ['new',])),
         })
+    tipo = fields.Selection([
+            ('automovil', 'Automovil'),
+            ('salud', 'Salud'),
+            ('vida', 'Vida'),
+            ('otro', 'Otros'),
+        ], 'Tipo', required=True,
+        states={
+            'readonly': Not(In(Eval('state'), ['new',])),
+        }, depends=['state'])
     asegurado = fields.Many2One('party.party', 'Asegurado',
         required=True, ondelete='CASCADE',
         states={
@@ -64,6 +73,9 @@ class Certificado(ModelSQL, ModelView):
             'readonly': Not(In(Eval('state'), ['new',])),
         })
     descripcion = fields.Text('Descripcion', size=None)
+    extendido_label = fields.Function(
+        fields.Char('Extendido Label'),
+        'on_change_with_extendido_label')
     extendidos = fields.One2Many(
         'corseg.poliza.certificado.extension',
         'certificado', 'Extendidos',
@@ -89,6 +101,18 @@ class Certificado(ModelSQL, ModelView):
 
     def get_rec_name(self, name):
         return self.numero + '-' + self.asegurado.rec_name
+
+
+    @fields.depends('tipo')
+    def on_change_with_extendido_label(self, name=None):
+        if self.tipo:
+            if self.tipo == 'automovil':
+                return 'Conductores Adicionales'
+            elif self.tipo == 'salud':
+                return 'Dependientes'
+            elif self.tipo == 'vida':
+                return 'Beneficiarios'
+        return 'Extendidos'
 
 
 class Extension(ModelSQL, ModelView):

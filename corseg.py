@@ -25,8 +25,6 @@ class Ramo(ModelSQL, ModelView):
     'Ramo'
     __name__ = 'corseg.ramo'
     name = fields.Char('Nombre', required=True)
-    #TODO dato_tecnico
-    #TODO nombre_extendido
     active = fields.Boolean('Activo')
 
     @staticmethod

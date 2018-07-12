@@ -4,6 +4,8 @@ this repository contains the full copyright notices and license terms. -->
 <form>
     <label name="numero"/>
     <field name="numero"/>
+    <label name="tipo"/>
+    <field name="tipo"/>
     <label name="asegurado"/>
     <field name="asegurado"/>
     <label name="suma_asegurada"/>
@@ -18,11 +20,11 @@ this repository contains the full copyright notices and license terms. -->
             <field name="descripcion" colspan="4"/>
         </page>
         <page string="Extendidos" id="extendidos">
+            <field name="extendido_label" colspan="4"/>
             <field name="extendidos" colspan="4"/>
         </page>
         <page string="Vehiculo" id="vehiculo">
-            <field name="vehiculo" colspan="4"
-                view_ids="corseg.vehiculo_view_tree,corseg.vehiculo_view_form"/>
+            <field name="vehiculo" colspan="4" mode="form,tree"/>
         </page>
     </notebook>
 </form>
