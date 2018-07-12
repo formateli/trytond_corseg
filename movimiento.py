@@ -4,7 +4,7 @@
 from trytond.pool import Pool, PoolMeta
 from trytond.transaction import Transaction
 from trytond.model import Workflow, ModelView, ModelSQL, fields
-from trytond.pyson import Eval, If, Not, In, Bool, Or
+from trytond.pyson import Eval, If, Not, In, Bool, Or, Equal
 from .tools import auditoria_field, get_current_date, set_auditoria
 
 __all__ = [
@@ -113,6 +113,28 @@ class Certificado(ModelSQL, ModelView):
             elif self.tipo == 'vida':
                 return 'Beneficiarios'
         return 'Extendidos'
+
+    @classmethod
+    def view_attributes(cls):
+        extendidos = [
+            ('//page[@id="beneficiarios"]', 'states', {
+                    'invisible': Not(Equal(Eval('tipo'), 'vida')),
+                }),
+            ('//page[@id="dependientes"]', 'states', {
+                    'invisible': Not(Equal(Eval('tipo'), 'salud')),
+                }),
+            ('//page[@id="cadicional"]', 'states', {
+                    'invisible': Not(Equal(Eval('tipo'), 'automovil')),
+                }),
+        ]
+
+        datos_tecnicos = [
+            ('//page[@id="vehiculo"]', 'states', {
+                    'invisible': Not(Equal(Eval('tipo'), 'automovil')),
+                }),
+        ]
+        return super(Certificado, cls).view_attributes() + \
+                        extendidos + datos_tecnicos
 
 
 class Extension(ModelSQL, ModelView):
@@ -609,6 +631,7 @@ class Movimiento(Workflow, ModelSQL, ModelView):
             if mov.tipo_endoso == 'iniciacion':
                 renovacion_no = 0
             elif mov.tipo_endoso == 'renovacion':
+                # TODO si la poliza esta pendiente por pagos no se puede renovar
                 renovacion_no = pl.renovacion + 1
             else:
                 renovacion_no = pl.renovacion
@@ -780,7 +803,7 @@ class CertificadoModificacion(ModelSQL, ModelView):
         digits=(16, Eval('_parent_movimiento', {}).get('currency_digits', 2)))
     descripcion = fields.Text('Descripcion', size=None)
     vehiculo = fields.One2Many('corseg.vehiculo.modificacion',
-        'modificacion', 'Vehiculo', size=1)
+        'modificacion', 'Vehiculo', size=None)
     state = fields.Selection([
             ('new', 'Nuevo'),
             ('confirmado', 'Confirmado'),

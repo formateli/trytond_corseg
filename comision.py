@@ -304,17 +304,11 @@ class ComisionAjusteCia(Workflow, ModelSQL, ModelView):
 
         cls._transitions |= set(
             (
-                ('cancelado', 'borrador'),
                 ('pendiente', 'finalizado'),
             )
         )
 
         cls._buttons.update({
-            'borrador': {
-                'invisible': ~Eval('state').in_(['cancelado']),
-                'icon': If(Eval('state') == 'cancelado',
-                    'tryton-clear', 'tryton-go-previous'),
-                },
             'finalizar': {
                 'invisible': Not(In(Eval ('state'), ['pendiente'])),
                 },
@@ -388,12 +382,6 @@ class ComisionAjusteCia(Workflow, ModelSQL, ModelView):
 
     @classmethod
     @ModelView.button
-    @Workflow.transition('borrador')
-    def borrador(cls, movs):
-        pass
-
-    @classmethod
-    @ModelView.button
     @Workflow.transition('finalizado')
     def finalizar(cls, ajustes):
         for ajuste in ajustes:
@@ -437,11 +425,11 @@ class ComisionAjusteVendedor(Workflow, ModelSQL, ModelView):
             ('company', '=', Eval('company')),
             If(
                 In(Eval('state'), ['borrador',]),
-                ('OR',[
-                        ('state', '=', 'confirmado'),
-                        ('state', '=', 'liq_cia'),
-                    ]),
-                ('state', '!=', '')
+                ['OR',
+                    [('state', '=', 'confirmado')],
+                    [('state', '=', 'liq_cia')],
+                ],
+                [('state', '!=', '')]
             )
         ],
         states={
@@ -464,6 +452,7 @@ class ComisionAjusteVendedor(Workflow, ModelSQL, ModelView):
             ('borrador', 'Borrador'),
             ('procesado', 'Procesado'),
             ('confirmado', 'Confirmado'),
+            ('cancelado', 'Cancelado'),
         ], 'Estado', required=True, readonly=True)
     made_by = auditoria_field('user', 'Creado por')
     made_date = auditoria_field('date', 'fecha')
@@ -522,6 +511,7 @@ class ComisionAjusteVendedor(Workflow, ModelSQL, ModelView):
                 values['made_by'] = Transaction().user
                 values['made_date'] = get_current_date()
         ajustes = super(ComisionAjusteVendedor, cls).create(vlist)
+        cls.set_number(ajustes)
         return ajustes
 
     @classmethod

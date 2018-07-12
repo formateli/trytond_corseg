@@ -10,8 +10,14 @@ this repository contains the full copyright notices and license terms. -->
     <field name="fecha"/>
     <label name="referencia"/>
     <field name="referencia"/>
-    <label name="total"/>
-    <field name="total"/>
+    <group col="6" colspan="4">
+        <label name="monto_pagado"/>
+        <field name="monto_pagado"/>
+        <label name="total"/>
+        <field name="total"/>
+        <label name="diff"/>
+        <field name="diff"/>
+    </group>
     <notebook colspan="4">
         <page string="Pagos" id="pagos">
             <field name="pagos" colspan="4"/>

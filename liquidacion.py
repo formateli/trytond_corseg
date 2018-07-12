@@ -83,6 +83,7 @@ class LiquidacionBase(Workflow, ModelSQL, ModelView):
                     'debe ser "Confirmado".'),
                 'pago_liq_cia': ('El Estado del Pago "%s" '
                     'debe ser "Liquidado por la Cia".'),
+                'diff_no_cero': ('La diferencia debe ser igual a cero.'),
                 })
         cls._transitions |= set(
             (
@@ -190,6 +191,14 @@ class LiquidacionCia(LiquidacionBase):
         states={
             'readonly': Not(In(Eval('state'), ['borrador',])),
         }, depends=['state'])
+    monto_pagado = fields.Numeric('Monto Pagado', #required=True, TODO Descomentar despues de migrar
+        digits=(16, Eval('currency_digits', 2)),
+        states={
+            'readonly': Not(In(Eval('state'), ['borrador',])),
+        }, depends=['state', 'currency_digits'])
+    diff = fields.Function(fields.Numeric('Diferencia',
+        digits=(16, Eval('currency_digits', 2)),
+        depends=['currency_digits']), 'on_change_with_diff')
     pagos = fields.Many2Many(
         'poliza.pagos-liquidacion.cia',
         'liquidacion', 'pago', 'Pagos',
@@ -214,6 +223,15 @@ class LiquidacionCia(LiquidacionBase):
     def get_total(self, name=None):
         return super(LiquidacionCia, self)._get_total(
             self.pagos, 'cia')
+
+    @fields.depends('monto_pagado', 'total')
+    def on_change_with_diff(self, name=None):
+        res = Decimal('0.0')
+        if self.monto_pagado:
+            res = self.monto_pagado
+            if self.total:
+                res -= self.total
+        return res
 
     @classmethod
     def _compensar_ajuste(cls, factor, first, ajuste):
@@ -305,6 +323,8 @@ class LiquidacionCia(LiquidacionBase):
     @Workflow.transition('procesado')
     def procesar(cls, liqs):
         for liq in liqs:
+            if liq.diff != 0:
+                cls.raise_user_error('diff_no_cero')
             for pago in liq.pagos:
                 for ajuste in pago.ajustes_comision_cia:
                     if ajuste.state != 'borrador': 
@@ -321,6 +341,8 @@ class LiquidacionCia(LiquidacionBase):
     @Workflow.transition('confirmado')
     def confirmar(cls, liqs):
         for liq in liqs:
+            if liq.diff != 0:
+                cls.raise_user_error('diff_no_cero')
             for pago in liq.pagos:
                 if pago.state != 'confirmado':
                     cls.raise_user_error(
@@ -394,13 +416,24 @@ class LiquidacionVendedor(LiquidacionBase):
     @ModelView.button
     @Workflow.transition('borrador')
     def borrador(cls, liqs):
-        pass
+        for liq in liqs:
+            for pago in liq.pagos:
+                for ajuste in pago.ajustes_comision_vendedor:
+                    ajuste.state = 'borrador'
+                    ajuste.save()
 
     @classmethod
     @ModelView.button
     @Workflow.transition('procesado')
     def procesar(cls, liqs):
         for liq in liqs:
+            for pago in liq.pagos:
+                for ajuste in pago.ajustes_comision_vendedor:
+                    if ajuste.state != 'borrador': 
+                        cls.raise_user_error(
+                            'ajuste_state', (ajuste.rec_name,))
+                    ajuste.state = 'procesado'
+                    ajuste.save()
             set_auditoria(liq, 'processed')
             liq.save()
         cls.store_cache(liqs)
@@ -411,6 +444,12 @@ class LiquidacionVendedor(LiquidacionBase):
     def confirmar(cls, liqs):
         for liq in liqs:
             for pago in liq.pagos:
+                for ajuste in pago.ajustes_comision_vendedor:
+                    if ajuste.state != 'procesado': 
+                        cls.raise_user_error(
+                            'ajuste_state', (ajuste.rec_name,))
+                    ajuste.state = 'confirmado'
+                    ajuste.save()
                 if pago.state != 'liq_cia':
                     cls.raise_user_error(
                         'pago_liq_cia', (pago.rec_name,))
@@ -428,6 +467,10 @@ class LiquidacionVendedor(LiquidacionBase):
     @Workflow.transition('cancelado')
     def cancelar(cls, liqs):
         for liq in liqs:
+            for pago in liq.pagos:
+                for ajuste in pago.ajustes_comision_vendedor:
+                    ajuste.state = 'cancelado'
+                    ajuste.save()
             set_auditoria(liq, 'canceled')
             liq.save()
         cls.store_cache(liqs)

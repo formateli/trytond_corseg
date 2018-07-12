@@ -195,6 +195,12 @@ class Pago(Workflow, ModelSQL, ModelView):
                     'debe tener un estado de "Confirmado".'),
                 'pago_cero': ('El monto del Pago "%s" '
                     'debe ser mayor que cero.'),
+                'comision_menor_cero': ('El monto de la Comision %s '
+                    'no de ser menor que cero. Pago "%s"'),
+                'comision_cia_mayor': ('El monto de la Comision Cia '
+                    'no debe ser mayor al monto del Pago "%s".'),
+                'comision_vendedor_mayor': ('El monto de la Comision Vendedor '
+                    'no debe ser mayor al monto de la Comision Cia. Pago "%s".'),
                 })
         cls._transitions |= set(
             (
@@ -383,6 +389,7 @@ class Pago(Workflow, ModelSQL, ModelView):
         self.currency_digits = 2
         self.renovacion = None
         self.vendedor_sugerido = None
+        self.contratante=None
         if self.poliza:
             self.cia = self.poliza.cia
             self.currency_digits = \
@@ -390,6 +397,7 @@ class Pago(Workflow, ModelSQL, ModelView):
             self.vendedor = self.poliza.vendedor
             self.vendedor_sugerido = self.poliza.vendedor
             self.renovacion = self.poliza.renovacion
+            self.contratante = self.poliza.contratante
         self.on_change_monto()
 
     @fields.depends('poliza', 'vendedor', 'monto',
@@ -448,6 +456,29 @@ class Pago(Workflow, ModelSQL, ModelView):
         return pagos
 
     @classmethod
+    def validate(cls, pagos):
+        super(Pago, cls).validate(pagos)
+        for pago in pagos:
+            if pago.monto <= 0:
+                #cls.raise_user_error(
+                #    'pago_cero', (pago.rec_name,))
+                pass #TODO descomentar despues de migracion
+            if pago.comision_cia < 0:
+                cls.raise_user_error(
+                    'comision_menor_cero', ('Cia', pago.rec_name,))
+            if pago.comision_vendedor < 0:
+                cls.raise_user_error(
+                    'comision_menor_cero', ('Vendedor', pago.rec_name,))
+            if pago.comision_cia > pago.monto:
+                #cls.raise_user_error(
+                #    'comision_cia_mayor', (pago.rec_name,))
+                pass #TODO descomentar despues de migracion
+            if pago.comision_vendedor > pago.comision_cia:
+                #cls.raise_user_error(
+                #    'comision_vendedor_mayor', (pago.rec_name,))
+                pass #TODO descomentar despues de migracion
+
+    @classmethod
     def delete(cls, pagos):
         for pago in pagos:
             if pago.state not in ['borrador', 'cancelado']:
@@ -465,9 +496,6 @@ class Pago(Workflow, ModelSQL, ModelView):
     @Workflow.transition('procesado')
     def procesar(cls, pagos):
         for pago in pagos:
-            #if pago.monto <= 0:
-            #    cls.raise_user_error(
-            #        'pago_cero', (pago.rec_name,))            
             set_auditoria(pago, 'processed')
             pago.currency = pago.company.currency #TODO borrar despues de migrar
             pago.save()

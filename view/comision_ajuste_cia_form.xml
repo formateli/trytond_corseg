@@ -45,7 +45,6 @@ this repository contains the full copyright notices and license terms. -->
     <group col="6" colspan="4" id="buttons" yfill="1">
         <label name="state"/>
         <field name="state"/>
-        <button name="borrador" string="Borrador"/>
         <button name="finalizar" string="Finalizar"
             icon="tryton-go-next"/>
     </group>

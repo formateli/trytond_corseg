@@ -2,6 +2,7 @@
 #this repository contains the full copyright notices and license terms.
 
 from trytond.model import ModelView, ModelSQL, fields
+from trytond.pyson import Eval, Not, Equal
 
 __all__ = [
         'VehiculoMarca',
@@ -10,6 +11,12 @@ __all__ = [
         'Vehiculo',
         'VehiculoModificacion',
     ]
+
+_STATES = {
+        'readonly': Not(Equal(Eval('certificado_state'), 'new'))
+    }
+    
+_DEPENDS = ['certificado_state']
 
 
 class VehiculoTipo(ModelSQL, ModelView):
@@ -46,33 +53,52 @@ class VehiculoModelo(ModelSQL, ModelView):
         return True
 
 
+# TODO crear la clase VehiculoBase de la cual
+# se deriven Vehiculo y VehiculoModificacion 
+
 class Vehiculo(ModelSQL, ModelView):
     'Vehiculo'
     __name__ = 'corseg.vehiculo'
     certificado = fields.Many2One('corseg.poliza.certificado',
         'Certificado', ondelete='CASCADE', select=True,
         required=False) # TODO debe ser True despues de la migracion
-    placa = fields.Char('Placa')
-    marca = fields.Many2One('corseg.vehiculo.marca', 'Marca')
-    modelo = fields.Many2One('corseg.vehiculo.modelo', 'Modelo')
-    ano = fields.Char('Ano')
-    s_motor = fields.Char('Motor')
-    s_carroceria = fields.Char('Carroceria')
-    color = fields.Char('Color')
+    placa = fields.Char('Placa',
+        states=_STATES, depends=_DEPENDS)
+    marca = fields.Many2One('corseg.vehiculo.marca', 'Marca',
+        states=_STATES, depends=_DEPENDS)
+    modelo = fields.Many2One('corseg.vehiculo.modelo', 'Modelo',
+        states=_STATES, depends=_DEPENDS)
+    ano = fields.Char('Ano',
+        states=_STATES, depends=_DEPENDS)
+    s_motor = fields.Char('Motor',
+        states=_STATES, depends=_DEPENDS)
+    s_carroceria = fields.Char('Carroceria',
+        states=_STATES, depends=_DEPENDS)
+    color = fields.Char('Color',
+        states=_STATES, depends=_DEPENDS)
     transmision = fields.Selection([
             (None, ''),
             ('automatica', 'Automatica'),
             ('manual', 'Manual'),
-        ], 'Transmision'
-    )
+        ], 'Transmision',
+        states=_STATES, depends=_DEPENDS)
     uso = fields.Selection([
             (None, ''),
             ('particular', 'Particular'),
             ('comercial', 'Comercial'),
-        ], 'Uso'
-    )
-    tipo = fields.Many2One('corseg.vehiculo.tipo', 'Tipo')
-    comentario = fields.Text('Comentarios', size=None)
+        ], 'Uso',
+        states=_STATES, depends=_DEPENDS)
+    tipo = fields.Many2One('corseg.vehiculo.tipo', 'Tipo',
+        states=_STATES, depends=_DEPENDS)
+    comentario = fields.Text('Comentarios', size=None,
+        states=_STATES, depends=_DEPENDS)
+    certificado_state = fields.Function(
+        fields.Char('Estado del Certificado'),
+        'get_certificado_state')
+
+    @staticmethod
+    def default_certificado_state():
+        return 'new'
 
     def get_rec_name(self, name):
         return "{0}/{1}/{2}".format(
@@ -85,6 +111,11 @@ class Vehiculo(ModelSQL, ModelView):
         domain.append(('modelo.rec_name', clause[1], clause[2]))
         domain.append(('placa', clause[1], clause[2]))
         return domain
+
+    def get_certificado_state(self, name):
+        if self.certificado:
+            return self.certificado.state
+        return 'new'
 
 
 class VehiculoModificacion(ModelSQL, ModelView):
