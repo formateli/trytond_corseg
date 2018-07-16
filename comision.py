@@ -271,9 +271,10 @@ class ComisionAjusteCia(Workflow, ModelSQL, ModelView):
                 ),
         }, depends=['ajuste_vendedor', 'state'])
     ajuste_vendedor = fields.Many2One(
-        'corseg.comision.ajuste.cia', 'Ajuste Vendedor', readonly=True,
+        'corseg.comision.ajuste.vendedor', 'Ajuste Vendedor', readonly=True,
         states={
             'invisible': Not(Bool(Eval('ajustar_vendedor'))),
+            'readonly': Not(In(Eval('state'), ['borrador',])),
         }, depends=['ajustar_vendedor'])
     state = fields.Selection([
             ('borrador', 'Borrador'),
@@ -322,6 +323,32 @@ class ComisionAjusteCia(Workflow, ModelSQL, ModelView):
     def default_state():
         return 'borrador'
 
+    @staticmethod
+    def default_currency():
+        Company = Pool().get('company.company')
+        company = Transaction().context.get('company')
+        if company:
+            company = Company(company)
+            return company.currency.id
+
+    @staticmethod
+    def default_currency_digits():
+        Company = Pool().get('company.company')
+        company = Transaction().context.get('company')
+        if company:
+            company = Company(company)
+            return company.currency.digits
+        return 2
+
+    def get_rec_name(self, name):
+        if self.number:
+            return self.number
+        return str(self.id)
+
+    @classmethod
+    def search_rec_name(cls, name, clause):
+        return [('number',) + tuple(clause[1:])]
+
     def get_currency_digits(self, name=None):
         if self.currency:
             self.currency.digits
@@ -346,6 +373,36 @@ class ComisionAjusteCia(Workflow, ModelSQL, ModelView):
                 result -= comp.monto
         return result
 
+    @classmethod
+    def set_ajuste_vendedor(cls, ajustes):
+        AjusteVendedor = Pool().get('corseg.comision.ajuste.vendedor')
+        vnds = []
+        for ajuste in ajustes:
+            if not ajuste.ajustar_vendedor or ajuste.state != 'borrador':
+                continue 
+            if ajuste.ajustar_vendedor and not ajuste.ajuste_vendedor:
+                vendedor = AjusteVendedor(
+                        fecha=ajuste.fecha,
+                        currency=ajuste.currency,
+                        currency_digits=ajuste.currency_digits,
+                        pago=ajuste.pago,
+                    )
+            elif ajuste.ajustar_vendedor and ajuste.ajuste_vendedor:
+                vendedor = ajuste.ajuste_vendedor
+                if ajuste.ajuste_vendedor.state != 'borrador':
+                    continue
+                if not vendedor.pago or \
+                        vendedor.pago.id != ajuste.pago.id:
+                    # Probablemente se elimino o cambio el pago en
+                    # el ajuste de comision vendedor
+                    continue
+            exp = Decimal(str(10.0 ** -vendedor.currency_digits))
+            por = ajuste.monto / ajuste.pago.monto
+            vendedor.monto = (ajuste.pago.comision_vendedor * por).quantize(exp)
+            vendedor.save()
+            ajuste.ajuste_vendedor = vendedor
+            vnds.append(vendedor)
+        return vnds
 
     @classmethod
     def set_number(cls, ajustes):
@@ -371,7 +428,17 @@ class ComisionAjusteCia(Workflow, ModelSQL, ModelView):
                 values['made_date'] = get_current_date()
         ajustes = super(ComisionAjusteCia, cls).create(vlist)
         cls.set_number(ajustes)
+        cls.set_ajuste_vendedor(ajustes)
         return ajustes
+
+    @classmethod
+    def write(cls, ajustes, vals):
+        super(ComisionAjusteCia, cls).write(ajustes, vals)
+        if len(ajustes) == 1:
+            vnds = cls.set_ajuste_vendedor(ajustes)
+            if vnds:
+                vals={'ajuste_vendedor': vnds[0].id}
+                super(ComisionAjusteCia, cls).write(ajustes, vals)
 
     @classmethod
     def delete(cls, ajustes):
@@ -477,6 +544,23 @@ class ComisionAjusteVendedor(Workflow, ModelSQL, ModelView):
     def default_state():
         return 'borrador'
 
+    @staticmethod
+    def default_currency():
+        Company = Pool().get('company.company')
+        company = Transaction().context.get('company')
+        if company:
+            company = Company(company)
+            return company.currency.id
+
+    @staticmethod
+    def default_currency_digits():
+        Company = Pool().get('company.company')
+        company = Transaction().context.get('company')
+        if company:
+            company = Company(company)
+            return company.currency.digits
+        return 2
+
     @fields.depends('pago', 'currency', 'currency_digits')
     def on_change_pago(self):
         self.currency = None
@@ -484,6 +568,15 @@ class ComisionAjusteVendedor(Workflow, ModelSQL, ModelView):
         if self.pago:
             self.currency = self.pago.currency
             self.currency_digits = self.pago.currency_digits
+
+    def get_rec_name(self, name):
+        if self.number:
+            return self.number
+        return str(self.id)
+
+    @classmethod
+    def search_rec_name(cls, name, clause):
+        return [('number',) + tuple(clause[1:])]
 
     def get_currency_digits(self, name=None):
         if self.currency:
