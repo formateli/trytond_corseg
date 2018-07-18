@@ -27,7 +27,9 @@ this repository contains the full copyright notices and license terms. -->
         </page>
         <page string="Info" id="info">
             <label name="company"/>
-            <field name="company" colspan="3"/>
+            <field name="company"/>
+            <label name="currency"/>
+            <field name="currency"/>
             <separator string="Auditoria" id="auditoria" colspan="4"/>
             <label name="made_by"/>
             <field name="made_by"/>

@@ -20,7 +20,6 @@ _STATE = [
         ('borrador', 'Borrador'),
         ('procesado', 'Procesado'),
         ('confirmado', 'Confirmado'),
-        ('posted', 'Posteado'),
         ('cancelado', 'Cancelado'),
     ]
 
@@ -36,6 +35,9 @@ class LiquidacionBase(Workflow, ModelSQL, ModelView):
                 Eval('context', {}).get('company', -1)),
             ], select=True)
     number = fields.Char('Numero', size=None, readonly=True, select=True)
+    currency = fields.Many2One('currency.currency',
+        'Moneda', required=False, # TODO required=True
+        readonly=True)
     currency_digits = fields.Function(fields.Integer('Currency Digits'),
         'get_currency_digits')
     fecha = fields.Date('Fecha', required=True,
@@ -117,6 +119,14 @@ class LiquidacionBase(Workflow, ModelSQL, ModelView):
     @staticmethod
     def default_state():
         return 'borrador'
+
+    @staticmethod
+    def default_currency():
+        Company = Pool().get('company.company')
+        company = Transaction().context.get('company')
+        if company:
+            company = Company(company)
+            return company.currency.id
 
     @staticmethod
     def default_currency_digits():
@@ -204,6 +214,7 @@ class LiquidacionCia(LiquidacionBase):
         'liquidacion', 'pago', 'Pagos',
         domain=[
             ('company', '=', Eval('company')),
+            ('currency', '=', Eval('currency')),
             ('cia', '=', Eval('cia')),
             If(
                 In(Eval('state'), ['borrador', 'procesado']),
@@ -214,7 +225,7 @@ class LiquidacionCia(LiquidacionBase):
         states={
             'readonly': Not(In(Eval('state'), ['borrador',])),
             'invisible': Not(Bool(Eval('cia'))),
-        }, depends=['company', 'cia', 'state'])
+        }, depends=['company', 'currency', 'cia', 'state'])
 
     @fields.depends('pagos')
     def on_change_pagos(self):
@@ -358,7 +369,6 @@ class LiquidacionCia(LiquidacionBase):
 
         cls.set_number(liqs)
         cls.store_cache(liqs)
-        # TODO crear el account_move
 
     @classmethod
     @ModelView.button
@@ -387,6 +397,7 @@ class LiquidacionVendedor(LiquidacionBase):
         'liquidacion', 'pago', 'Pagos',
         domain=[
             ('company', '=', Eval('company')),
+            ('currency', '=', Eval('currency')),
             ('vendedor', '=', Eval('vendedor')),
             If(
                 In(Eval('state'), ['borrador', 'procesado']),
@@ -397,7 +408,7 @@ class LiquidacionVendedor(LiquidacionBase):
         states={
             'readonly': Not(In(Eval('state'), ['borrador',])),
             'invisible': Not(Bool(Eval('vendedor'))),
-        }, depends=['company', 'vendedor', 'state'])
+        }, depends=['company', 'currency', 'vendedor', 'state'])
 
     @fields.depends('pagos')
     def on_change_pagos(self):
