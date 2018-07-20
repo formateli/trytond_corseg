@@ -422,17 +422,6 @@ class Movimiento(Workflow, ModelSQL, ModelView):
         if self.poliza:
             return self.poliza.state
 
-    def _fill_comision(self, parent, Comision, lineas):
-        for cm in lineas:
-            new = Comision()
-            new.parent = parent
-            new.renovacion = cm.renovacion
-            new.tipo_comision = cm.tipo_comision
-            new.re_renovacion = cm.re_renovacion
-            new.re_cuota = cm.re_cuota
-            new.active = cm.active
-            new.save()
-
     def _set_default_inclusion(self):
         if self.inclusiones:
             return
@@ -448,42 +437,52 @@ class Movimiento(Workflow, ModelSQL, ModelView):
         certificado.save()
         self.inclusiones = [certificado,]
 
-    def _prepare_comision_inicio(self):
-        pool = Pool()
-        ComisionMovimientoCia = pool.get(
-            'corseg.comision.movimiento.cia')
-        ComisionMovimientoVendedor = pool.get(
-            'corseg.comision.movimiento.vendedor')
+#    def _prepare_comision_inicio(self):
+#        pool = Pool()
+#        ComisionMovimientoCia = pool.get(
+#            'corseg.comision.movimiento.cia')
+#        ComisionMovimientoVendedor = pool.get(
+#            'corseg.comision.movimiento.vendedor')
 
-        if not self.comision_cia and \
-                self.poliza.cia_producto.comision_cia:
-            print("fill_mov_cia")
-            self._fill_comision(
-                self, ComisionMovimientoCia,
-                self.poliza.cia_producto.comision_cia.lineas)
+#        if not self.comision_cia and \
+#                self.poliza.cia_producto.comision_cia:
+#            self._fill_comision(
+#                self, ComisionMovimientoCia,
+#                self.poliza.cia_producto.comision_cia.lineas)
 
-        if not self.comision_vendedor:
-            if self.poliza.cia_producto.comision_vendedor:
-                found = False
-                for vnd in self.poliza.cia_producto.comision_vendedor.lineas:
-                    if vnd.vendedor.id == self.vendedor.id:
-                        self._fill_comision(
-                            self, ComisionMovimientoVendedor,
-                            vnd.comision.lineas)
-                        found = True
-                        break
-                if not found:
-                    self._set_comision_vendedor_defecto(
-                        ComisionMovimientoVendedor)                    
-            else:
-                self._set_comision_vendedor_defecto(
-                    ComisionMovimientoVendedor)
+#        if not self.comision_vendedor:
+#            if self.poliza.cia_producto.comision_vendedor:
+#                found = False
+#                for vnd in self.poliza.cia_producto.comision_vendedor.lineas:
+#                    if vnd.vendedor.id == self.vendedor.id:
+#                        self._fill_comision(
+#                            self, ComisionMovimientoVendedor,
+#                            vnd.comision.lineas)
+#                        found = True
+#                        break
+#                if not found:
+#                    self._set_comision_vendedor_defecto(
+#                        ComisionMovimientoVendedor)                    
+#            else:
+#                self._set_comision_vendedor_defecto(
+#                    ComisionMovimientoVendedor)
 
-    def _set_comision_vendedor_defecto(self, ComisionMovimientoVendedor):
-        if self.poliza.cia_producto.comision_vendedor_defecto:
-            self._fill_comision(
-                self, ComisionMovimientoVendedor,
-                self.poliza.cia_producto.comision_vendedor_defecto.lineas)        
+#    def _set_comision_vendedor_defecto(self, ComisionMovimientoVendedor):
+#        if self.poliza.cia_producto.comision_vendedor_defecto:
+#            self._fill_comision(
+#                self, ComisionMovimientoVendedor,
+#                self.poliza.cia_producto.comision_vendedor_defecto.lineas)        
+
+    def _fill_comision(self, parent, Comision, lineas):
+        for cm in lineas:
+            new = Comision()
+            new.parent = parent
+            new.renovacion = cm.renovacion
+            new.tipo_comision = cm.tipo_comision
+            new.re_renovacion = cm.re_renovacion
+            new.re_cuota = cm.re_cuota
+            new.active = cm.active
+            new.save()
 
     def _set_comision(self):
         pool = Pool()
@@ -610,9 +609,8 @@ class Movimiento(Workflow, ModelSQL, ModelView):
                     'poliza_un_inicia',
                     (mov.poliza.rec_name,))
             if mov.tipo_endoso == 'iniciacion':
-                # Mejor es advertir que el certificado no fue creado
                 mov._set_default_inclusion()
-                mov._prepare_comision_inicio()
+                #mov._prepare_comision_inicio()
             set_auditoria(mov, 'processed')
             mov.save()
 

@@ -22,7 +22,6 @@ class CorsegTestCase(ModuleTestCase):
         Extension = pool.get('corseg.poliza.certificado.extension')
         Movimiento = pool.get('corseg.poliza.movimiento')
         CertificadoModificacion = pool.get('corseg.poliza.certificado.modificacion')
-        Pago = pool.get('corseg.poliza.pago')
         VehiculoTipo = pool.get('corseg.vehiculo.tipo')
         VehiculoMarca = pool.get('corseg.vehiculo.marca')
         VehiculoModelo = pool.get('corseg.vehiculo.modelo')
@@ -43,15 +42,49 @@ class CorsegTestCase(ModuleTestCase):
         company = create_company()
         with set_company(company):
             self._set_config(company)
-            poliza, vendedor, forma_pago, frecuencia_pago = \
-                self._get_poliza()
-            self._movimiento_ini(
-                poliza, vendedor, forma_pago, frecuencia_pago)
-            
-    def _movimiento_ini(self, poliza, vendedor, forma_pago, frecuencia_pago):
+            producto, vendedor, forma_pago, frecuencia_pago = \
+                self._get_varios()
+            self._movimientos(
+                producto, vendedor, forma_pago, frecuencia_pago)
+            self._pagos(
+                producto, vendedor, forma_pago, frecuencia_pago)
+
+    def _pagos(self, producto, vendedor, forma_pago, frecuencia_pago):
+        pool = Pool()
+        Pago = pool.get('corseg.poliza.pago')
+
+        poliza = self._get_poliza("P2", producto)
+        fecha = datetime.date.today()
+
+        mov = self._get_mov_ini(fecha, poliza,
+            self._create_party("Contratante Party"),
+            vendedor, forma_pago, frecuencia_pago)
+        mov.procesar([mov])
+        mov.confirmar([mov])
+
+        self.assertEqual(poliza.monto_pago, Decimal('0.0'))
+        self.assertEqual(poliza.saldo, poliza.prima)
+
+        pago = Pago(
+                poliza=poliza,
+                vendedor=poliza.vendedor,
+                fecha=fecha,
+                monto=Decimal('15.0'),
+            )
+        pago.save()
+        Pago.procesar([pago])
+        self.assertEqual(poliza.monto_pago, Decimal('0.0'))
+        Pago.confirmar([pago])
+        self.assertEqual(pago.state, 'confirmado')
+        self.assertEqual(pago.renovacion, 0)
+        self.assertEqual(poliza.monto_pago, Decimal('15.0'))
+        self.assertEqual(poliza.saldo, poliza.prima - poliza.monto_pago)
+
+    def _movimientos(self, producto, vendedor, forma_pago, frecuencia_pago):
         pool = Pool()
         Movimiento = pool.get('corseg.poliza.movimiento')
 
+        poliza = self._get_poliza("P1", producto)
         fecha = datetime.date.today()
 
         mov = Movimiento()
@@ -65,14 +98,88 @@ class CorsegTestCase(ModuleTestCase):
             Movimiento.procesar([mov])
         Movimiento.delete([mov])
 
-        # Iniciacion
+        mov = self._get_mov_ini(fecha, poliza,
+            self._create_party("Contratante Party"),
+            vendedor, forma_pago, frecuencia_pago)
+        Movimiento.procesar([mov])
+        self.assertEqual(mov.state, 'procesado')
+        Movimiento.confirmar([mov])
+        self.assertEqual(mov.renovacion, 0)
+        self.assertEqual(mov.state, 'confirmado')
+        self.assertEqual(poliza.state, 'vigente')
+        self.assertEqual(poliza.renovacion, 0)
+        self.assertEqual(poliza.no_cuotas, 10)
+        self.assertEqual(poliza.monto_pago, Decimal('0.0'))
+        self.assertEqual(poliza.saldo, poliza.prima)
+
+        # Modificacion simple
+        mov = Movimiento(
+            fecha=fecha,
+            poliza=poliza,
+            descripcion="Modificacion Simple",
+            tipo="general",
+            no_cuotas=11,
+        )
+        mov.save()
+        Movimiento.procesar([mov])
+        self.assertEqual(poliza.no_cuotas, 10)
+        # La poliza se modifica solo al confirmar el movimiento
+        Movimiento.confirmar([mov])
+        self.assertEqual(poliza.no_cuotas, 11)
+
+        # Renovacion
+        mov = Movimiento(
+            fecha=fecha,
+            poliza=poliza,
+            descripcion="Movimiento Renovacion",
+            tipo="endoso",
+            tipo_endoso="renovacion",
+            f_emision=fecha,
+            f_desde=fecha,
+            f_hasta=fecha,
+            suma_asegurada=Decimal('20000.0'),
+            prima=Decimal('250.0'),
+            forma_pago=forma_pago,
+            frecuencia_pago=frecuencia_pago,
+            no_cuotas=10,
+        )
+        mov.save()
+        Movimiento.procesar([mov])
+        Movimiento.confirmar([mov])
+        self.assertEqual(mov.renovacion, 1)
+        self.assertEqual(poliza.state, 'vigente')
+        self.assertEqual(poliza.renovacion, 1)
+        self.assertEqual(poliza.no_cuotas, 10)
+        self.assertEqual(poliza.monto_pago, Decimal('0.0'))
+        # Se suman la prima de la renovacion anterior con esta
+        self.assertEqual(poliza.saldo, Decimal('450.0'))
+
+        # Cancelacion
+        mov = Movimiento(
+            fecha=fecha,
+            poliza=poliza,
+            descripcion="Cancelacion",
+            tipo="endoso",
+            tipo_endoso="cancelacion",
+        )
+        mov.save()
+        Movimiento.procesar([mov])
+        Movimiento.confirmar([mov])
+        self.assertEqual(mov.state, 'confirmado')
+        self.assertEqual(poliza.state, 'cancelada')
+
+    def _get_mov_ini(self, fecha, poliza, contratante,
+                vendedor, forma_pago, frecuencia_pago):
+        pool = Pool()
+        Movimiento = pool.get('corseg.poliza.movimiento')
+
         mov = Movimiento(
             fecha=fecha,
             poliza=poliza,
             descripcion="Movimiento Iniciacion",
             tipo="endoso",
             tipo_endoso="iniciacion",
-            contratante=self._create_party("Contratante Party"),
+            contratante=contratante,
             f_emision=fecha,
             f_desde=fecha,
             f_hasta=fecha,
@@ -84,24 +191,32 @@ class CorsegTestCase(ModuleTestCase):
             no_cuotas=10,
         )
         mov.save()
-        Movimiento.procesar([mov])
-        self.assertEqual(mov.state, 'procesado')
-        Movimiento.confirmar([mov])
-        self.assertEqual(mov.renovacion, 0)
-        self.assertEqual(mov.state, 'confirmado')
+        return mov
 
-    def _get_poliza(self):
+    def _get_poliza(self, numero, producto):
+        pool = Pool()
+        Poliza = pool.get('corseg.poliza')
+        GrupoPoliza = pool.get('corseg.poliza.grupo')
+        OrigenPoliza = pool.get('corseg.poliza.origen')
+        ComentarioPoliza = pool.get('corseg.poliza.comentario')
+
+        poliza = Poliza(
+                cia=producto.cia,
+                cia_producto=producto,
+                numero=numero,                
+            )
+        poliza.save()
+
+        return poliza
+
+    def _get_varios(self):
         pool = Pool()
         Ramo = pool.get('corseg.ramo')
         CiaSeguros = pool.get('corseg.cia')
         CiaProducto = pool.get('corseg.cia.producto')
-        Poliza = pool.get('corseg.poliza')
         Vendedor = pool.get('corseg.vendedor')
         FormaPago = pool.get('corseg.forma_pago')
         FrecuenciaPago = pool.get('corseg.frecuencia_pago')
-        GrupoPoliza = pool.get('corseg.poliza.grupo')
-        OrigenPoliza = pool.get('corseg.poliza.origen')
-        ComentarioPoliza = pool.get('corseg.poliza.comentario')
 
         ramo = Ramo(name="Automovil")
         ramo.save()
@@ -126,15 +241,7 @@ class CorsegTestCase(ModuleTestCase):
 
         frecuencia_pago = FrecuenciaPago(name="Mensual", meses=1)
         frecuencia_pago.save()
-
-        poliza = Poliza(
-                cia=producto.cia,
-                cia_producto=producto,
-                numero="P123",                
-            )
-        poliza.save()
-
-        return poliza, vendedor, forma_pago, frecuencia_pago
+        return producto, vendedor, forma_pago, frecuencia_pago
 
     def _set_config(self, company):
         Config = Pool().get('corseg.configuration')
