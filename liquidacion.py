@@ -235,7 +235,7 @@ class LiquidacionCia(LiquidacionBase):
         return super(LiquidacionCia, self)._get_total(
             self.pagos, 'cia')
 
-    @fields.depends('monto_pagado', 'total')
+    @fields.depends('pagos', 'monto_pagado', 'total')
     def on_change_with_diff(self, name=None):
         res = Decimal('0.0')
         if self.monto_pagado:

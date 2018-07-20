@@ -233,16 +233,20 @@ class Poliza(ModelSQL, ModelView):
     f_hasta = fields.Function(fields.Date('Hasta:'),
         'get_renovacion')
     suma_asegurada = fields.Function(fields.Numeric('Suma Asegurada',
-            digits=(16, Eval('currency_digits', 2))),
+            digits=(16, Eval('currency_digits', 2)),
+            depends=['currency_digits']),
         'get_renovacion')
     prima = fields.Function(fields.Numeric('Prima',
-            digits=(16, Eval('currency_digits', 2))),
+            digits=(16, Eval('currency_digits', 2)),
+            depends=['currency_digits']),
         'get_renovacion')
     renovaciones = fields.One2Many('corseg.poliza.renovacion',
         'poliza', 'Renovaciones', readonly=True)
-    vendedor = fields.Many2One('corseg.vendedor', 'Vendedor', readonly=True)
+    vendedor = fields.Many2One('corseg.vendedor',
+        'Vendedor', readonly=True)
     notas = fields.Text('Notas', size=None)
-    forma_pago = fields.Many2One('corseg.forma_pago', 'Forma pago',  readonly=True)
+    forma_pago = fields.Many2One('corseg.forma_pago',
+        'Forma pago', readonly=True)
     frecuencia_pago = fields.Many2One('corseg.frecuencia_pago',
         'Frecuencia pago',  readonly=True)
     no_cuotas = fields.Integer('Cant. cuotas', readonly=True)
