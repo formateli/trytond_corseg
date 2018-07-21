@@ -88,21 +88,32 @@ class Comision(ModelSQL, ModelView):
 
     @classmethod
     def get_comision(cls, poliza, lineas, monto):
+        result = Decimal('0.0')
+
         if not poliza or not monto or not lineas:
-            return Decimal('0.0')
+            return result
 
         last_linea = None
+        i = 1
         for linea in lineas:
             if linea.renovacion == poliza.renovacion:
                 result = cls._get_comision_linea(
                     poliza, linea, monto)
                 break
+            elif len(lineas) == i and poliza.renovacion > linea.renovacion:
+                if linea.re_renovacion:
+                    result = cls._get_comision_linea(
+                        poliza, linea, monto)
+                break                
             elif linea.renovacion > poliza.renovacion:
-                if last_linea.tipo_comision.r_renovacion:
+                if last_linea is None:
+                    break
+                if last_linea.re_renovacion:
                     result = cls._get_comision_linea(
                         poliza, last_linea, monto)
                 break
             last_linea = linea
+            i += 1
         return result
 
     @classmethod
@@ -466,6 +477,7 @@ class ComisionAjusteCiaCompensacion(ModelSQL, ModelView):
         'Compensado por', required=True)
     monto = fields.Numeric('Monto', required=True,
             digits=(16, Eval('_parent_currency_digits', 2))
+
         )
 
 

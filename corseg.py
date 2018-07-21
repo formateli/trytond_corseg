@@ -388,8 +388,6 @@ class Poliza(ModelSQL, ModelView):
 
     def get_saldo(self, name):
         res = Decimal('0.0')
-        #if self.prima:
-        #    return self.prima - self.monto_pago
         if self.renovaciones:
             primas = Decimal('0.0')
             for ren in self.renovaciones:

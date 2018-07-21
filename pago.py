@@ -345,22 +345,22 @@ class Pago(Workflow, ModelSQL, ModelView):
                             self.poliza.cia_producto.comision_cia.lineas,
                             self.monto)
 
-            if self.poliza and self.vendedor:
+            if self.poliza and self.vendedor and self.comision_cia:
                 if self.poliza.comision_vendedor:
                     self.comision_vendedor = \
                         Comision.get_comision(
                             self.poliza,
                             self.poliza.comision_vendedor,
-                            self.monto)
+                            self.comision_cia)
                 elif self.poliza.cia_producto.comision_vendedor:
                     found = False
-                    for line in self.poliza.cia_producto.comision_vendedor:
+                    for line in self.poliza.cia_producto.comision_vendedor.lineas:
                         if line.vendedor.id == self.vendedor.id:
                             self.comision_vendedor = \
                                 Comision.get_comision(
                                     self.poliza,
                                     line.comision.lineas,
-                                    self.monto)
+                                    self.comision_cia)
                             found = True
                             break
                     if not found and \
@@ -368,12 +368,12 @@ class Pago(Workflow, ModelSQL, ModelView):
                         self.comision_vendedor = Comision.get_comision(
                             self.poliza,
                             self.poliza.cia_producto.comision_vendedor_defecto.lineas,
-                            self.monto)
+                            self.comision_cia)
                 elif self.poliza.cia_producto.comision_vendedor_defecto:
                     self.comision_vendedor = Comision.get_comision(
                         self.poliza,
                         self.poliza.cia_producto.comision_vendedor_defecto.lineas,
-                        self.monto)
+                        self.comision_cia)
 
             self.comision_cia_sugerida = self.comision_cia
             self.comision_vendedor_sugerida = self.comision_vendedor

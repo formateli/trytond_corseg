@@ -26,11 +26,6 @@ class CorsegTestCase(ModuleTestCase):
         VehiculoMarca = pool.get('corseg.vehiculo.marca')
         VehiculoModelo = pool.get('corseg.vehiculo.modelo')
         Vehiculo = pool.get('corseg.vehiculo')
-        TipoComision = pool.get('corseg.tipo_comision')
-        Comision = pool.get('corseg.comision')
-        ComisionLinea = pool.get('corseg.comision.linea')
-        ComisionVendedor = pool.get('corseg.comision.vendedor')
-        ComisionVendedorLinea = pool.get('corseg.comision.vendedor.linea')
         ComisionPolizaCia = pool.get('corseg.comision.poliza.cia')
         ComisionMovimientoCia = pool.get('corseg.comision.movimiento.cia')
         ComisionMovimientoVendedor = pool.get('corseg.comision.movimiento.vendedor')
@@ -48,6 +43,169 @@ class CorsegTestCase(ModuleTestCase):
                 producto, vendedor, forma_pago, frecuencia_pago)
             self._pagos(
                 producto, vendedor, forma_pago, frecuencia_pago)
+            self._comisiones(
+                producto, vendedor, forma_pago, frecuencia_pago)
+
+    def _comisiones(self, producto, vendedor, forma_pago, frecuencia_pago):
+        pool = Pool()
+        Comision = pool.get('corseg.comision')
+        ComisionLinea = pool.get('corseg.comision.linea')
+        ComisionVendedor = pool.get('corseg.comision.vendedor')
+        ComisionVendedorLinea = pool.get('corseg.comision.vendedor.linea')
+        Movimiento = pool.get('corseg.poliza.movimiento')
+        Vendedor = pool.get('corseg.vendedor')
+
+        poliza = self._get_poliza("P3", producto)
+        fecha = datetime.date.today()
+
+        # Iniciamos la poliza
+        mov = self._get_mov_ini(fecha, poliza,
+            self._create_party("Contratante P3 Party"),
+            vendedor, forma_pago, frecuencia_pago)
+        mov.procesar([mov])
+        mov.confirmar([mov])
+
+        tipo_comision_5 = self._crear_tipo_comision('5.0')
+        tipo_comision_10 = self._crear_tipo_comision('10.0')
+        tipo_comision_20 = self._crear_tipo_comision('20.0')
+
+        comision_5 = Comision(
+                name='Basico 5',
+                lineas=[
+                    ComisionLinea(
+                        renovacion=0,
+                        tipo_comision=tipo_comision_5,
+                        re_renovacion=True,
+                        re_cuota=True
+                    )
+                ]                
+            )
+        comision_5.save()
+        comision_10 = Comision(
+                name='Basico 10',
+                lineas=[
+                    ComisionLinea(
+                        renovacion=0,
+                        tipo_comision=tipo_comision_10,
+                        re_renovacion=True,
+                        re_cuota=True
+                    )
+                ]                
+            )
+        comision_10.save()
+        self.assertEqual(len(comision_10.lineas), 1)
+        comision_20 = Comision(
+                name='Basico 20',
+                lineas=[
+                    ComisionLinea(
+                        renovacion=1, # Se apliza a partir de la renovacion 1
+                        tipo_comision=tipo_comision_20,
+                        re_renovacion=True,
+                        re_cuota=True
+                    )
+                ]
+            )
+        comision_20.save()
+
+        # Asignamos los planes de comision al producto
+        producto.comision_cia = comision_10
+        producto.comision_vendedor_defecto = comision_10
+        producto.save()
+
+        pago = self._create_pago(poliza, vendedor, fecha, Decimal('100.0'))
+        pago.on_change_monto() # Para que calcula las comisiones
+        pago.procesar([pago])
+        self.assertEqual(pago.comision_cia_liq, Decimal('10.0'))
+        self.assertEqual(pago.comision_vendedor_liq, Decimal('1.0'))
+        pago.confirmar([pago])
+
+        # Creamos un plan especifico para el vendedor
+        comision_vendedor = ComisionVendedor(
+                name="Comision Vendedor 5",
+                lineas=[
+                    ComisionVendedorLinea(
+                        vendedor=vendedor,
+                        comision=comision_5
+                    )
+                ],
+            )
+
+        producto.comision_vendedor = comision_vendedor
+        producto.save()
+
+        pago = self._create_pago(poliza, vendedor, fecha, Decimal('100.0'))
+        pago.on_change_monto()
+        pago.procesar([pago])
+        self.assertEqual(pago.comision_cia_liq, Decimal('10.0'))
+        self.assertEqual(pago.comision_vendedor_liq, Decimal('0.5'))
+        pago.confirmar([pago])
+
+        # Creamos un movimiento que cambie el vendedor,
+        # al crear un nuevo pago este volvera a usar el plan 
+        # de comision_vendedor_defecto
+        new_vendedor = Vendedor(
+            party=self._create_party("Nuevo Vendedor Party"))
+        vendedor.save()
+
+        mov = Movimiento(
+            fecha=fecha,
+            poliza=poliza,
+            descripcion="Cambio de Vendedor",
+            tipo="general",
+            vendedor = new_vendedor,
+        )
+        mov.save()
+        Movimiento.procesar([mov])
+        Movimiento.confirmar([mov])
+
+        pago = self._create_pago(poliza, new_vendedor, fecha, Decimal('100.0'))
+        pago.on_change_monto()
+        pago.procesar([pago])
+        self.assertEqual(pago.comision_cia_liq, Decimal('10.0'))
+        self.assertEqual(pago.comision_vendedor_liq, Decimal('1.0'))
+        pago.confirmar([pago])
+
+        # Agregamos al nuevo vendedor al plan de comision vendedor,
+        # sin embargo crearemos una regla para la renovacion 1,
+        # como la renovacion actual es 0, no se podra encontrar la linea
+        # y por lo tanto la comision sera 'cero'.
+        linea = ComisionVendedorLinea(
+                parent=comision_vendedor,
+                vendedor=new_vendedor,
+                comision=comision_20
+            )
+        linea.save()
+
+        pago = self._create_pago(poliza, new_vendedor, fecha, Decimal('100.0'))
+        pago.on_change_monto()
+        pago.procesar([pago])
+        self.assertEqual(pago.comision_cia_liq, Decimal('10.0'))
+        self.assertEqual(pago.comision_vendedor_liq, Decimal('0.0'))
+        pago.confirmar([pago])
+
+        # Creamos una nueva renovacion (1) lo cual
+        # hara que se aplique la comision_20 al pago
+        mov = self._get_mov_renovacion(fecha, poliza, forma_pago, frecuencia_pago)
+        mov.procesar([mov])
+        mov.confirmar([mov])
+
+        pago = self._create_pago(poliza, new_vendedor, fecha, Decimal('100.0'))
+        pago.on_change_monto()
+        pago.procesar([pago])
+        self.assertEqual(pago.renovacion, 1)
+        self.assertEqual(pago.comision_cia_liq, Decimal('10.0'))
+        self.assertEqual(pago.comision_vendedor_liq, Decimal('2.0'))
+        pago.confirmar([pago])
+
+    def _crear_tipo_comision(self, monto_comision):
+        TipoComision = Pool().get('corseg.tipo_comision')
+        tipo_comision = TipoComision(
+                name="Porcentaje " + str(monto_comision),
+                tipo='porcentaje',
+                monto=Decimal(monto_comision)
+            )
+        tipo_comision.save()
+        return tipo_comision
 
     def _pagos(self, producto, vendedor, forma_pago, frecuencia_pago):
         pool = Pool()
@@ -57,7 +215,7 @@ class CorsegTestCase(ModuleTestCase):
         fecha = datetime.date.today()
 
         mov = self._get_mov_ini(fecha, poliza,
-            self._create_party("Contratante Party"),
+            self._create_party("Contratante P2 Party"),
             vendedor, forma_pago, frecuencia_pago)
         mov.procesar([mov])
         mov.confirmar([mov])
@@ -65,20 +223,53 @@ class CorsegTestCase(ModuleTestCase):
         self.assertEqual(poliza.monto_pago, Decimal('0.0'))
         self.assertEqual(poliza.saldo, poliza.prima)
 
-        pago = Pago(
-                poliza=poliza,
-                vendedor=poliza.vendedor,
-                fecha=fecha,
-                monto=Decimal('15.0'),
-            )
-        pago.save()
+        pagos = Decimal('0.0')
+
+        pago = self._create_pago(poliza, vendedor, fecha, Decimal('15.0'))
+        pagos += Decimal('15.0')
         Pago.procesar([pago])
         self.assertEqual(poliza.monto_pago, Decimal('0.0'))
         Pago.confirmar([pago])
         self.assertEqual(pago.state, 'confirmado')
         self.assertEqual(pago.renovacion, 0)
-        self.assertEqual(poliza.monto_pago, Decimal('15.0'))
-        self.assertEqual(poliza.saldo, poliza.prima - poliza.monto_pago)
+        self.assertEqual(poliza.monto_pago, pagos)
+        self.assertEqual(poliza.saldo, poliza.prima - pagos)
+
+        pago = self._create_pago(poliza, vendedor, fecha, Decimal('25.0'))
+        pagos += Decimal('25.0')
+        Pago.procesar([pago])
+        Pago.confirmar([pago])
+        self.assertEqual(poliza.monto_pago, pagos)
+        self.assertEqual(poliza.saldo, poliza.prima - pagos)
+
+        # Renovacion
+        mov = self._get_mov_renovacion(
+                fecha, poliza, forma_pago, frecuencia_pago)
+        mov.procesar([mov])
+        mov.confirmar([mov])
+
+        pago = self._create_pago(poliza, vendedor, fecha, Decimal('15.0'))
+        pagos += Decimal('15.0')
+        Pago.procesar([pago])
+        Pago.confirmar([pago])
+        self.assertEqual(pago.renovacion, 1)
+        self.assertEqual(poliza.monto_pago, pagos)
+        # La suma de las primas de las dos renovaciones
+        suma_primas = Decimal('200.0') + Decimal('250.0')
+        self.assertEqual(poliza.saldo, suma_primas - pagos)
+
+    def _create_pago(self, poliza, vendedor, fecha, monto):
+        pool = Pool()
+        Pago = pool.get('corseg.poliza.pago')
+
+        pago = Pago(
+                poliza=poliza,
+                fecha=fecha,
+                monto=monto,
+            )
+        pago.on_change_poliza()
+        pago.save()
+        return pago
 
     def _movimientos(self, producto, vendedor, forma_pago, frecuencia_pago):
         pool = Pool()
@@ -128,22 +319,8 @@ class CorsegTestCase(ModuleTestCase):
         self.assertEqual(poliza.no_cuotas, 11)
 
         # Renovacion
-        mov = Movimiento(
-            fecha=fecha,
-            poliza=poliza,
-            descripcion="Movimiento Renovacion",
-            tipo="endoso",
-            tipo_endoso="renovacion",
-            f_emision=fecha,
-            f_desde=fecha,
-            f_hasta=fecha,
-            suma_asegurada=Decimal('20000.0'),
-            prima=Decimal('250.0'),
-            forma_pago=forma_pago,
-            frecuencia_pago=frecuencia_pago,
-            no_cuotas=10,
-        )
-        mov.save()
+        mov = self._get_mov_renovacion(
+                fecha, poliza, forma_pago, frecuencia_pago)
         Movimiento.procesar([mov])
         Movimiento.confirmar([mov])
         self.assertEqual(mov.renovacion, 1)
@@ -193,6 +370,28 @@ class CorsegTestCase(ModuleTestCase):
         mov.save()
         return mov
 
+    def _get_mov_renovacion(self, fecha, poliza, forma_pago, frecuencia_pago):
+        pool = Pool()
+        Movimiento = pool.get('corseg.poliza.movimiento')
+
+        mov = Movimiento(
+            fecha=fecha,
+            poliza=poliza,
+            descripcion="Movimiento Renovacion",
+            tipo="endoso",
+            tipo_endoso="renovacion",
+            f_emision=fecha,
+            f_desde=fecha,
+            f_hasta=fecha,
+            suma_asegurada=Decimal('20000.0'),
+            prima=Decimal('250.0'),
+            forma_pago=forma_pago,
+            frecuencia_pago=frecuencia_pago,
+            no_cuotas=10,
+        )
+        mov.save()
+        return mov
+
     def _get_poliza(self, numero, producto):
         pool = Pool()
         Poliza = pool.get('corseg.poliza')
@@ -206,7 +405,6 @@ class CorsegTestCase(ModuleTestCase):
                 numero=numero,                
             )
         poliza.save()
-
         return poliza
 
     def _get_varios(self):
