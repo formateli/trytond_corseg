@@ -324,12 +324,15 @@ class Pago(Workflow, ModelSQL, ModelView):
             'comision_cia_liq', 'comision_vendedor_liq')
     def on_change_monto(self):
         Comision = Pool().get('corseg.comision')
-        self.comision_cia = Decimal('0.0')
-        self.comision_vendedor = Decimal('0.0')
-        self.comision_cia_sugerida = Decimal('0.0')
-        self.comision_vendedor_sugerida = Decimal('0.0')
-        self.comision_cia_liq = Decimal('0.0')
-        self.comision_vendedor_liq = Decimal('0.0')
+        zero = Decimal('0.0')
+        self.comision_cia = zero
+        self.comision_vendedor = zero
+        self.comision_cia_sugerida = zero
+        self.comision_vendedor_sugerida = zero
+        self.comision_cia_liq = zero
+        self.comision_vendedor_liq = zero
+        self.comision_cia_ajuste = zero
+        self.comision_vendedor_ajuste = zero
         if self.monto:
             if self.poliza:
                 if self.poliza.comision_cia:
@@ -377,6 +380,8 @@ class Pago(Workflow, ModelSQL, ModelView):
 
             self.comision_cia_sugerida = self.comision_cia
             self.comision_vendedor_sugerida = self.comision_vendedor
+            self.comision_cia_liq = self.on_change_with_comision_cia_liq()
+            self.comision_vendedor_liq = self.on_change_with_comision_vendedor_liq()
 
     @fields.depends('poliza', 'cia', 'currency_digits',
             'vendedor', 'vendedor_sugerido', 'renovacion', 'monto',
