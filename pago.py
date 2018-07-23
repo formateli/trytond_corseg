@@ -321,7 +321,8 @@ class Pago(Workflow, ModelSQL, ModelView):
     @fields.depends('poliza', 'vendedor', 'monto',
             'comision_cia', 'comision_vendedor',
             'comision_cia_sugerida', 'comision_vendedor_sugerida',
-            'comision_cia_liq', 'comision_vendedor_liq')
+            'comision_cia_liq', 'comision_vendedor_liq',
+            'self.currency_digits')
     def on_change_monto(self):
         Comision = Pool().get('corseg.comision')
         zero = Decimal('0.0')
@@ -340,13 +341,13 @@ class Pago(Workflow, ModelSQL, ModelView):
                         Comision.get_comision(
                             self.poliza,
                             self.poliza.comision_cia,
-                            self.monto)
+                            self.monto, self.currency_digits)
                 elif self.poliza.cia_producto.comision_cia:
                     self.comision_cia = \
                         Comision.get_comision(
                             self.poliza,
                             self.poliza.cia_producto.comision_cia.lineas,
-                            self.monto)
+                            self.monto, self.currency_digits)
 
             if self.poliza and self.vendedor and self.comision_cia:
                 if self.poliza.comision_vendedor:
@@ -354,7 +355,7 @@ class Pago(Workflow, ModelSQL, ModelView):
                         Comision.get_comision(
                             self.poliza,
                             self.poliza.comision_vendedor,
-                            self.comision_cia)
+                            self.comision_cia, self.currency_digits)
                 elif self.poliza.cia_producto.comision_vendedor:
                     found = False
                     for line in self.poliza.cia_producto.comision_vendedor.lineas:
@@ -363,7 +364,7 @@ class Pago(Workflow, ModelSQL, ModelView):
                                 Comision.get_comision(
                                     self.poliza,
                                     line.comision.lineas,
-                                    self.comision_cia)
+                                    self.comision_cia, self.currency_digits)
                             found = True
                             break
                     if not found and \
@@ -371,12 +372,12 @@ class Pago(Workflow, ModelSQL, ModelView):
                         self.comision_vendedor = Comision.get_comision(
                             self.poliza,
                             self.poliza.cia_producto.comision_vendedor_defecto.lineas,
-                            self.comision_cia)
+                            self.comision_cia, self.currency_digits)
                 elif self.poliza.cia_producto.comision_vendedor_defecto:
                     self.comision_vendedor = Comision.get_comision(
                         self.poliza,
                         self.poliza.cia_producto.comision_vendedor_defecto.lineas,
-                        self.comision_cia)
+                        self.comision_cia, self.currency_digits)
 
             self.comision_cia_sugerida = self.comision_cia
             self.comision_vendedor_sugerida = self.comision_vendedor

@@ -67,7 +67,9 @@ class CorsegTestCase(ModuleTestCase):
 
         tipo_comision_5 = self._crear_tipo_comision('5.0')
         tipo_comision_10 = self._crear_tipo_comision('10.0')
+        tipo_comision_15 = self._crear_tipo_comision('15.0')
         tipo_comision_20 = self._crear_tipo_comision('20.0')
+        tipo_comision_35 = self._crear_tipo_comision('35.0')
 
         comision_5 = Comision(
                 name='Basico 5',
@@ -78,7 +80,7 @@ class CorsegTestCase(ModuleTestCase):
                         re_renovacion=True,
                         re_cuota=True
                     )
-                ]                
+                ]
             )
         comision_5.save()
         comision_10 = Comision(
@@ -195,6 +197,187 @@ class CorsegTestCase(ModuleTestCase):
         self.assertEqual(pago.renovacion, 1)
         self.assertEqual(pago.comision_cia_liq, Decimal('10.0'))
         self.assertEqual(pago.comision_vendedor_liq, Decimal('2.0'))
+        pago.confirmar([pago])
+
+        ################################################
+
+        # Un plan mas complejo
+        #  Renovacion 0 - 35%
+        #  Renovacion 1 - 15%
+        #  Renovacion 2 - 5% recurrente
+        #  Renovacion 9 - 10% no recurrente en renovacion
+
+        comision_complex = Comision(
+                name='Comision COmplex',
+                lineas=[
+                    ComisionLinea(
+                        renovacion=0,
+                        tipo_comision=tipo_comision_35,
+                        re_renovacion=True,
+                        re_cuota=True),
+                    ComisionLinea(
+                        renovacion=1,
+                        tipo_comision=tipo_comision_15,
+                        re_renovacion=True,
+                        re_cuota=True),
+                    ComisionLinea(
+                        renovacion=2,
+                        tipo_comision=tipo_comision_5,
+                        re_renovacion=True,
+                        re_cuota=True),
+                    ComisionLinea(
+                        renovacion=9,
+                        tipo_comision=tipo_comision_10,
+                        re_renovacion=False,
+                        re_cuota=True),
+                ]
+            )
+        comision_complex.save()
+
+        # Asignamos el nuevo plan al producto
+        # Usa la comision vendedor de 5%
+        producto.comision_cia = comision_complex
+        producto.save()
+
+        poliza = self._get_poliza("P4", producto)
+
+        # Iniciamos la poliza
+        mov = self._get_mov_ini(fecha, poliza,
+            self._create_party("Contratante P4 Party"),
+            vendedor, forma_pago, frecuencia_pago)
+        mov.procesar([mov])
+        mov.confirmar([mov])
+
+        # Pago en renovacion 0
+        pago = self._create_pago(poliza, vendedor, fecha, Decimal('100.0'))
+        pago.on_change_monto()
+        pago.procesar([pago])
+        self.assertEqual(pago.comision_cia_liq, Decimal('35.0'))
+        self.assertEqual(pago.comision_vendedor_liq, Decimal('1.75'))
+        pago.confirmar([pago])
+
+        pago = self._create_pago(poliza, vendedor, fecha, Decimal('10.0'))
+        pago.on_change_monto()
+        pago.procesar([pago])
+        self.assertEqual(pago.comision_cia_liq, Decimal('3.5'))
+        # redondea el 0.175 a 0.18 por currency_digits=2
+        self.assertEqual(pago.comision_vendedor_liq, Decimal('0.18'))
+        pago.confirmar([pago])
+
+        # Renovacion 1
+        mov = self._get_mov_renovacion(fecha, poliza, forma_pago, frecuencia_pago)
+        mov.procesar([mov])
+        mov.confirmar([mov])
+
+        pago = self._create_pago(poliza, vendedor, fecha, Decimal('100.0'))
+        pago.on_change_monto()
+        pago.procesar([pago])
+        self.assertEqual(pago.comision_cia_liq, Decimal('15.0'))
+        self.assertEqual(pago.comision_vendedor_liq, Decimal('0.75'))
+        pago.confirmar([pago])
+
+        pago = self._create_pago(poliza, vendedor, fecha, Decimal('10.0'))
+        pago.on_change_monto()
+        pago.procesar([pago])
+        self.assertEqual(pago.comision_cia_liq, Decimal('1.5'))
+        self.assertEqual(pago.comision_vendedor_liq, Decimal('0.08'))
+        pago.confirmar([pago])
+
+        # Renovacion 2
+        mov = self._get_mov_renovacion(fecha, poliza, forma_pago, frecuencia_pago)
+        mov.procesar([mov])
+        mov.confirmar([mov])
+
+        pago = self._create_pago(poliza, vendedor, fecha, Decimal('100.0'))
+        pago.on_change_monto()
+        pago.procesar([pago])
+        self.assertEqual(pago.comision_cia_liq, Decimal('5.0'))
+        self.assertEqual(pago.comision_vendedor_liq, Decimal('0.25'))
+        pago.confirmar([pago])
+
+        pago = self._create_pago(poliza, vendedor, fecha, Decimal('10.0'))
+        pago.on_change_monto()
+        pago.procesar([pago])
+        self.assertEqual(pago.comision_cia_liq, Decimal('0.5'))
+        self.assertEqual(pago.comision_vendedor_liq, Decimal('0.02'))
+        pago.confirmar([pago])
+
+        # Renovacion 3 = 2 ya que es recurrente en renovaciones
+        mov = self._get_mov_renovacion(fecha, poliza, forma_pago, frecuencia_pago)
+        mov.procesar([mov])
+        mov.confirmar([mov])
+
+        pago = self._create_pago(poliza, vendedor, fecha, Decimal('100.0'))
+        pago.on_change_monto()
+        pago.procesar([pago])
+        self.assertEqual(pago.comision_cia_liq, Decimal('5.0'))
+        self.assertEqual(pago.comision_vendedor_liq, Decimal('0.25'))
+        pago.confirmar([pago])
+
+        # Renovacion 8 = 2 ya que es recurrente en renovaciones
+        i = 1
+        while i < 6:
+            mov = self._get_mov_renovacion(fecha, poliza, forma_pago, frecuencia_pago)
+            mov.procesar([mov])
+            mov.confirmar([mov])
+            i += 1
+        self.assertEqual(poliza.renovacion, 8)
+        pago = self._create_pago(poliza, vendedor, fecha, Decimal('100.0'))
+        pago.on_change_monto()
+        pago.procesar([pago])
+        self.assertEqual(pago.comision_cia_liq, Decimal('5.0'))
+        self.assertEqual(pago.comision_vendedor_liq, Decimal('0.25'))
+        pago.confirmar([pago])
+
+        # Renovacion 9 10%
+        mov = self._get_mov_renovacion(fecha, poliza, forma_pago, frecuencia_pago)
+        mov.procesar([mov])
+        mov.confirmar([mov])
+
+        pago = self._create_pago(poliza, vendedor, fecha, Decimal('100.0'))
+        pago.on_change_monto()
+        pago.procesar([pago])
+        self.assertEqual(pago.comision_cia_liq, Decimal('10.0'))
+        self.assertEqual(pago.comision_vendedor_liq, Decimal('0.5'))
+        pago.confirmar([pago])
+
+        pago = self._create_pago(poliza, vendedor, fecha, Decimal('10.0'))
+        pago.on_change_monto()
+        pago.procesar([pago])
+        self.assertEqual(pago.comision_cia_liq, Decimal('1.0'))
+        self.assertEqual(pago.comision_vendedor_liq, Decimal('0.05'))
+        pago.confirmar([pago])
+
+        # Renovacion 10 = 0, ya que no hay linea definida para
+        # esta renovacion y la ultima linea no es recurrente en renovacion
+        mov = self._get_mov_renovacion(fecha, poliza, forma_pago, frecuencia_pago)
+        mov.procesar([mov])
+        mov.confirmar([mov])
+
+        pago = self._create_pago(poliza, vendedor, fecha, Decimal('100.0'))
+        pago.on_change_monto()
+        pago.procesar([pago])
+        self.assertEqual(pago.comision_cia_liq, Decimal('0.0'))
+        self.assertEqual(pago.comision_vendedor_liq, Decimal('0.0'))
+        pago.confirmar([pago])
+
+        pago = self._create_pago(poliza, vendedor, fecha, Decimal('10.0'))
+        pago.on_change_monto()
+        pago.procesar([pago])
+        self.assertEqual(pago.comision_cia_liq, Decimal('0.0'))
+        self.assertEqual(pago.comision_vendedor_liq, Decimal('0.0'))
+        pago.confirmar([pago])
+
+        # Renovacion 11, solo para confirmar
+        mov = self._get_mov_renovacion(fecha, poliza, forma_pago, frecuencia_pago)
+        mov.procesar([mov])
+        mov.confirmar([mov])
+
+        pago = self._create_pago(poliza, vendedor, fecha, Decimal('100.0'))
+        pago.on_change_monto()
+        pago.procesar([pago])
+        self.assertEqual(pago.comision_cia_liq, Decimal('0.0'))
+        self.assertEqual(pago.comision_vendedor_liq, Decimal('0.0'))
         pago.confirmar([pago])
 
     def _crear_tipo_comision(self, monto_comision):

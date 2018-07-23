@@ -87,7 +87,7 @@ class Comision(ModelSQL, ModelView):
         return True
 
     @classmethod
-    def get_comision(cls, poliza, lineas, monto):
+    def get_comision(cls, poliza, lineas, monto, digits):
         result = Decimal('0.0')
 
         if not poliza or not monto or not lineas:
@@ -114,7 +114,9 @@ class Comision(ModelSQL, ModelView):
                 break
             last_linea = linea
             i += 1
-        return result
+
+        exp = Decimal(str(10.0 ** -digits))
+        return result.quantize(exp)
 
     @classmethod
     def _get_comision_linea(cls, poliza, linea, monto):
