@@ -64,7 +64,7 @@ class Pago(Workflow, ModelSQL, ModelView):
             If(
                 In(Eval('state'), ['confirmado']),
                 [('state', '!=', '')],
-                [('state', '!=', 'finalizada')]
+                [('state', '!=', 'cancelado')]
             )
         ],
         states=_STATES, depends=['company', 'state'])
@@ -74,7 +74,8 @@ class Pago(Workflow, ModelSQL, ModelView):
     contratante = fields.Function(
         fields.Many2One('party.party', 'Contratante'),
         'get_contratante')
-    renovacion = fields.Integer('Renovacion', readonly=True)
+    renovacion = fields.Integer('Renovacion',
+        states={'readonly': True})
     fecha = fields.Date('Fecha', required=True,
         states={
             'readonly': Not(In(Eval('state'), ['borrador', 'procesado'])),
@@ -90,13 +91,13 @@ class Pago(Workflow, ModelSQL, ModelView):
         'Vendedor', required=True,
         states=_STATES, depends=_DEPENDS)
     vendedor_sugerido = fields.Many2One('corseg.vendedor',
-        'Vendedor Sugerido', readonly=True)
+        'Vendedor Sugerido', states={'readonly': True})
     comision_cia = fields.Numeric('Comision Cia',
         digits=(16, Eval('currency_digits', 2)),
         required=True, states=_STATES,
         depends=['currency_digits'])
     comision_cia_sugerida = fields.Numeric(
-        'Comision Cia Sugerida', readonly=True,
+        'Comision Cia Sugerida', states={'readonly': True},
         digits=(16, Eval('currency_digits', 2)),
         depends=['currency_digits'])
     comision_cia_ajuste = fields.Function(
@@ -114,7 +115,7 @@ class Pago(Workflow, ModelSQL, ModelView):
         required=True, states=_STATES,
         depends=['currency_digits'])
     comision_vendedor_sugerida = fields.Numeric(
-        'Comision Vendedor Sugerida', readonly=True,
+        'Comision Vendedor Sugerida', states={'readonly': True},
         digits=(16, Eval('currency_digits', 2)),
         depends=['currency_digits'])
     comision_vendedor_ajuste = fields.Function(
@@ -318,11 +319,11 @@ class Pago(Workflow, ModelSQL, ModelView):
                 result += ajuste.monto
         return result
 
-    @fields.depends('poliza', 'vendedor', 'monto',
+    @fields.depends('poliza', 'vendedor', 'vendedor_sugerido', 'monto',
             'comision_cia', 'comision_vendedor',
             'comision_cia_sugerida', 'comision_vendedor_sugerida',
             'comision_cia_liq', 'comision_vendedor_liq',
-            'self.currency_digits')
+            'currency_digits')
     def on_change_monto(self):
         Comision = Pool().get('corseg.comision')
         zero = Decimal('0.0')
