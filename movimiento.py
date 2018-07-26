@@ -191,6 +191,17 @@ class Movimiento(Workflow, ModelSQL, ModelView):
             'readonly': Not(In(Eval('state'), ['borrador',])),
         }, depends=['company', 'state'])
     renovacion = fields.Integer('Renovacion', readonly=True)
+    renovacion_actual = fields.Function(
+            fields.Integer('Renovacion Actual'),
+            'on_change_with_renovacion_actual'
+        )
+    renovacion_eliminar = fields.Integer('Renovaciona a Eliminar',
+        states={
+            'invisible': Not(In(Eval('tipo'), ['eliminar_renov'])),
+            'required': In(Eval('tipo'), ['eliminar_renov']),
+            'readonly': Not(In(Eval('state'), ['borrador'])),
+        }, depends=['tipo', 'state']
+    )
     poliza_state = fields.Function(fields.Char('Estado'),
         'get_poliza_state')
     fecha = fields.Date('Fecha', required=True,
@@ -203,6 +214,7 @@ class Movimiento(Workflow, ModelSQL, ModelView):
         }, depends=['state'])
     tipo = fields.Selection([
             ('general', 'General'),
+            ('eliminar_renov', 'Eliminar renovacion'),
             ('endoso', 'Endoso'),
         ], 'Tipo', required=True,
         states={
@@ -218,6 +230,7 @@ class Movimiento(Workflow, ModelSQL, ModelView):
         ], 'Tipo Endoso',
         states={
             'invisible': Not(In(Eval('tipo'), ['endoso'])),
+            'requires': In(Eval('tipo'), ['endoso']),
             'readonly': Not(In(Eval('state'), ['borrador'])),
         }, depends=['tipo', 'state']
     )
@@ -358,6 +371,14 @@ class Movimiento(Workflow, ModelSQL, ModelView):
                     '"Nuevo" o "Excluido" antes de la inclusion.'),
                 'extendido_excluido': ('El extendido "%s" debe tener estado de '
                     '"Incluido" antes de la exclusion.'),
+                'renovacion_eliminar_actual': ('No puede eliminarse la renovacion actual '
+                    'de la poliza "%s".'),
+                'renovacion_eliminar_pagos': ('No puede eliminarse la renovacion "%s" '
+                    'de la poliza "%s" porque tienes pagos asociados.'),
+                'renovacion_eliminar_movimientos': ('No puede eliminarse la renovacion "%s" '
+                    'de la poliza "%s" porque tienes movimientos asociados.'),
+                'renovacion_eliminar_no_existe': ('La renovacion "%s" '
+                    'de la poliza "%s" no existe.'),
                 })
         cls._transitions |= set(
             (
@@ -400,9 +421,15 @@ class Movimiento(Workflow, ModelSQL, ModelView):
     def default_tipo_endoso():
         return None
 
+    @fields.depends('poliza')
+    def on_change_with_renovacion_actual(self, name=None):
+        if self.poliza:
+            return self.poliza.renovacion
+
     @fields.depends('tipo', 'tipo_endoso')
     def on_change_tipo(self):
         self.tipo_endoso = None
+        self.renovacion_eliminar = None
 
     @fields.depends('poliza', 'currency_digits', 'poliza_state')
     def on_change_poliza(self):
@@ -422,6 +449,99 @@ class Movimiento(Workflow, ModelSQL, ModelView):
         if self.poliza:
             return self.poliza.state
 
+    @classmethod
+    def _eliminar_renovacion(cls, mov):
+        pool = Pool()
+        Renovacion = pool.get('corseg.poliza.renovacion')
+        Pago = pool.get('corseg.poliza.pago')
+        Movimiento = pool.get('corseg.poliza.movimiento')
+
+        pgs = []
+        mvs = []
+
+        renovacion = cls._validar_renovacion_eliminar(mov)
+        mov_reno = Movimiento.search([
+                ('poliza', '=', mov.poliza.id),
+                ('tipo_endoso', '=', 'renovacion'),
+                ('renovacion', '=', renovacion.renovacion),
+                ('state', '=', 'confirmado'),
+            ])[0]
+        mov_reno.tipo = 'general'
+        mov_reno.tipo_endoso = None
+        mvs.append(mov_reno)
+
+        renovs = Renovacion.search([
+                ('poliza', '=', mov.poliza.id),
+                ('renovacion', '>', renovacion.renovacion)
+            ], order=[('renovacion', 'ASC')])
+        for ren in renovs:
+            pagos = Pago.search([
+                    ('poliza', '=', mov.poliza.id),
+                    ('renovacion', '=', ren.renovacion)
+                ])
+            for pago in pagos:
+                pago.renovacion = ren.renovacion - 1
+                pgs.append(pago)
+                    
+            movimientos = Movimiento.search([
+                    ('poliza', '=', mov.poliza.id),
+                    ('renovacion', '=', ren.renovacion)
+                ])
+            for movimiento in movimientos:
+                movimiento.renovacion = ren.renovacion - 1
+                mvs.append(movimiento)
+                
+            ren.renovacion = ren.renovacion - 1
+            ren.save()
+
+        Pago.save(pgs)
+        Movimiento.save(mvs)
+        Renovacion.delete([renovacion])
+
+    @classmethod
+    def _validar_renovacion_eliminar(cls, mov):
+        pool = Pool()
+        Renovacion = pool.get('corseg.poliza.renovacion')
+        Pago = pool.get('corseg.poliza.pago')
+        Movimiento = pool.get('corseg.poliza.movimiento')
+
+        if mov.renovacion_actual == mov.renovacion_eliminar:
+            cls.raise_user_error(
+                'renovacion_eliminar_actual',
+                (mov.poliza.rec_name,))
+
+        renovs = Renovacion.search([
+                ('poliza', '=', mov.poliza.id),
+                ('renovacion', '=', mov.renovacion_eliminar)
+            ])
+
+        if not renovs:
+            cls.raise_user_error(
+                'renovacion_eliminar_no_existe',
+                (mov.renovacion_eliminar, mov.poliza.rec_name))
+
+        ren = renovs[0]
+
+        pagos = Pago.search([
+                ('poliza', '=', mov.poliza.id),
+                ('renovacion', '=', ren.renovacion)
+            ])
+        if pagos:
+            cls.raise_user_error(
+                'renovacion_eliminar_pagos',
+                (mov.renovacion_eliminar, mov.poliza.rec_name))
+
+        movimientos = Movimiento.search([
+                ('poliza', '=', mov.poliza.id),
+                ('renovacion', '=', ren.renovacion)
+            ])
+        if len(movimientos) > 1:
+            cls.raise_user_error(
+                'renovacion_eliminar_movimientos',
+                (mov.renovacion_eliminar, mov.poliza.rec_name))
+
+        return ren
+
     def _set_default_inclusion(self):
         if self.inclusiones:
             return
@@ -435,43 +555,7 @@ class Movimiento(Workflow, ModelSQL, ModelView):
             prima=self.prima,
         )
         certificado.save()
-        self.inclusiones = [certificado,]
-
-#    def _prepare_comision_inicio(self):
-#        pool = Pool()
-#        ComisionMovimientoCia = pool.get(
-#            'corseg.comision.movimiento.cia')
-#        ComisionMovimientoVendedor = pool.get(
-#            'corseg.comision.movimiento.vendedor')
-
-#        if not self.comision_cia and \
-#                self.poliza.cia_producto.comision_cia:
-#            self._fill_comision(
-#                self, ComisionMovimientoCia,
-#                self.poliza.cia_producto.comision_cia.lineas)
-
-#        if not self.comision_vendedor:
-#            if self.poliza.cia_producto.comision_vendedor:
-#                found = False
-#                for vnd in self.poliza.cia_producto.comision_vendedor.lineas:
-#                    if vnd.vendedor.id == self.vendedor.id:
-#                        self._fill_comision(
-#                            self, ComisionMovimientoVendedor,
-#                            vnd.comision.lineas)
-#                        found = True
-#                        break
-#                if not found:
-#                    self._set_comision_vendedor_defecto(
-#                        ComisionMovimientoVendedor)                    
-#            else:
-#                self._set_comision_vendedor_defecto(
-#                    ComisionMovimientoVendedor)
-
-#    def _set_comision_vendedor_defecto(self, ComisionMovimientoVendedor):
-#        if self.poliza.cia_producto.comision_vendedor_defecto:
-#            self._fill_comision(
-#                self, ComisionMovimientoVendedor,
-#                self.poliza.cia_producto.comision_vendedor_defecto.lineas)        
+        self.inclusiones = [certificado,]        
 
     def _fill_comision(self, parent, Comision, lineas):
         for cm in lineas:
@@ -610,7 +694,8 @@ class Movimiento(Workflow, ModelSQL, ModelView):
                     (mov.poliza.rec_name,))
             if mov.tipo_endoso == 'iniciacion':
                 mov._set_default_inclusion()
-                #mov._prepare_comision_inicio()
+            if mov.tipo == 'eliminar_renov':
+                cls._validar_renovacion_eliminar(mov)
             set_auditoria(mov, 'processed')
             mov.save()
 
@@ -728,6 +813,10 @@ class Movimiento(Workflow, ModelSQL, ModelView):
             set_auditoria(mov, 'confirmed')
             mov.renovacion = renovacion_no
             mov.save()
+
+        for mov in movs:
+            if mov.tipo == 'eliminar_renov':
+                cls._eliminar_renovacion(mov)
 
         cls.set_number(movs)
 

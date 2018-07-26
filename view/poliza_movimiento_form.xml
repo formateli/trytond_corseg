@@ -12,6 +12,8 @@ this repository contains the full copyright notices and license terms. -->
     <field name="poliza_state"/>
     <label name="numero"/>
     <field name="numero"/>
+    <label name="renovacion_actual"/>
+    <field name="renovacion_actual"/>
     <newline/>
     <label name="descripcion"/>
     <field name="descripcion" colspan="3"/>
@@ -21,6 +23,8 @@ this repository contains the full copyright notices and license terms. -->
     <field name="tipo_endoso"/>
     <label name="vendedor"/>
     <field name="vendedor"/>
+    <label name="renovacion_eliminar"/>
+    <field name="renovacion_eliminar"/>
     <newline />
     <notebook colspan="4">
         <page string="Datos" id="datos" col="6">
