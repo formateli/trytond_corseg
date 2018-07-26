@@ -250,6 +250,10 @@ class Poliza(ModelSQL, ModelView):
     frecuencia_pago = fields.Many2One('corseg.frecuencia_pago',
         'Frecuencia pago',  readonly=True)
     no_cuotas = fields.Integer('Cant. cuotas', readonly=True)
+    cuota = fields.Function(fields.Numeric('Cuota',
+            digits=(16, Eval('currency_digits', 2)),
+            depends=['currency_digits']),
+        'get_cuota')
     monto_pago = fields.Function(fields.Numeric(
             'Pagado', digits=(16, Eval('currency_digits', 2)),
             depends=['currency_digits']),
@@ -385,6 +389,11 @@ class Poliza(ModelSQL, ModelView):
                         'sustituido', 'cancelado']:
                     res += pago.monto
         return res
+
+    def get_cuota(self, name):
+        if self.prima:
+            exp = Decimal(str(10.0 ** -self.currency_digits))
+            return (self.prima / self.no_cuotas).quantize(exp)
 
     def get_saldo(self, name):
         res = Decimal('0.0')

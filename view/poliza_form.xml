@@ -18,37 +18,40 @@ this repository contains the full copyright notices and license terms. -->
     <field name="contratante"/>
     <label name="vendedor"/>
     <field name="vendedor"/>
-    <label name="renovacion"/>
-    <field name="renovacion"/>
-    <label name="state"/>
-    <field name="state"/>
     <newline />
     <notebook colspan="4">
         <page string="Informacion" id="informacion" col="6">
-            <separator string="Emision" colspan="6" id="emision"/>
-            <label name="f_emision"/>
-            <field name="f_emision"/>
-            <label name="f_desde"/>
-            <field name="f_desde"/>
-            <label name="f_hasta"/>
-            <field name="f_hasta"/>
-            <label name="suma_asegurada"/>
-            <field name="suma_asegurada"/>
-            <label name="prima"/>
-            <field name="prima"/>
-            <newline/>
-            <separator string="Pagos" colspan="6" id="pago"/>
-            <label name="forma_pago"/>
-            <field name="forma_pago"/>
-            <label name="frecuencia_pago"/>
-            <field name="frecuencia_pago"/>
-            <label name="no_cuotas"/>
-            <field name="no_cuotas"/>
-            <label name="monto_pago"/>
-            <field name="monto_pago"/>
-            <label name="saldo"/>
-            <field name="saldo"/>
-            <newline/>
+            <group string="Vigencia actual" colspan="6" col="6" id="emision">
+                <label name="renovacion"/>
+                <field name="renovacion"/>
+                <label name="state"/>
+                <field name="state"/>
+                <newline/>
+                <label name="f_emision"/>
+                <field name="f_emision"/>
+                <label name="f_desde"/>
+                <field name="f_desde"/>
+                <label name="f_hasta"/>
+                <field name="f_hasta"/>
+                <label name="suma_asegurada"/>
+                <field name="suma_asegurada"/>
+                <label name="prima"/>
+                <field name="prima"/>
+            </group>
+            <group string="Pagos" colspan="6" col="6" id="pago">
+                <label name="forma_pago"/>
+                <field name="forma_pago"/>
+                <label name="frecuencia_pago"/>
+                <field name="frecuencia_pago"/>
+                <label name="no_cuotas"/>
+                <field name="no_cuotas"/>
+                <label name="cuota"/>
+                <field name="cuota"/>
+                <label name="monto_pago"/>
+                <field name="monto_pago"/>
+                <label name="saldo"/>
+                <field name="saldo"/>
+            </group>
             <separator string="Notas" colspan="6" id="notas"/>
             <field name="notas" colspan="6"/>
         </page>

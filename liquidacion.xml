@@ -8,7 +8,6 @@ contains the full copyright notices and license terms. -->
         <menuitem name="Comisiones" parent="menu_corseg"
             id="menu_liq_comision" sequence="40"/>
 
-
         <!-- Ajuste Comision Cia -->
         <record model="ir.ui.view" id="comision_ajuste_cia_view_form">
             <field name="model">corseg.comision.ajuste.cia</field>

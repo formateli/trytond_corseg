@@ -237,11 +237,9 @@ contains the full copyright notices and license terms. -->
             <field name="perm_delete" eval="True"/>
         </record>
 
-
         <!-- Menu Poliza -->
         <menuitem name="Polizas" parent="menu_corseg"
             id="menu_corseg_poliza" sequence="30"/>
-
 
         <!-- Poliza -->
         <record model="ir.ui.view" id="poliza_view_form">
