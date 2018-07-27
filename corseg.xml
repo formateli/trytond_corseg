@@ -147,6 +147,25 @@ contains the full copyright notices and license terms. -->
             <field name="type">tree</field>
             <field name="name">cia_producto_tree</field>
         </record>
+
+        <record model="ir.action.act_window" id="act_cia_producto_form">
+            <field name="name">Productos</field>
+            <field name="res_model">corseg.cia.producto</field>
+        </record>
+        <record model="ir.action.act_window.view" id="act_cia_producto_form_view1">
+            <field name="sequence" eval="10"/>
+            <field name="view" ref="cia_producto_view_tree"/>
+            <field name="act_window" ref="act_cia_producto_form"/>
+        </record>
+        <record model="ir.action.act_window.view" id="act_cia_producto_form_view2">
+            <field name="sequence" eval="20"/>
+            <field name="view" ref="cia_producto_view_form"/>
+            <field name="act_window" ref="act_cia_producto_form"/>
+        </record>
+
+        <menuitem parent="menu_corseg_cia_seguros" sequence="30"
+            action="act_cia_producto_form" id="menu_cia_producto_tree"/>
+
         <record model="ir.model.access" id="access_cia_producto">
             <field name="model" search="[('model', '=', 'corseg.cia.producto')]"/>
             <field name="perm_read" eval="True"/>
