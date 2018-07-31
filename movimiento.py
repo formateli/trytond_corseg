@@ -72,10 +72,13 @@ class Certificado(ModelSQL, ModelView):
         states={
             'readonly': Not(In(Eval('state'), ['new',])),
         })
+
+    fecha_inclusion = fields.Function(fields.Date('Incluido'),
+        'get_fecha_inclusion')
+    fecha_exclusion = fields.Function(fields.Date('Excluido'),
+        'get_fecha_inclusion')
+
     descripcion = fields.Text('Descripcion', size=None)
-    extendido_label = fields.Function(
-        fields.Char('Extendido Label'),
-        'on_change_with_extendido_label')
     extendidos = fields.One2Many(
         'corseg.poliza.certificado.extension',
         'certificado', 'Extendidos',
@@ -102,18 +105,6 @@ class Certificado(ModelSQL, ModelView):
     def get_rec_name(self, name):
         return self.numero + '-' + self.asegurado.rec_name
 
-
-    @fields.depends('tipo')
-    def on_change_with_extendido_label(self, name=None):
-        if self.tipo:
-            if self.tipo == 'automovil':
-                return 'Conductores Adicionales'
-            elif self.tipo == 'salud':
-                return 'Dependientes'
-            elif self.tipo == 'vida':
-                return 'Beneficiarios'
-        return 'Extendidos'
-
     @classmethod
     def view_attributes(cls):
         extendidos = [
@@ -135,6 +126,21 @@ class Certificado(ModelSQL, ModelView):
         ]
         return super(Certificado, cls).view_attributes() + \
                         extendidos + datos_tecnicos
+
+    def get_fecha_inclusion(self, name):
+        if name == 'fecha_inclusion':
+            model = 'poliza.certificado-inclusion-poliza.movimiento'
+        else:
+            model = 'poliza.certificado-exclusion-poliza.movimiento'        
+
+        pool = Pool()
+        Cert = pool.get(model)
+        certs = Cert.search(
+            [('certificado', '=', self.id)],
+            order=[('movimiento.fecha', 'DESC')], limit=1)
+
+        if certs:
+            return certs[0].movimiento.fecha
 
 
 class Extension(ModelSQL, ModelView):

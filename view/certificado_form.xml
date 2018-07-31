@@ -2,16 +2,24 @@
 <!-- This file is part of trytond-corseg module. The COPYRIGHT file at the top level of
 this repository contains the full copyright notices and license terms. -->
 <form>
-    <label name="numero"/>
-    <field name="numero"/>
-    <label name="tipo"/>
-    <field name="tipo"/>
-    <label name="asegurado"/>
-    <field name="asegurado"/>
+    <group id='info' colspan="4" col="6">
+        <label name="numero"/>
+        <field name="numero"/>
+        <label name="tipo"/>
+        <field name="tipo"/>
+        <label name="asegurado"/>
+        <field name="asegurado"/>
+    </group>
     <label name="suma_asegurada"/>
     <field name="suma_asegurada"/>
     <label name="prima"/>
     <field name="prima"/>
+
+    <label name="fecha_inclusion"/>
+    <field name="fecha_inclusion"/>
+    <label name="fecha_exclusion"/>
+    <field name="fecha_exclusion"/>
+
     <label name="state"/>
     <field name="state"/>
     <newline />
