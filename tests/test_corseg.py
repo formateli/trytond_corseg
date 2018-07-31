@@ -484,7 +484,7 @@ class CorsegTestCase(ModuleTestCase):
         self.assertEqual(poliza.renovacion, 0)
         self.assertEqual(poliza.no_cuotas, 10)
         self.assertEqual(poliza.monto_pago, Decimal('0.0'))
-        self.assertEqual(poliza.saldo, poliza.prima)
+        self.assertEqual(poliza.saldo, poliza.prima) # 200.0
 
         # Modificacion simple
         mov = Movimiento(
@@ -500,6 +500,21 @@ class CorsegTestCase(ModuleTestCase):
         # La poliza se modifica solo al confirmar el movimiento
         Movimiento.confirmar([mov])
         self.assertEqual(poliza.no_cuotas, 11)
+        # No varia la prima de la poliza
+        self.assertEqual(poliza.prima, Decimal('200.0'))
+
+        # Modificacion ajuste de prima a la baja
+        mov = Movimiento(
+            fecha=fecha,
+            poliza=poliza,
+            descripcion="Modificacion Simple a la baja",
+            tipo="general",
+            prima=-Decimal('50.0'),
+        )
+        mov.save()
+        Movimiento.procesar([mov])
+        Movimiento.confirmar([mov])
+        self.assertEqual(poliza.prima, Decimal('150.0'))
 
         # Renovacion
         mov = self._get_mov_renovacion(
@@ -511,8 +526,9 @@ class CorsegTestCase(ModuleTestCase):
         self.assertEqual(poliza.renovacion, 1)
         self.assertEqual(poliza.no_cuotas, 10)
         self.assertEqual(poliza.monto_pago, Decimal('0.0'))
+        self.assertEqual(poliza.prima, Decimal('250.0'))
         # Se suman la prima de la renovacion anterior con esta
-        self.assertEqual(poliza.saldo, Decimal('450.0'))
+        self.assertEqual(poliza.saldo, Decimal('400.0'))
 
         # Cancelacion
         mov = Movimiento(

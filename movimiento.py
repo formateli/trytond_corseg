@@ -588,7 +588,7 @@ class Movimiento(Workflow, ModelSQL, ModelView):
                 ComisionPolizaVendedor, self.comision_vendedor)
 
     @staticmethod
-    def _act_field(name, obj, chg):
+    def _act_field(name, obj, chg, ajustar_prima=False):
         v = getattr(chg, name)
         if v is not None:
             try:
@@ -596,7 +596,11 @@ class Movimiento(Workflow, ModelSQL, ModelView):
                     return
             except:
                 pass
-            setattr(obj, name, v)
+            if name == 'prima' and ajustar_prima:
+                act = getattr(obj, name)
+                setattr(obj, name, act + v)
+            else:
+                setattr(obj, name, v)
 
     @classmethod
     def _get_renovacion_fields(cls):
@@ -714,15 +718,17 @@ class Movimiento(Workflow, ModelSQL, ModelView):
             if mov.tipo_endoso == 'iniciacion':
                 renovacion_no = 0
             elif mov.tipo_endoso == 'renovacion':
-                # TODO si la poliza esta pendiente por pagos no se puede renovar
                 renovacion_no = pl.renovacion + 1
             else:
                 renovacion_no = pl.renovacion
 
+            ajustar_prima = False
+            if mov.tipo_endoso not in ['iniciacion', 'renovacion']:
+                ajustar_prima = True
             renovacion = cls._get_renovacion(
                 pl, renovacion_no, mov.tipo_endoso)
             for f in fields_renovacion:
-                cls._act_field(f, renovacion, mov)
+                cls._act_field(f, renovacion, mov, ajustar_prima)
             renovacion.save()
 
             for f in fields:
