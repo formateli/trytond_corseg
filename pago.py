@@ -73,7 +73,7 @@ class Pago(Workflow, ModelSQL, ModelView):
         'get_cia', searcher='search_cia')
     contratante = fields.Function(
         fields.Many2One('party.party', 'Contratante'),
-        'get_contratante')
+        'get_contratante', searcher='search_contratante')
     renovacion = fields.Integer('Renovacion',
         states={'readonly': True})
     fecha = fields.Date('Fecha', required=True,
@@ -439,6 +439,10 @@ class Pago(Workflow, ModelSQL, ModelView):
     @classmethod
     def search_cia(cls, name, clause):
         return [('poliza.cia',) + tuple(clause[1:])]
+
+    @classmethod
+    def search_contratante(cls, name, clause):
+        return [('poliza.contratante',) + tuple(clause[1:])]
 
     @classmethod
     def set_number(cls, pagos):
