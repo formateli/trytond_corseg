@@ -14,14 +14,14 @@ this repository contains the full copyright notices and license terms. -->
     <field name="suma_asegurada"/>
     <label name="prima"/>
     <field name="prima"/>
-
     <label name="fecha_inclusion"/>
     <field name="fecha_inclusion"/>
     <label name="fecha_exclusion"/>
     <field name="fecha_exclusion"/>
-
     <label name="state"/>
     <field name="state"/>
+    <label name="poliza"/>
+    <field name="poliza"/>
     <newline />
     <notebook colspan="4">
         <page string="Descripcion" id="descripcion">

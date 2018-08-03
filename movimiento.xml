@@ -145,6 +145,56 @@ contains the full copyright notices and license terms. -->
             <field name="type">tree</field>
             <field name="name">certificado_tree</field>
         </record>
+        <record model="ir.action.act_window" id="act_certificado_form">
+            <field name="name">Certificados</field>
+            <field name="res_model">corseg.poliza.certificado</field>
+        </record>
+        <record model="ir.action.act_window.view" id="act_certificado_form_view1">
+            <field name="sequence" eval="10"/>
+            <field name="view" ref="certificado_view_tree"/>
+            <field name="act_window" ref="act_certificado_form"/>
+        </record>
+        <record model="ir.action.act_window.view" id="act_certificado_form_view2">
+            <field name="sequence" eval="20"/>
+            <field name="view" ref="certificado_view_form"/>
+            <field name="act_window" ref="act_certificado_form"/>
+        </record>
+
+        <record model="ir.action.act_window.domain"
+                id="act_certificado_form_domain_new">
+            <field name="name">Nuevos</field>
+            <field name="sequence" eval="30"/>
+            <field name="domain" eval="[('state', '=', 'new')]" pyson="1"/>
+            <field name="count" eval="True"/>
+            <field name="act_window" ref="act_certificado_form"/>
+        </record>
+        <record model="ir.action.act_window.domain"
+                id="act_certificado_form_domain_incluido">
+            <field name="name">Incluidos</field>
+            <field name="sequence" eval="40"/>
+            <field name="domain" eval="[('state', '=', 'incluido')]" pyson="1"/>
+            <field name="count" eval="True"/>
+            <field name="act_window" ref="act_certificado_form"/>
+        </record>
+        <record model="ir.action.act_window.domain"
+                id="act_certificado_form_domain_excluido">
+            <field name="name">Excluidos</field>
+            <field name="sequence" eval="40"/>
+            <field name="domain" eval="[('state', '=', 'excluido')]" pyson="1"/>
+            <field name="count" eval="True"/>
+            <field name="act_window" ref="act_certificado_form"/>
+        </record>
+        <record model="ir.action.act_window.domain"
+                id="act_certificado_form_domain_all">
+            <field name="name">Todos</field>
+            <field name="sequence" eval="9999"/>
+            <field name="domain"></field>
+            <field name="act_window" ref="act_certificado_form"/>
+        </record>
+
+        <menuitem parent="menu_corseg_configuration" sequence="50"
+            action="act_certificado_form" id="menu_certificado_tree"/>
+
         <record model="ir.model.access" id="access_certificado">
             <field name="model" search="[('model', '=', 'corseg.poliza.certificado')]"/>
             <field name="perm_read" eval="True"/>

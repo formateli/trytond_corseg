@@ -4,5 +4,6 @@ this repository contains the full copyright notices and license terms. -->
 <tree>
     <field name="numero"/>
     <field name="asegurado"/>
+    <field name="poliza"/>
     <field name="state"/>
 </tree>

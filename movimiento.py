@@ -43,7 +43,8 @@ class PartyCorseg:
 class Certificado(ModelSQL, ModelView):
     'Certificado'
     __name__ = 'corseg.poliza.certificado'
-    poliza = fields.Many2One('corseg.poliza', 'Poliza', readonly=True)
+    poliza = fields.Many2One('corseg.poliza', 'Poliza',
+        readonly=True, ondelete='RESTRICT')
     numero = fields.Char('Numero', required=True,
         states={
             'readonly': Not(In(Eval('state'), ['new',])),
@@ -58,7 +59,7 @@ class Certificado(ModelSQL, ModelView):
             'readonly': Not(In(Eval('state'), ['new',])),
         }, depends=['state'])
     asegurado = fields.Many2One('party.party', 'Asegurado',
-        required=True, ondelete='CASCADE',
+        required=True,
         states={
             'readonly': Not(In(Eval('state'), ['new',])),
         })
@@ -97,6 +98,14 @@ class Certificado(ModelSQL, ModelView):
             ('incluido', 'Incluido'),
             ('excluido', 'Excluido')
         ], 'Estado', required=True, readonly=True)
+
+    @classmethod
+    def __setup__(cls):
+        super(Certificado, cls).__setup__()
+        cls._error_messages.update({
+                'delete_new': ('El Certificado "%s" debe ser '
+                    '"Nuevo" para poder eliminarse.'),
+                })
 
     @staticmethod
     def default_state():
@@ -142,17 +151,24 @@ class Certificado(ModelSQL, ModelView):
         if certs:
             return certs[0].movimiento.fecha
 
+    @classmethod
+    def delete(cls, certs):
+        for cert in certs:
+            if cert.state != 'new':
+                cls.raise_user_error('delete_new', (cert.rec_name,))
+        super(Certificado, cls).delete(certs)
+
 
 class Extension(ModelSQL, ModelView):
     'Extension'
     __name__ = 'corseg.poliza.certificado.extension'
     certificado = fields.Many2One('corseg.poliza.certificado',
-        'Certificado',
+        'Certificado', ondelete='CASCADE',
         states={
             'invisible': Not(Bool(Eval('_parent_certificado'))),
         })
     extendido = fields.Many2One('party.party', 'Extendido',
-        required=True, ondelete='CASCADE',
+        required=True,
         states={
             'readonly': Not(In(Eval('state'), ['new',])),
         })
@@ -173,20 +189,20 @@ class Extension(ModelSQL, ModelView):
 class Movimiento(Workflow, ModelSQL, ModelView):
     'Movimiento de Poliza'
     __name__ = 'corseg.poliza.movimiento'
-    company = fields.Many2One('company.company', 'Company', required=False, # TODO required=True
+    company = fields.Many2One('company.company', 'Company', required=True,
         states={
             'readonly': True,
             },
-        domain=[ #TODO descomentar despues de realizar la migracion
-#            ('id', If(Eval('context', {}).contains('company'), '=', '!='),
-#                Eval('context', {}).get('company', -1)),
+        domain=[
+            ('id', If(Eval('context', {}).contains('company'), '=', '!='),
+                Eval('context', {}).get('company', -1)),
             ], select=True)
     number = fields.Char('Numero', size=None, readonly=True, select=True)
     currency_digits = fields.Function(fields.Integer('Currency Digits'),
         'get_currency_digits')
     poliza = fields.Many2One('corseg.poliza', 'Poliza', required=True,
         domain=[
-#            ('company', '=', Eval('company')), # TODO Uncomment despues de migracion
+            ('company', '=', Eval('company')), # TODO Uncomment despues de migracion
             If(
                 In(Eval('state'), ['confirmado']),
                 [('state', '!=', '')],
@@ -245,6 +261,7 @@ class Movimiento(Workflow, ModelSQL, ModelView):
             'readonly': Not(In(Eval('state'), ['borrador',])),
         }, depends=['state'])
     contratante = fields.Many2One('party.party', 'Contratante',
+        ondelete='RESTRICT',
         states={
             'required': In(Eval('tipo_endoso'), ['iniciacion',]),
             'readonly': Not(In(Eval('state'), ['borrador',])),
