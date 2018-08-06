@@ -44,18 +44,17 @@ class FrecuenciaPago(ModelSQL, ModelView):
 class Pago(Workflow, ModelSQL, ModelView):
     'Pago a Poliza'
     __name__ = 'corseg.poliza.pago'
-    company = fields.Many2One('company.company', 'Company', required=False, # TODO required=True
+    company = fields.Many2One('company.company', 'Company', required=True,
         states={
             'readonly': True,
             },
-        domain=[ #TODO descomentar despues de realizar la migracion
-#            ('id', If(Eval('context', {}).contains('company'), '=', '!='),
-#                Eval('context', {}).get('company', -1)),
+        domain=[
+            ('id', If(Eval('context', {}).contains('company'), '=', '!='),
+                Eval('context', {}).get('company', -1)),
             ], select=True)
     number = fields.Char('Numero', size=None, readonly=True, select=True)
     currency = fields.Many2One('currency.currency',
-        'Moneda', required=False, # TODO required=True
-        readonly=True)
+        'Moneda', required=True, states={'readonly': True})
     currency_digits = fields.Function(fields.Integer('Currency Digits'),
         'get_currency_digits')
     poliza = fields.Many2One('corseg.poliza', 'Poliza', required=True,
@@ -82,7 +81,7 @@ class Pago(Workflow, ModelSQL, ModelView):
         }, depends=['state'])
     referencia = fields.Char('Referencia',
         states={
-            'readonly': Not(In(Eval('state'), ['borrador', 'procesado'])),
+            'readonly': Not(In(Eval('state'), ['borrador', 'procesado', 'confirmado'])),
         }, depends=['state'])
     monto = fields.Numeric('Monto', required=True,
         digits=(16, Eval('currency_digits', 2)),
@@ -471,9 +470,9 @@ class Pago(Workflow, ModelSQL, ModelView):
         super(Pago, cls).validate(pagos)
         for pago in pagos:
             if pago.monto <= 0:
-                #cls.raise_user_error(
-                #    'pago_cero', (pago.rec_name,))
-                pass #TODO descomentar despues de migracion
+                cls.raise_user_error(
+                    'pago_cero', (pago.rec_name,))
+                pass
             if pago.comision_cia < 0:
                 cls.raise_user_error(
                     'comision_menor_cero', ('Cia', pago.rec_name,))
@@ -481,13 +480,13 @@ class Pago(Workflow, ModelSQL, ModelView):
                 cls.raise_user_error(
                     'comision_menor_cero', ('Vendedor', pago.rec_name,))
             if pago.comision_cia > pago.monto:
-                #cls.raise_user_error(
-                #    'comision_cia_mayor', (pago.rec_name,))
-                pass #TODO descomentar despues de migracion
+                cls.raise_user_error(
+                    'comision_cia_mayor', (pago.rec_name,))
+                pass
             if pago.comision_vendedor > pago.comision_cia:
-                #cls.raise_user_error(
-                #    'comision_vendedor_mayor', (pago.rec_name,))
-                pass #TODO descomentar despues de migracion
+                cls.raise_user_error(
+                    'comision_vendedor_mayor', (pago.rec_name,))
+                pass
 
     @classmethod
     def delete(cls, pagos):
@@ -508,7 +507,6 @@ class Pago(Workflow, ModelSQL, ModelView):
     def procesar(cls, pagos):
         for pago in pagos:
             set_auditoria(pago, 'processed')
-            pago.currency = pago.company.currency #TODO borrar despues de migrar
             pago.save()
 
     @classmethod

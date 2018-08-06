@@ -394,8 +394,6 @@ class Movimiento(Workflow, ModelSQL, ModelView):
                     '"Nuevo" o "Excluido" antes de la inclusion.'),
                 'extendido_excluido': ('El extendido "%s" debe tener estado de '
                     '"Incluido" antes de la exclusion.'),
-                'renovacion_eliminar_actual': ('No puede eliminarse la renovacion actual '
-                    'de la poliza "%s".'),
                 'renovacion_eliminar_pagos': ('No puede eliminarse la renovacion "%s" '
                     'de la poliza "%s" porque tienes pagos asociados.'),
                 'renovacion_eliminar_movimientos': ('No puede eliminarse la renovacion "%s" '
@@ -491,7 +489,14 @@ class Movimiento(Workflow, ModelSQL, ModelView):
             ])[0]
         mov_reno.tipo = 'general'
         mov_reno.tipo_endoso = None
+        mov_reno.prima = None
+        mov_reno.suma_asegurada = None
+        mov_reno.descripcion = 'RENOVACION ELIMINADA: ' + mov.numero
+        mov_reno.renovacion = mov_reno.renovacion - 1
         mvs.append(mov_reno)
+
+        mov.renovacion = mov_reno.renovacion
+        mvs.append(mov)
 
         renovs = Renovacion.search([
                 ('poliza', '=', mov.poliza.id),
@@ -528,11 +533,6 @@ class Movimiento(Workflow, ModelSQL, ModelView):
         Pago = pool.get('corseg.poliza.pago')
         Movimiento = pool.get('corseg.poliza.movimiento')
 
-        if mov.renovacion_actual == mov.renovacion_eliminar:
-            cls.raise_user_error(
-                'renovacion_eliminar_actual',
-                (mov.poliza.rec_name,))
-
         renovs = Renovacion.search([
                 ('poliza', '=', mov.poliza.id),
                 ('renovacion', '=', mov.renovacion_eliminar)
@@ -556,7 +556,8 @@ class Movimiento(Workflow, ModelSQL, ModelView):
 
         movimientos = Movimiento.search([
                 ('poliza', '=', mov.poliza.id),
-                ('renovacion', '=', ren.renovacion)
+                ('renovacion', '=', ren.renovacion),
+                ('state', '=', 'confirmado'),
             ])
         if len(movimientos) > 1:
             cls.raise_user_error(
