@@ -177,16 +177,16 @@ class ComentarioPoliza(ModelSQL, ModelView):
 class Poliza(ModelSQL, ModelView):
     'Poliza de seguros'
     __name__ = 'corseg.poliza'
-    company = fields.Many2One('company.company', 'Company', required=False, # TODO required=True
+    company = fields.Many2One('company.company', 'Company', required=True,
         states={
             'readonly': True,
             },
-        domain=[ # TODO habilitar el domain al terminar la migracion
-#            ('id', If(Eval('context', {}).contains('company'), '=', '!='),
-#                Eval('context', {}).get('company', -1)),
+        domain=[
+            ('id', If(Eval('context', {}).contains('company'), '=', '!='),
+                Eval('context', {}).get('company', -1)),
             ], select=True)
     currency = fields.Many2One('currency.currency',
-        'Moneda', required=False, # TODO required=True
+        'Moneda', required=True,
         states={
             'readonly': True,
             })
