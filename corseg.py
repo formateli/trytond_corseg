@@ -430,6 +430,57 @@ class Renovacion(ModelSQL, ModelView):
                 ('renovacion', 'DESC'),
             ]
 
+        cls._error_messages.update({
+            'fecha_emision_mayor': ('La fecha de emision de la poliza "%s" '
+                'no puede ser mayor a la fecha de inicio de la vigencia. '
+                'Renovacion: "%s".'),
+            'fecha_hasta_menor': ('La fecha de finalizacion de la vigencia '
+                'de la poliza "%s" no puede ser menor que la fecha de inicio '
+                'de la misma. Renovacion: "%s".'),
+            'dias_diff_emision': ('La fecha de emision tiene mas de "%s" dias '
+                'de diferencia con respecto a la fecha de inicio de la vigencia '
+                'de la poliza "%s". Renovacion: "%s".'),
+            'dias_diff_vigencia': ('La diferencia entre el inicio y '
+                'la finalizacion de la vigencia de la poliza "%s" es mayor '
+                'a "%s" dias. Renovacion: "%s".'),
+            'fecha_renovacion_desde_menor': ('La fecha de inicio de la vigencia '
+                'de la poliza "%s" no debe ser menor a la fecha de finalizacion de '
+                'la vigencia anterior. Renovacion: "%s".'),
+        })
+
+    @classmethod
+    def validate(cls, renovaciones):
+        Renovacion = Pool().get('corseg.poliza.renovacion')
+        dias_diff_emision = 30      # TODO debe estar en configuracion
+        dias_diff_vigencia = 1100   # en el ramo?
+
+        for reno in renovaciones:
+            if reno.f_emision > reno.f_desde:
+                cls.raise_user_error(
+                    'fecha_emision_mayor',
+                    (reno.poliza.rec_name, reno.renovacion))
+            if reno.f_hasta < reno.f_desde:
+                cls.raise_user_error(
+                    'fecha_hasta_menor',
+                    (reno.poliza.rec_name, reno.renovacion))
+            if (reno.f_desde - reno.f_emision).days > dias_diff_emision:
+                cls.raise_user_error(
+                    'dias_diff_emision',
+                    (dias_diff_emision, reno.poliza.rec_name, reno.renovacion))
+            if (reno.f_hasta - reno.f_desde).days > dias_diff_vigencia:
+                cls.raise_user_error(
+                    'dias_diff_vigencia',
+                    (reno.poliza.rec_name, dias_diff_vigencia, reno.renovacion))
+            if reno.renovacion > 0:
+                reno_anterior = Renovacion.search([
+                        ('poliza', '=', reno.poliza.id),
+                        ('renovacion', '=', reno.renovacion - 1),
+                    ])[0]
+                if reno.f_desde < reno_anterior.f_hasta:
+                    cls.raise_user_error(
+                        'fecha_renovacion_desde_menor',
+                        (reno.poliza.rec_name, reno.renovacion))
+
 
 class Vendedor(ModelSQL, ModelView):
     'Vendedor'

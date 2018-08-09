@@ -56,8 +56,6 @@ class Configuration(
             ('code', '=', 'corseg.comision.ajuste.vendedor'),
         ]))
 
-    #TODO default account para comisiones cia
-    #TODO default account para comisiones vendedor
 
     @classmethod
     def multivalue_model(cls, field):

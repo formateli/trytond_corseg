@@ -472,7 +472,6 @@ class Pago(Workflow, ModelSQL, ModelView):
             if pago.monto <= 0:
                 cls.raise_user_error(
                     'pago_cero', (pago.rec_name,))
-                pass
             if pago.comision_cia < 0:
                 cls.raise_user_error(
                     'comision_menor_cero', ('Cia', pago.rec_name,))
@@ -482,11 +481,9 @@ class Pago(Workflow, ModelSQL, ModelView):
             if pago.comision_cia > pago.monto:
                 cls.raise_user_error(
                     'comision_cia_mayor', (pago.rec_name,))
-                pass
             if pago.comision_vendedor > pago.comision_cia:
                 cls.raise_user_error(
                     'comision_vendedor_mayor', (pago.rec_name,))
-                pass
 
     @classmethod
     def delete(cls, pagos):

@@ -664,12 +664,15 @@ class Movimiento(Workflow, ModelSQL, ModelView):
         return fields
 
     @classmethod
-    def _get_renovacion(cls, poliza, no, tipo):
+    def _get_renovacion(cls, poliza, no, tipo, f_emision, f_desde, f_hasta):
         Renovacion = Pool().get('corseg.poliza.renovacion')
         if tipo in ['iniciacion', 'renovacion']:
             renovacion = Renovacion(
                     poliza=poliza,
-                    renovacion=no
+                    renovacion=no,
+                    f_emision=f_emision,
+                    f_desde=f_desde,
+                    f_hasta=f_hasta
                 )
             renovacion.save()
         else:
@@ -759,7 +762,8 @@ class Movimiento(Workflow, ModelSQL, ModelView):
             if mov.tipo_endoso not in ['iniciacion', 'renovacion']:
                 ajustar_prima = True
             renovacion = cls._get_renovacion(
-                pl, renovacion_no, mov.tipo_endoso)
+                pl, renovacion_no, mov.tipo_endoso,
+                mov.f_emision, mov.f_desde, mov.f_hasta)
             for f in fields_renovacion:
                 cls._act_field(f, renovacion, mov, ajustar_prima)
             renovacion.save()

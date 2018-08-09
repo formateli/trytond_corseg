@@ -529,7 +529,7 @@ class ComisionAjusteVendedor(Workflow, ModelSQL, ModelView):
             'readonly': Not(In(Eval('state'), ['borrador',])),
         }, depends=['company', 'state'])
     vendedor = fields.Function(
-        fields.Many2One('currency.currency', 'Vendedor'),
+        fields.Many2One('corseg.vendedor', 'Vendedor'),
         'get_vendedor')
     currency = fields.Many2One('currency.currency',
         'Moneda', required=False, readonly=True)
