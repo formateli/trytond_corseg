@@ -5,6 +5,7 @@ this repository contains the full copyright notices and license terms. -->
     <field name="number"/>
     <field name="fecha"/>
     <field name="pago"/>
+    <field name="vendedor"/>
     <field name="monto"/>
     <field name="state"/>
     <field name="company"/>

@@ -59,7 +59,7 @@ class Pago(Workflow, ModelSQL, ModelView):
         'get_currency_digits')
     poliza = fields.Many2One('corseg.poliza', 'Poliza', required=True,
         domain=[
-            #('company', '=', Eval('company')), TODO descomentar despues de la migracion
+            ('company', '=', Eval('company')),
             If(
                 In(Eval('state'), ['confirmado']),
                 [('state', '!=', '')],

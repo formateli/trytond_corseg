@@ -8,7 +8,8 @@ this repository contains the full copyright notices and license terms. -->
     <field name="number"/>
     <label name="pago"/>
     <field name="pago"/>
-    <newline/>
+    <label name="vendedor"/>
+    <field name="vendedor"/>
     <label name="monto"/>
     <field name="monto"/>
     <notebook colspan="4">

@@ -87,39 +87,49 @@ class Comision(ModelSQL, ModelView):
         return True
 
     @classmethod
-    def get_comision(cls, poliza, lineas, monto, digits):
+    def get_comision(cls, poliza, lineas, monto, digits, return_all=False):
         result = Decimal('0.0')
+        tipo = None
+        tipo_monto = None
 
         if not poliza or not monto or not lineas:
-            return result
+            if return_all:
+                return None, result, result
+            else:
+                return result
 
         last_linea = None
         i = 1
         for linea in lineas:
             if linea.renovacion == poliza.renovacion:
-                result = cls._get_comision_linea(
+                tipo, tipo_monto, result = cls._get_comision_linea(
                     poliza, linea, monto)
                 break
             elif len(lineas) == i and poliza.renovacion > linea.renovacion:
                 if linea.re_renovacion:
-                    result = cls._get_comision_linea(
+                    tipo, tipo_monto, result = cls._get_comision_linea(
                         poliza, linea, monto)
                 break                
             elif linea.renovacion > poliza.renovacion:
                 if last_linea is None:
                     break
                 if last_linea.re_renovacion:
-                    result = cls._get_comision_linea(
+                    tipo, tipo_monto, result = cls._get_comision_linea(
                         poliza, last_linea, monto)
                 break
             last_linea = linea
             i += 1
 
         exp = Decimal(str(10.0 ** -digits))
-        return result.quantize(exp)
+        res = result.quantize(exp)
+        if return_all:
+            return tipo, tipo_monto, res
+        else:
+            return res
 
     @classmethod
     def _get_comision_linea(cls, poliza, linea, monto):
+        "Returns: tipo, tipo_monto, monto_calculado"
         Pago = Pool().get('corseg.poliza.pago')
         result = Decimal('0.0')
 
@@ -131,14 +141,16 @@ class Comision(ModelSQL, ModelView):
         if not linea.re_cuota and \
                 pagos:
             # un solo pago
-            return result
-
-        if linea.tipo_comision.tipo == 'fijo':
-            result = linea.tipo_comision.monto
+            return None, result, result
+        
+        tipo = linea.tipo_comision.tipo
+        tipo_monto = linea.tipo_comision.monto
+        if tipo == 'fijo':
+            result = tipo_monto
         else:
-            result = monto * (linea.tipo_comision.monto / 100)
+            result = monto * (tipo_monto / 100)
 
-        return result
+        return tipo, tipo_monto, result
 
 
 class ComisionLinea(ComisionBaseLinea):
@@ -516,6 +528,9 @@ class ComisionAjusteVendedor(Workflow, ModelSQL, ModelView):
         states={
             'readonly': Not(In(Eval('state'), ['borrador',])),
         }, depends=['company', 'state'])
+    vendedor = fields.Function(
+        fields.Many2One('currency.currency', 'Vendedor'),
+        'get_vendedor')
     currency = fields.Many2One('currency.currency',
         'Moneda', required=False, readonly=True)
     currency_digits = fields.Function(fields.Integer('Currency Digits'),
@@ -579,9 +594,15 @@ class ComisionAjusteVendedor(Workflow, ModelSQL, ModelView):
     def on_change_pago(self):
         self.currency = None
         self.currency_digits = 2
+        self.vendedor = None
         if self.pago:
             self.currency = self.pago.currency
             self.currency_digits = self.pago.currency_digits
+            self.vendedor = self.pago.vendedor.id
+
+    def get_vendedor(self, name):
+        if self.pago:
+            return self.pago.vendedor.id
 
     def get_rec_name(self, name):
         if self.number:

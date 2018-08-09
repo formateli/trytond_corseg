@@ -167,7 +167,7 @@ class Extension(ModelSQL, ModelView):
         states={
             'invisible': Not(Bool(Eval('_parent_certificado'))),
         })
-    extendido = fields.Many2One('party.party', 'Extendido',
+    extendido = fields.Many2One('party.party', 'Ente',
         required=True,
         states={
             'readonly': Not(In(Eval('state'), ['new',])),
@@ -214,7 +214,7 @@ class Movimiento(Workflow, ModelSQL, ModelView):
         }, depends=['company', 'state'])
     renovacion = fields.Integer('Renovacion', readonly=True)
     renovacion_actual = fields.Function(
-            fields.Integer('Renovacion Actual'),
+            fields.Integer('Renovacion'),
             'on_change_with_renovacion_actual'
         )
     renovacion_eliminar = fields.Integer('Renovaciona a Eliminar',
@@ -226,6 +226,8 @@ class Movimiento(Workflow, ModelSQL, ModelView):
     )
     poliza_state = fields.Function(fields.Char('Estado'),
         'get_poliza_state')
+    poliza_contratante = fields.Function(fields.Char('Contratante'),
+        'get_poliza_contratante')
     fecha = fields.Date('Fecha', required=True,
         states={
             'readonly': In(Eval('state'), ['confirmado',]),
@@ -455,11 +457,14 @@ class Movimiento(Workflow, ModelSQL, ModelView):
     @fields.depends('poliza', 'currency_digits', 'poliza_state')
     def on_change_poliza(self):
         self.poliza_state = None
+        self.poliza_contratante = None
         self.currency_digits = 2
         if self.poliza:
             self.currency_digits = \
                 self.poliza.currency_digits
             self.poliza_state = self.poliza.state
+            if self.poliza.contratante:
+                self.poliza_contratante = self.poliza.contratante.rec_name
 
     def get_currency_digits(self, name=None):
         if self.poliza:
@@ -469,6 +474,10 @@ class Movimiento(Workflow, ModelSQL, ModelView):
     def get_poliza_state(self, name=None):
         if self.poliza:
             return self.poliza.state
+
+    def get_poliza_contratante(self, name=None):
+        if self.poliza and self.poliza.contratante:
+            return self.poliza.contratante.rec_name
 
     @classmethod
     def _eliminar_renovacion(cls, mov):
@@ -642,7 +651,7 @@ class Movimiento(Workflow, ModelSQL, ModelView):
 
     @classmethod
     def _get_cert_fields(cls):
-        fields = ['numero', 'asegurado',
+        fields = ['numero', 'asegurado', 'tipo',
             'suma_asegurada', 'prima',
             'descripcion']
         return fields
@@ -870,6 +879,15 @@ class CertificadoModificacion(ModelSQL, ModelView):
             ('poliza', '=',
                 Eval('_parent_movimiento', {}).get('poliza', -1)),
         ])
+    tipo = fields.Selection([
+            ('automovil', 'Automovil'),
+            ('salud', 'Salud'),
+            ('vida', 'Vida'),
+            ('otro', 'Otros'),
+        ], 'Tipo',
+        states={
+            'readonly': Not(In(Eval('state'), ['new',])),
+        }, depends=['state'])
     inclusiones = fields.Many2Many(
         'poliza.certificado-inclusion-certificado.extendido',
         'modificacion', 'extendido', 'Inclusiones',
@@ -929,6 +947,34 @@ class CertificadoModificacion(ModelSQL, ModelView):
     @staticmethod
     def default_state():
         return 'new'
+
+    @fields.depends('certificado', 'tipo')
+    def on_change_certificado(self):
+        self.tipo = None
+        if self.certificado:
+            self.tipo = self.certificado.tipo
+
+    @classmethod
+    def view_attributes(cls):
+        extendidos = [
+            ('//page[@id="beneficiarios"]', 'states', {
+                    'invisible': Not(Equal(Eval('tipo'), 'vida')),
+                }),
+            ('//page[@id="dependientes"]', 'states', {
+                    'invisible': Not(Equal(Eval('tipo'), 'salud')),
+                }),
+            ('//page[@id="cadicional"]', 'states', {
+                    'invisible': Not(Equal(Eval('tipo'), 'automovil')),
+                }),
+        ]
+
+        datos_tecnicos = [
+            ('//page[@id="vehiculo"]', 'states', {
+                    'invisible': Not(Equal(Eval('tipo'), 'automovil')),
+                }),
+        ]
+        return super(CertificadoModificacion, cls).view_attributes() + \
+                        extendidos + datos_tecnicos
 
 
 class CertificadoInclusion(ModelSQL):

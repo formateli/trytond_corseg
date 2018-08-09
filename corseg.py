@@ -275,7 +275,10 @@ class Poliza(ModelSQL, ModelView):
     movimientos = fields.One2Many('corseg.poliza.movimiento',
         'poliza', 'Movimientos', readonly=True)
     pagos = fields.One2Many('corseg.poliza.pago',
-        'poliza', 'Pagos',
+        'poliza', 'Pagos', readonly=True,
+        filter=[
+            ('state', '!=', 'sustituido'),
+        ],
         states={
             'invisible': Equal(Eval('state'), 'new'),
             },

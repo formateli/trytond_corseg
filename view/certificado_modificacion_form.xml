@@ -4,28 +4,38 @@ this repository contains the full copyright notices and license terms. -->
 <form>
     <label name="movimiento"/>
     <field name="movimiento" colspan="3"/>
-    <label name="certificado"/>
-    <field name="certificado"/>
-    <label name="numero"/>
-    <field name="numero"/>
-    <label name="asegurado"/>
-    <field name="asegurado"/>
-    <newline />
-    <label name="suma_asegurada"/>
-    <field name="suma_asegurada"/>
-    <label name="prima"/>
-    <field name="prima"/>
-    <newline />
+    <group id='info' colspan="4" col="6">
+        <label name="certificado"/>
+        <field name="certificado"/>
+        <label name="numero"/>
+        <field name="numero"/>
+        <label name="tipo"/>
+        <field name="tipo"/>
+        <label name="asegurado"/>
+        <field name="asegurado"/>
+        <label name="suma_asegurada"/>
+        <field name="suma_asegurada"/>
+        <label name="prima"/>
+        <field name="prima"/>
+    </group>
     <notebook colspan="4">
         <page string="Descripcion" id="descripcion">
             <field name="descripcion" colspan="4"/>
         </page>
-        <page string="Inclusiones / Exclusiones" id="inclu_exclu">
+        <page string="Beneficiarios" id="beneficiarios">
+            <field name="inclusiones"/>
+            <field name="exclusiones"/>
+        </page>
+        <page string="Dependientes" id="dependientes">
+            <field name="inclusiones"/>
+            <field name="exclusiones"/>
+        </page>
+        <page string="Conductor Adicional" id="cadicional">
             <field name="inclusiones"/>
             <field name="exclusiones"/>
         </page>
         <page string="Vehiculo" id="vehiculo">
-            <field name="vehiculo" colspan="4"/>
+            <field name="vehiculo" colspan="4" mode="form,tree"/>
         </page>
         <page string="Comentarios" id="comentario">
             <field name="comentario" colspan="4"/>
