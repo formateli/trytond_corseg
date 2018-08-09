@@ -105,6 +105,8 @@ class Certificado(ModelSQL, ModelView):
         cls._error_messages.update({
                 'delete_new': ('El Certificado "%s" debe ser '
                     '"Nuevo" para poder eliminarse.'),
+                'inclusiones': ('El Certificado "%s" forma '
+                    'parte de un movimiento.'),
                 })
 
     @staticmethod
@@ -153,9 +155,16 @@ class Certificado(ModelSQL, ModelView):
 
     @classmethod
     def delete(cls, certs):
+        Inclusion = Pool().get(
+            'poliza.certificado-inclusion-poliza.movimiento')
         for cert in certs:
             if cert.state != 'new':
                 cls.raise_user_error('delete_new', (cert.rec_name,))
+            incls = Inclusion.search([
+                    ('certificado', '=', cert.id)
+                ])
+            if incls:
+                cls.raise_user_error('inclusiones', (cert.rec_name,))
         super(Certificado, cls).delete(certs)
 
 
@@ -227,7 +236,8 @@ class Movimiento(Workflow, ModelSQL, ModelView):
     poliza_state = fields.Function(fields.Char('Estado'),
         'get_poliza_state')
     poliza_contratante = fields.Function(fields.Char('Contratante'),
-        'get_poliza_contratante')
+        'get_poliza_contratante',
+        searcher='search_poliza_contratante')
     fecha = fields.Date('Fecha', required=True,
         states={
             'readonly': In(Eval('state'), ['confirmado',]),
@@ -478,6 +488,10 @@ class Movimiento(Workflow, ModelSQL, ModelView):
     def get_poliza_contratante(self, name=None):
         if self.poliza and self.poliza.contratante:
             return self.poliza.contratante.rec_name
+
+    @classmethod
+    def search_poliza_contratante(cls, name, clause):
+        return [('poliza.contratante',) + tuple(clause[1:])]
 
     @classmethod
     def _eliminar_renovacion(cls, mov):
