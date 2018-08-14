@@ -384,9 +384,18 @@ class Poliza(ModelSQL, ModelView):
             return self.cia_producto.ramo.rec_name
 
     def get_monto_pago(self, name):
-        res = Decimal('0.0')
+        Renovacion = Pool().get('corseg.poliza.renovacion')
+
+        # Obtenemos el saldo de la renovacion anterior,
+        # El cual deberia ser cero, sin embargo hay casos
+        # donde se paga de mas, por lo que el saldo es negativo
+        res = -Renovacion.get_saldo_poliza_renovacion(
+            self, None if self.renovacion is None else self.renovacion - 1)
+
         if self.pagos:
             for pago in self.pagos:
+                if pago.renovacion != self.renovacion:
+                    continue
                 if pago.state not in \
                         ['borrador', 'procesado',
                         'sustituido', 'cancelado']:
@@ -400,11 +409,8 @@ class Poliza(ModelSQL, ModelView):
 
     def get_saldo(self, name):
         res = Decimal('0.0')
-        if self.renovaciones:
-            primas = Decimal('0.0')
-            for ren in self.renovaciones:
-                primas += ren.prima
-            res = primas - self.monto_pago
+        if self.prima:
+            res = self.prima - self.monto_pago
         return res
 
 
@@ -480,6 +486,33 @@ class Renovacion(ModelSQL, ModelView):
                     cls.raise_user_error(
                         'fecha_renovacion_desde_menor',
                         (reno.poliza.rec_name, reno.renovacion))
+
+    @classmethod
+    def get_saldo_poliza_renovacion(cls, poliza, renovacion):
+        pool = Pool()
+        Renovacion = pool.get('corseg.poliza.renovacion')
+        Pago = pool.get('corseg.poliza.pago')
+
+        result = Decimal('0.0')
+
+        if not poliza or renovacion is None or renovacion < 0:
+            return result
+
+        renovaciones = Renovacion.search([
+                ('poliza', '=', poliza.id),
+                ('renovacion', '<=', renovacion)
+            ])
+
+        for reno in renovaciones:
+            result += reno.prima
+            pagos = Pago.search([
+                    ('poliza', '=', poliza.id),
+                    ('renovacion', '=', reno.renovacion)
+                ])
+            for pago in pagos:
+                result -= pago.monto
+
+        return result
 
 
 class Vendedor(ModelSQL, ModelView):
