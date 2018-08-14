@@ -10,5 +10,12 @@ this repository contains the full copyright notices and license terms. -->
     <field name="parent"/>
     <label name="active"/>
     <field name="active"/>
-    <field name="childs" colspan="4"/>
+    <notebook colspan="4">
+        <page string="Subs" id="subs">
+            <field name="childs" colspan="4"/>
+        </page>
+        <page string="Polizas" id="polizas">
+            <field name="polizas" colspan="4"/>
+        </page>
+    </notebook>
 </form>
