@@ -404,26 +404,24 @@ class CorsegTestCase(ModuleTestCase):
         mov.confirmar([mov])
 
         self.assertEqual(poliza.monto_pago, Decimal('0.0'))
-        self.assertEqual(poliza.saldo, poliza.prima)
+        self.assertEqual(poliza.saldo, poliza.prima) # 200.0
 
-        pagos = Decimal('0.0')
-
-        pago = self._create_pago(poliza, vendedor, fecha, Decimal('15.0'))
-        pagos += Decimal('15.0')
+        monto_pago = Decimal('15.0')
+        pago = self._create_pago(poliza, vendedor, fecha, monto_pago)
         Pago.procesar([pago])
         self.assertEqual(poliza.monto_pago, Decimal('0.0'))
         Pago.confirmar([pago])
         self.assertEqual(pago.state, 'confirmado')
         self.assertEqual(pago.renovacion, 0)
-        self.assertEqual(poliza.monto_pago, pagos)
-        self.assertEqual(poliza.saldo, poliza.prima - pagos)
+        self.assertEqual(poliza.monto_pago, monto_pago)
+        self.assertEqual(poliza.saldo, poliza.prima - monto_pago)
 
-        pago = self._create_pago(poliza, vendedor, fecha, Decimal('25.0'))
-        pagos += Decimal('25.0')
+        monto_pago = Decimal('25.0')
+        pago = self._create_pago(poliza, vendedor, fecha, monto_pago)
         Pago.procesar([pago])
         Pago.confirmar([pago])
-        self.assertEqual(poliza.monto_pago, pagos)
-        self.assertEqual(poliza.saldo, poliza.prima - pagos)
+        self.assertEqual(poliza.monto_pago, Decimal('40.0'))
+        self.assertEqual(poliza.saldo, poliza.prima - Decimal('40.0'))
 
         # Renovacion
         mov = self._get_mov_renovacion(
@@ -431,15 +429,16 @@ class CorsegTestCase(ModuleTestCase):
         mov.procesar([mov])
         mov.confirmar([mov])
 
-        pago = self._create_pago(poliza, vendedor, fecha, Decimal('15.0'))
-        pagos += Decimal('15.0')
+        # Se arrastra como saldo negativo de la renovacion anterior
+        self.assertEqual(poliza.monto_pago, Decimal('-160.0'))
+
+        monto_pago = Decimal('15.0')
+        pago = self._create_pago(poliza, vendedor, fecha, monto_pago)
         Pago.procesar([pago])
         Pago.confirmar([pago])
         self.assertEqual(pago.renovacion, 1)
-        self.assertEqual(poliza.monto_pago, pagos)
-        # La suma de las primas de las dos renovaciones
-        suma_primas = Decimal('200.0') + Decimal('250.0')
-        self.assertEqual(poliza.saldo, suma_primas - pagos)
+        self.assertEqual(poliza.monto_pago, Decimal('-145.0'))
+        self.assertEqual(poliza.saldo, Decimal('250.0') - Decimal('-145.0'))
 
     def _create_pago(self, poliza, vendedor, fecha, monto):
         pool = Pool()
@@ -525,7 +524,7 @@ class CorsegTestCase(ModuleTestCase):
         self.assertEqual(poliza.state, 'vigente')
         self.assertEqual(poliza.renovacion, 1)
         self.assertEqual(poliza.no_cuotas, 10)
-        self.assertEqual(poliza.monto_pago, Decimal('0.0'))
+        self.assertEqual(poliza.monto_pago, Decimal('-150.0'))
         self.assertEqual(poliza.prima, Decimal('250.0'))
         # Se suman la prima de la renovacion anterior con esta
         self.assertEqual(poliza.saldo, Decimal('400.0'))
