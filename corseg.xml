@@ -182,6 +182,32 @@ contains the full copyright notices and license terms. -->
             <field name="perm_delete" eval="True"/>
         </record>
 
+        <!-- Poliza Documento -->
+        <record model="ir.ui.view" id="poliza_documento_view_form">
+            <field name="model">corseg.poliza.documento</field>
+            <field name="type">form</field>
+            <field name="name">poliza_documento_form</field>
+        </record>
+        <record model="ir.ui.view" id="poliza_documento_view_tree">
+            <field name="model">corseg.poliza.documento</field>
+            <field name="type">tree</field>
+            <field name="name">poliza_documento_tree</field>
+        </record>
+        <record model="ir.model.access" id="access_poliza_documento">
+            <field name="model" search="[('model', '=', 'corseg.poliza.documento')]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_delete" eval="False"/>
+        </record>
+        <record model="ir.model.access" id="access_poliza_documento_admin">
+            <field name="model" search="[('model', '=', 'corseg.poliza.documento')]"/>
+            <field name="group" ref="group_corseg_admin"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_delete" eval="True"/>
+        </record>
 
         <!-- Poliza Comentario -->
         <record model="ir.ui.view" id="poliza_comentario_view_form">

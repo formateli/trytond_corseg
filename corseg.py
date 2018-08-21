@@ -15,6 +15,7 @@ __all__ = [
         'OrigenPoliza',
         'GrupoPoliza',
         'ComentarioPoliza',
+        'PolizaDocumento',
         'Poliza',
         'Renovacion',
         'Vendedor',
@@ -174,6 +175,21 @@ class ComentarioPoliza(ModelSQL, ModelView):
         return comentarios
 
 
+class PolizaDocumento(ModelSQL, ModelView):
+    'Origen Poliza'
+    __name__ = 'corseg.poliza.documento'
+
+    poliza = fields.Many2One('corseg.poliza', 'Poliza',
+        ondelete='CASCADE', select=True, required=True)
+    name = fields.Char('Nombre', required=True)
+    comentario = fields.Text('Comentario', size=None)
+    documento = fields.Binary('Documento', file_id='doc_id',
+        required=True)
+    doc_id = fields.Char('Doc id',
+            states={'invisible': True}
+        )
+
+
 class Poliza(ModelSQL, ModelView):
     'Poliza de seguros'
     __name__ = 'corseg.poliza'
@@ -292,7 +308,8 @@ class Poliza(ModelSQL, ModelView):
         ],
         'Estado', readonly=True, required=True)
 
-    # TODO documentos
+    documentos = fields.One2Many('corseg.poliza.documento',
+        'poliza', 'Documentos')
 
     @classmethod
     def __setup__(cls):

@@ -43,6 +43,7 @@ def register():
         Movimiento,
         ComentarioPoliza,
         OrigenPoliza,
+        PolizaDocumento,
         Poliza,
         Renovacion,
         Ramo,
