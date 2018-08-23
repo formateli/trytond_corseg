@@ -231,8 +231,10 @@ class Poliza(ModelSQL, ModelView):
             )
         ],
         depends=['cia', 'state'])
-    ramo = fields.Function(fields.Char('Ramo'),
-        'get_ramo')
+    ramo = fields.Function(fields.Many2One(
+        'corseg.ramo', 'Ramo'),
+        'get_ramo',
+        searcher='search_ramo')
     numero = fields.Char('Numero de Poliza', required=True,
         states={
             'readonly': Not(In(Eval('state'), ['new'])),
@@ -382,7 +384,7 @@ class Poliza(ModelSQL, ModelView):
         self.vendedor = None
         if self.cia_producto:
             self.cia = self.cia_producto.cia
-            self.ramo = self.cia_producto.ramo.rec_name
+            self.ramo = self.cia_producto.ramo
 
     @fields.depends('currency')
     def on_change_with_currency_digits(self, name=None):
@@ -398,7 +400,7 @@ class Poliza(ModelSQL, ModelView):
 
     def get_ramo(self, name):
         if self.cia_producto:
-            return self.cia_producto.ramo.rec_name
+            return self.cia_producto.ramo.id
 
     def get_monto_pago(self, name):
         Renovacion = Pool().get('corseg.poliza.renovacion')
@@ -429,6 +431,10 @@ class Poliza(ModelSQL, ModelView):
         if self.prima:
             res = self.prima - self.monto_pago
         return res
+
+    @classmethod
+    def search_ramo(cls, name, clause):
+        return [('cia_producto.ramo',) + tuple(clause[1:])]
 
 
 class Renovacion(ModelSQL, ModelView):
