@@ -393,10 +393,8 @@ class Poliza(ModelSQL, ModelView):
         return 2
 
     def get_renovacion(self, name):
-        result = None
         if self.renovaciones:
-            result = getattr(self.renovaciones[0], name)
-        return result
+            return getattr(self.renovaciones[0], name)
 
     def get_ramo(self, name):
         if self.cia_producto:
