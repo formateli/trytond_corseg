@@ -211,7 +211,7 @@ class Movimiento(Workflow, ModelSQL, ModelView):
         'get_currency_digits')
     poliza = fields.Many2One('corseg.poliza', 'Poliza', required=True,
         domain=[
-            ('company', '=', Eval('company')), # TODO Uncomment despues de migracion
+            ('company', '=', Eval('company')),
             If(
                 In(Eval('state'), ['confirmado']),
                 [('state', '!=', '')],
@@ -680,6 +680,7 @@ class Movimiento(Workflow, ModelSQL, ModelView):
     @classmethod
     def _get_renovacion(cls, poliza, no, tipo, f_emision, f_desde, f_hasta):
         Renovacion = Pool().get('corseg.poliza.renovacion')
+        renovacion = None
         if tipo in ['iniciacion', 'renovacion']:
             renovacion = Renovacion(
                     poliza=poliza,
@@ -690,10 +691,12 @@ class Movimiento(Workflow, ModelSQL, ModelView):
                 )
             renovacion.save()
         else:
-            renovacion = Renovacion.search([
+            renovaciones = Renovacion.search([
                     ('poliza', '=', poliza.id),
                     ('renovacion', '=', no),
-                ])[0]
+                ])
+            if renovaciones:
+                renovacion = renovaciones[0]
         return renovacion
 
     @classmethod
