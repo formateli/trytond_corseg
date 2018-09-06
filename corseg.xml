@@ -21,8 +21,12 @@ contains the full copyright notices and license terms. -->
             <field name="group" ref="group_corseg"/>
         </record>
 
+        <record model="ir.ui.icon" id="corseg_icon">
+            <field name="name">corseg-shield</field>
+            <field name="path">icons/shield.svg</field>
+        </record>
         <menuitem name="Corretaje" sequence="30" 
-            id="menu_corseg"/>
+            icon="corseg-shield" id="menu_corseg"/>
         <record model="ir.ui.menu-res.group"
                 id="menu_corseg_group_corseg">
             <field name="menu" ref="menu_corseg"/>

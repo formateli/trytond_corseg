@@ -176,7 +176,7 @@ class ComentarioPoliza(ModelSQL, ModelView):
 
 
 class PolizaDocumento(ModelSQL, ModelView):
-    'Origen Poliza'
+    'Documento Poliza'
     __name__ = 'corseg.poliza.documento'
 
     poliza = fields.Many2One('corseg.poliza', 'Poliza',
@@ -303,15 +303,14 @@ class Poliza(ModelSQL, ModelView):
         depends=['state'])
     comentarios = fields.One2Many('corseg.poliza.comentario',
         'poliza', 'Comentarios')
+    documentos = fields.One2Many('corseg.poliza.documento',
+        'poliza', 'Documentos')
     state = fields.Selection([
             ('new', 'Nuevo'),
             ('vigente', 'Vigente'),
             ('cancelada', 'Cancelada'),
         ],
         'Estado', readonly=True, required=True)
-
-    documentos = fields.One2Many('corseg.poliza.documento',
-        'poliza', 'Documentos')
 
     @classmethod
     def __setup__(cls):

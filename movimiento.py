@@ -211,12 +211,7 @@ class Movimiento(Workflow, ModelSQL, ModelView):
         'get_currency_digits')
     poliza = fields.Many2One('corseg.poliza', 'Poliza', required=True,
         domain=[
-            ('company', '=', Eval('company')),
-            If(
-                In(Eval('state'), ['confirmado']),
-                [('state', '!=', '')],
-                [('state', '!=', 'cancelada')]
-            )
+            ('company', '=', Eval('company'))
         ],
         states={
             'readonly': Not(In(Eval('state'), ['borrador',])),
@@ -260,7 +255,7 @@ class Movimiento(Workflow, ModelSQL, ModelView):
             ('renovacion', 'Renovacion'),
             ('otros', 'Otros'),
             ('cancelacion', 'Cancelacion'),
-            ('anulacion', 'Anulacion'),
+            ('reactivacion', 'Reactivacion'),
         ], 'Tipo Endoso',
         states={
             'invisible': Not(In(Eval('tipo'), ['endoso'])),
@@ -394,6 +389,10 @@ class Movimiento(Workflow, ModelSQL, ModelView):
                     'ser un endoso de tipo Iniciacion.'),
                 'poliza_un_inicia': ('Solo debe existir un movimiento de Iniciacion '
                     'de tipo endoso para la poliza "%s"'),
+                'poliza_reactiva': ('La poliza "%s" debe estar "Cancelada" '
+                    'para poder ser reactivada.'),
+                'poliza_reactiva_otro': ('La poliza "%s" debe ser "Reactivada" '
+                    'para poder modificarla.'),
                 'certificado_incluido': ('El certificado "%s" debe tener estado de '
                     '"Excluido" antes de la inclusion.'),
                 'certificado_excluido': ('El certificado "%s" debe tener estado de '
@@ -748,6 +747,16 @@ class Movimiento(Workflow, ModelSQL, ModelView):
                     mov.tipo_endoso == 'iniciacion':
                 cls.raise_user_error(
                     'poliza_un_inicia',
+                    (mov.poliza.rec_name,))
+            if mov.poliza.state != 'cancelada' and \
+                    mov.tipo_endoso == 'reactivacion':
+                cls.raise_user_error(
+                    'poliza_reactiva',
+                    (mov.poliza.rec_name,))
+            if mov.poliza.state == 'cancelada' and \
+                    mov.tipo_endoso != 'reactivacion':
+                cls.raise_user_error(
+                    'poliza_reactiva_otro',
                     (mov.poliza.rec_name,))
             if mov.tipo_endoso == 'iniciacion':
                 mov._set_default_inclusion()
