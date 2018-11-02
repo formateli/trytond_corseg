@@ -522,15 +522,21 @@ class Movimiento(Workflow, ModelSQL, ModelView):
 
         renovs = Renovacion.search([
                 ('poliza', '=', mov.poliza.id),
-                ('renovacion', '>', renovacion.renovacion)
+                ('renovacion', '>=', renovacion.renovacion)
             ], order=[('renovacion', 'ASC')])
         for ren in renovs:
+            ren_to_update = ren.renovacion - 1
+            if ren_to_update < 0:
+                cls.raise_user_error(
+                    'renovacion_eliminar_pagos',
+                    (mov.renovacion_eliminar, mov.poliza.rec_name))
+
             pagos = Pago.search([
                     ('poliza', '=', mov.poliza.id),
                     ('renovacion', '=', ren.renovacion)
                 ])
             for pago in pagos:
-                pago.renovacion = ren.renovacion - 1
+                pago.renovacion = ren_to_update
                 pgs.append(pago)
                     
             movimientos = Movimiento.search([
@@ -538,10 +544,10 @@ class Movimiento(Workflow, ModelSQL, ModelView):
                     ('renovacion', '=', ren.renovacion)
                 ])
             for movimiento in movimientos:
-                movimiento.renovacion = ren.renovacion - 1
+                movimiento.renovacion = ren_to_update
                 mvs.append(movimiento)
                 
-            ren.renovacion = ren.renovacion - 1
+            ren.renovacion = ren_to_update
             ren.save()
 
         Pago.save(pgs)
@@ -552,7 +558,7 @@ class Movimiento(Workflow, ModelSQL, ModelView):
     def _validar_renovacion_eliminar(cls, mov):
         pool = Pool()
         Renovacion = pool.get('corseg.poliza.renovacion')
-        Pago = pool.get('corseg.poliza.pago')
+        #Pago = pool.get('corseg.poliza.pago')
         Movimiento = pool.get('corseg.poliza.movimiento')
 
         renovs = Renovacion.search([
@@ -567,14 +573,14 @@ class Movimiento(Workflow, ModelSQL, ModelView):
 
         ren = renovs[0]
 
-        pagos = Pago.search([
-                ('poliza', '=', mov.poliza.id),
-                ('renovacion', '=', ren.renovacion)
-            ])
-        if pagos:
-            cls.raise_user_error(
-                'renovacion_eliminar_pagos',
-                (mov.renovacion_eliminar, mov.poliza.rec_name))
+        #pagos = Pago.search([
+        #        ('poliza', '=', mov.poliza.id),
+        #        ('renovacion', '=', ren.renovacion)
+        #    ])
+        #if pagos:
+        #    cls.raise_user_error(
+        #        'renovacion_eliminar_pagos',
+        #        (mov.renovacion_eliminar, mov.poliza.rec_name))
 
         movimientos = Movimiento.search([
                 ('poliza', '=', mov.poliza.id),
