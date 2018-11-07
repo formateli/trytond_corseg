@@ -73,8 +73,8 @@ class Pago(Workflow, ModelSQL, ModelView):
     contratante = fields.Function(
         fields.Many2One('party.party', 'Contratante'),
         'get_contratante', searcher='search_contratante')
-    renovacion = fields.Integer('Renovacion',
-        states={'readonly': True})
+    renovacion = fields.Integer('Renovacion', required=True,
+        states=_STATES, depends=_DEPENDS)
     fecha = fields.Date('Fecha', required=True,
         states={
             'readonly': Not(In(Eval('state'), ['borrador', 'procesado'])),
@@ -201,6 +201,7 @@ class Pago(Workflow, ModelSQL, ModelView):
                     'no debe ser mayor al monto del Pago "%s".'),
                 'comision_vendedor_mayor': ('El monto de la Comision Vendedor '
                     'no debe ser mayor al monto de la Comision Cia. Pago "%s".'),
+                'renovacion_no_valida': ('Renovacion no valida. Pago "%s".'),
                 })
         cls._transitions |= set(
             (
@@ -493,6 +494,17 @@ class Pago(Workflow, ModelSQL, ModelView):
         super(Pago, cls).delete(pagos)
 
     @classmethod
+    def validar_renovacion(cls, pagos):
+        Renovacion = Pool().get('corseg.poliza.renovacion')
+        for pago in pagos:
+            renovs = Renovacion.search([
+                    ('poliza', '=', pago.poliza.id),
+                    ('renovacion', '=', pago.renovacion)
+                ])
+            if not renovs:
+                cls.raise_user_error('renovacion_no_valida', (pago.rec_name,))
+
+    @classmethod
     @ModelView.button
     @Workflow.transition('borrador')
     def borrador(cls, movs):
@@ -502,6 +514,7 @@ class Pago(Workflow, ModelSQL, ModelView):
     @ModelView.button
     @Workflow.transition('procesado')
     def procesar(cls, pagos):
+        cls.validar_renovacion(pagos)
         for pago in pagos:
             set_auditoria(pago, 'processed')
             pago.save()
@@ -510,6 +523,7 @@ class Pago(Workflow, ModelSQL, ModelView):
     @ModelView.button
     @Workflow.transition('confirmado')
     def confirmar(cls, pagos):
+        cls.validar_renovacion(pagos)
         for pago in pagos:
             if pago.sustituir:
                 if pago.pago_sustituir.state != 'confirmado':
