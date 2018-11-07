@@ -194,7 +194,7 @@ class Pago(Workflow, ModelSQL, ModelView):
                 'pago_confirmado': ('El Pago a sustiruir en el Pago "%s" '
                     'debe tener un estado de "Confirmado".'),
                 'pago_cero': ('El monto del Pago "%s" '
-                    'debe ser mayor que cero.'),
+                    'debe ser diferente a cero.'),
                 'comision_menor_cero': ('El monto de la Comision %s '
                     'no de ser menor que cero. Pago "%s"'),
                 'comision_cia_mayor': ('El monto de la Comision Cia '
@@ -470,21 +470,21 @@ class Pago(Workflow, ModelSQL, ModelView):
     def validate(cls, pagos):
         super(Pago, cls).validate(pagos)
         for pago in pagos:
-            if pago.monto <= 0:
+            if pago.monto == 0:
                 cls.raise_user_error(
                     'pago_cero', (pago.rec_name,))
-            if pago.comision_cia < 0:
-                cls.raise_user_error(
-                    'comision_menor_cero', ('Cia', pago.rec_name,))
-            if pago.comision_vendedor < 0:
-                cls.raise_user_error(
-                    'comision_menor_cero', ('Vendedor', pago.rec_name,))
-            if pago.comision_cia > pago.monto:
-                cls.raise_user_error(
-                    'comision_cia_mayor', (pago.rec_name,))
-            if pago.comision_vendedor > pago.comision_cia:
-                cls.raise_user_error(
-                    'comision_vendedor_mayor', (pago.rec_name,))
+            #if pago.comision_cia < 0:
+            #    cls.raise_user_error(
+            #        'comision_menor_cero', ('Cia', pago.rec_name,))
+            #if pago.comision_vendedor < 0:
+            #    cls.raise_user_error(
+            #        'comision_menor_cero', ('Vendedor', pago.rec_name,))
+            #if pago.comision_cia > pago.monto:
+            #    cls.raise_user_error(
+            #        'comision_cia_mayor', (pago.rec_name,))
+            #if pago.comision_vendedor > pago.comision_cia:
+            #    cls.raise_user_error(
+            #        'comision_vendedor_mayor', (pago.rec_name,))
 
     @classmethod
     def delete(cls, pagos):
