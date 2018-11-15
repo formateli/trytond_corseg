@@ -490,6 +490,16 @@ class Movimiento(Workflow, ModelSQL, ModelView):
         self.tipo_endoso = None
         self.renovacion_eliminar = None
 
+    @fields.depends('tipo', 'tipo_endoso', 'f_desde', 'f_hasta')
+    def on_change_f_desde(self):
+        if self.tipo and self.tipo == 'endoso':
+            if self.tipo_endoso and \
+                    self.tipo_endoso in ['iniciacion', 'renovacion']:
+                self.f_hasta = None
+                if self.f_desde:
+                    self.f_hasta = \
+                        self.f_desde.replace(year=self.f_desde.year + 1)
+
     @fields.depends('poliza', 'currency_digits', 'poliza_state')
     def on_change_poliza(self):
         self.poliza_state = None
