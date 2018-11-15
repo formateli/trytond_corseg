@@ -62,7 +62,10 @@ class CiaProducto(ModelSQL, ModelView, CompanyMultiValueMixin):
     __name__ = 'corseg.cia.producto'
     name = fields.Char('Nombre', required=True)
     cia = fields.Many2One(
-        'corseg.cia', 'Compania de Seguros', required=True)
+        'corseg.cia', 'Compania de Seguros', required=True,
+        states={
+            'readonly': Bool(Eval('polizas')),
+        }, depends=['polizas'])
     ramo = fields.Many2One(
         'corseg.ramo', 'Ramo', required=True)
     comision_cia = fields.MultiValue(fields.Many2One(
