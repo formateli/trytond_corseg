@@ -78,6 +78,11 @@ class Certificado(ModelSQL, ModelView):
         'get_fecha_inclusion')
     fecha_exclusion = fields.Function(fields.Date('Excluido'),
         'get_fecha_inclusion')
+    fecha_eliminacion = fields.Date('Eliminacion', 
+        states={
+            'readonly': True,
+            'invisible': Not(In(Eval('state'), ['excluido', 'eliminado'])),
+        }, depends=['state'])
 
     descripcion = fields.Text('Descripcion', size=None)
     extendidos = fields.One2Many(
@@ -96,18 +101,28 @@ class Certificado(ModelSQL, ModelView):
     state = fields.Selection([
             ('new', 'Nuevo'),
             ('incluido', 'Incluido'),
-            ('excluido', 'Excluido')
+            ('excluido', 'Excluido'),
+            ('eliminado', 'Eliminado'),
         ], 'Estado', required=True, readonly=True)
 
     @classmethod
     def __setup__(cls):
         super(Certificado, cls).__setup__()
+
         cls._error_messages.update({
                 'delete_new': ('El Certificado "%s" debe ser '
                     '"Nuevo" para poder eliminarse.'),
+                'delete_excluido': ('El Certificado "%s" debe estar '
+                    '"Excluido" para poder eliminarse.'),
                 'inclusiones': ('El Certificado "%s" forma '
                     'parte de un movimiento.'),
                 })
+
+        cls._buttons.update({
+            'eliminar': {
+                'invisible': Not(In(Eval('state'), ['excluido'])),
+                },
+            })
 
     @staticmethod
     def default_state():
@@ -166,6 +181,18 @@ class Certificado(ModelSQL, ModelView):
             if incls:
                 cls.raise_user_error('inclusiones', (cert.rec_name,))
         super(Certificado, cls).delete(certs)
+
+    @classmethod
+    @ModelView.button
+    def eliminar(cls, certs):
+        pool = Pool()
+        Date = pool.get('ir.date')
+        for cert in certs:
+            if cert.state != 'excluido':
+                cls.raise_user_error('delete_excluido', (cert.rec_name,))
+            cert.fecha_eliminacion = Date.today()
+            cert.state = 'eliminado'
+            cert.save()
 
 
 class Extension(ModelSQL, ModelView):
@@ -329,7 +356,7 @@ class Movimiento(Workflow, ModelSQL, ModelView):
             ('poliza', '=', Eval('poliza')),
             If(
                 In(Eval('state'), ['confirmado',]),
-                ('state', '=', 'excluido'),
+                ('state', 'in', ['excluido', 'eliminado']),
                 ('state', '=', 'incluido')
             )
         ],
@@ -914,6 +941,7 @@ class CertificadoModificacion(ModelSQL, ModelView):
         domain=[
             ('poliza', '=',
                 Eval('_parent_movimiento', {}).get('poliza', -1)),
+            ('state', '!=', 'eliminado')
         ])
     tipo = fields.Selection([
             ('automovil', 'Automovil'),

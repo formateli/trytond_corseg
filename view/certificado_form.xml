@@ -23,6 +23,11 @@ this repository contains the full copyright notices and license terms. -->
     <label name="poliza"/>
     <field name="poliza"/>
     <newline />
+    <label name="fecha_eliminacion"/>
+    <field name="fecha_eliminacion"/>
+    <button name="eliminar" string="Eliminar"
+        icon="tryton-cancel"/>
+    <newline />
     <notebook colspan="4">
         <page string="Descripcion" id="descripcion">
             <field name="descripcion" colspan="4"/>
