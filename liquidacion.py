@@ -201,7 +201,7 @@ class LiquidacionCia(LiquidacionBase):
         states={
             'readonly': Not(In(Eval('state'), ['borrador',])),
         }, depends=['state'])
-    monto_pagado = fields.Numeric('Monto Pagado', #required=True, TODO Descomentar despues de migrar
+    monto_pagado = fields.Numeric('Monto Pagado', required=True,
         digits=(16, Eval('currency_digits', 2)),
         states={
             'readonly': Not(In(Eval('state'), ['borrador',])),
