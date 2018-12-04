@@ -697,7 +697,7 @@ class Movimiento(Workflow, ModelSQL, ModelView):
             'f_desde', 'f_hasta', 
             'suma_asegurada', 'prima']
         return fields
-            
+
     @classmethod
     def _get_poliza_fields(cls):
         fields = ['numero', 'contratante',
