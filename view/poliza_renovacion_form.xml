@@ -16,4 +16,6 @@ this repository contains the full copyright notices and license terms. -->
     <field name="suma_asegurada"/>
     <label name="prima"/>
     <field name="prima"/>
+    <label name="total"/>
+    <field name="total"/>
 </form>

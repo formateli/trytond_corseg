@@ -37,6 +37,10 @@ this repository contains the full copyright notices and license terms. -->
                 <field name="suma_asegurada"/>
                 <label name="prima"/>
                 <field name="prima"/>
+                <label id="after_prima" colspan="2"/>
+                <label id="before_total" colspan="4"/>
+                <label name="total"/>
+                <field name="total"/>
             </group>
             <group string="Pagos" colspan="6" col="6" id="pago">
                 <label name="forma_pago"/>

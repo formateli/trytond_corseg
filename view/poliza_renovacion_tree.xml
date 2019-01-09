@@ -9,4 +9,5 @@ this repository contains the full copyright notices and license terms. -->
     <field name="f_hasta"/>
     <field name="suma_asegurada"/>
     <field name="prima"/>
+    <field name="total"/>
 </tree>

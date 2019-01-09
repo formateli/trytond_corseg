@@ -246,21 +246,25 @@ class Poliza(ModelSQL, ModelView):
     origen = fields.Many2One('corseg.poliza.origen', 'Origen')
     contratante = fields.Many2One('party.party', 'Contratante', readonly=True)
     renovacion = fields.Function(fields.Integer('Renovacion actual'),
-        'get_renovacion')
+        'get_renovacion_dato')
     f_emision = fields.Function(fields.Date('Emitida el'),
-        'get_renovacion')
+        'get_renovacion_dato')
     f_desde = fields.Function(fields.Date('Desde:'),
-        'get_renovacion')
+        'get_renovacion_dato')
     f_hasta = fields.Function(fields.Date('Hasta:'),
-        'get_renovacion')
+        'get_renovacion_dato')
     suma_asegurada = fields.Function(fields.Numeric('Suma Asegurada',
             digits=(16, Eval('currency_digits', 2)),
             depends=['currency_digits']),
-        'get_renovacion')
+        'get_renovacion_dato')
     prima = fields.Function(fields.Numeric('Prima',
             digits=(16, Eval('currency_digits', 2)),
             depends=['currency_digits']),
-        'get_renovacion')
+        'get_renovacion_dato')
+    total = fields.Function(fields.Numeric('Total',
+            digits=(16, Eval('currency_digits', 2)),
+            depends=['currency_digits']),
+        'get_renovacion_dato')
     renovaciones = fields.One2Many('corseg.poliza.renovacion',
         'poliza', 'Renovaciones', readonly=True)
     vendedor = fields.Many2One('corseg.vendedor',
@@ -275,6 +279,10 @@ class Poliza(ModelSQL, ModelView):
             digits=(16, Eval('currency_digits', 2)),
             depends=['currency_digits']),
         'get_cuota')
+    cuota_prima = fields.Function(fields.Numeric('Cuota Prima',
+            digits=(16, Eval('currency_digits', 2)),
+            depends=['currency_digits']),
+        'get_cuota_prima')
     monto_pago = fields.Function(fields.Numeric(
             'Pagado', digits=(16, Eval('currency_digits', 2)),
             depends=['currency_digits']),
@@ -394,7 +402,7 @@ class Poliza(ModelSQL, ModelView):
             return self.currency.digits
         return 2
 
-    def get_renovacion(self, name):
+    def get_renovacion_dato(self, name):
         if self.renovaciones:
             return getattr(self.renovaciones[0], name)
 
@@ -422,14 +430,19 @@ class Poliza(ModelSQL, ModelView):
         return res
 
     def get_cuota(self, name):
+        if self.total:
+            exp = Decimal(str(10.0 ** -self.currency_digits))
+            return (self.total / self.no_cuotas).quantize(exp)
+
+    def get_cuota_prima(self, name):
         if self.prima:
             exp = Decimal(str(10.0 ** -self.currency_digits))
             return (self.prima / self.no_cuotas).quantize(exp)
 
     def get_saldo(self, name):
         res = Decimal('0.0')
-        if self.prima:
-            res = self.prima - self.monto_pago
+        if self.total:
+            res = self.total - self.monto_pago
         return res
 
     @classmethod
@@ -451,6 +464,10 @@ class Renovacion(ModelSQL, ModelView):
         digits=(16, Eval('_parent_currency_digits', 2)), readonly=True)
     prima = fields.Numeric('Prima',
         digits=(16, Eval('_parent_currency_digits', 2)), readonly=True)
+    total = fields.Function(fields.Numeric('Total',
+            digits=(16, Eval('currency_digits', 2)),
+            depends=['currency_digits']),
+        'get_total')
 
     @classmethod
     def __setup__(cls):
@@ -476,6 +493,12 @@ class Renovacion(ModelSQL, ModelView):
                 'de la poliza "%s" no debe ser menor a la fecha de finalizacion de '
                 'la vigencia anterior. Renovacion: "%s".'),
         })
+
+    def get_total(self, name):
+        result = Decimal('0.0')
+        if self.prima:
+            result += self.prima
+        return result
 
     @classmethod
     def validate(cls, renovaciones):
@@ -527,7 +550,7 @@ class Renovacion(ModelSQL, ModelView):
             ])
 
         for reno in renovaciones:
-            result += reno.prima
+            result += reno.total
             pagos = Pago.search([
                     ('poliza', '=', poliza.id),
                     ('renovacion', '=', reno.renovacion)
