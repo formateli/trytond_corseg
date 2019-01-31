@@ -1,0 +1,99 @@
+<?xml version="1.0"?>
+<!-- This file is part of trytond-corseg module. The COPYRIGHT file at the top level of
+this repository contains the full copyright notices and license terms. -->
+<form>
+    <group col="6" colspan="4" id="fechas">
+        <label name="fecha"/>
+        <field name="fecha"/>
+        <label name="fecha_recibido"/>
+        <field name="fecha_recibido"/>
+        <label name="fecha_finiquito"/>
+        <field name="fecha_finiquito"/>
+        <label name="referencia"/>
+        <field name="referencia"/>
+        <label name="poliza"/>
+        <field name="poliza"/>
+        <label name="number"/>
+        <field name="number"/>
+        <label name="cia"/>
+        <field name="cia"/>
+        <label name="contratante"/>
+        <field name="contratante"/>
+        <label name="renovacion"/>
+        <field name="renovacion"/>
+        <label name="monto_reclamado"/>
+        <field name="monto_reclamado"/>
+        <label name="deducible"/>
+        <field name="deducible"/>
+        <label name="monto_aprobado"/>
+        <field name="monto_aprobado"/>
+    </group>
+    <notebook colspan="4">
+        <page string="Descripcion" id="descripcion">
+            <field name="descripcion" colspan="4"/>
+        </page>
+        <page string="Comentarios" id="comentario">
+            <field name="comentarios" colspan="4"/>
+        </page>
+        <page string="Documentos" id="documentos">
+            <field name="documentos" colspan="4"/>
+        </page>
+        <page string="Info" id="info">
+            <label name="company"/>
+            <field name="company"/>
+            <label name="currency"/>
+            <field name="currency"/>
+            <separator string="Auditoria" id="auditoria" colspan="4"/>
+            <label name="made_by"/>
+            <field name="made_by"/>
+            <label name="made_date"/>
+            <field name="made_date"/>
+            <label name="incompleto_by"/>
+            <field name="incompleto_by"/>
+            <label name="incompleto_date"/>
+            <field name="incompleto_date"/>
+            <label name="recibido_by"/>
+            <field name="recibido_by"/>
+            <label name="recibido_date"/>
+            <field name="recibido_date"/>
+            <label name="aprobado_by"/>
+            <field name="aprobado_by"/>
+            <label name="aprobado_date"/>
+            <field name="aprobado_date"/>
+            <label name="rechazado_by"/>
+            <field name="rechazado_by"/>
+            <label name="rechazado_date"/>
+            <field name="rechazado_date"/>
+            <label name="reconsiderado_by"/>
+            <field name="reconsiderado_by"/>
+            <label name="reconsiderado_date"/>
+            <field name="reconsiderado_date"/>
+            <label name="finiquito_by"/>
+            <field name="finiquito_by"/>
+            <label name="finiquito_date"/>
+            <field name="finiquito_date"/>
+            <label name="canceled_by"/>
+            <field name="canceled_by"/>
+            <label name="canceled_date"/>
+            <field name="canceled_date"/>
+        </page>
+    </notebook>
+    <group col="9" colspan="4" id="buttons" yfill="1">
+        <label name="state"/>
+        <field name="state"/>
+        <button name="recibir" string="Recibir"
+            icon="tryton-go-next"/>
+        <button name="incompleto" string="Incompleto"
+            icon="tryton-go-next"/>
+        <button name="aprobar" string="Aprobar"
+            icon="tryton-ok"/>
+        <button name="rechazar" string="Rechazar"
+            icon="tryton-cancel"/>
+        <button name="reconsiderar" string="Reconsiderar"
+            icon="tryton-ok"/>
+        <button name="finiquitar" string="Finiquitar"
+            icon="tryton-ok"/>
+        <button name="cancelar" string="Cancelar"
+            icon="tryton-cancel"/>
+    </group>
+</form>

@@ -55,6 +55,13 @@ class Configuration(
                 [Eval('context', {}).get('company', -1), None]),
             ('code', '=', 'corseg.comision.ajuste.vendedor'),
         ]))
+    reclamo_seq = fields.MultiValue(fields.Many2One(
+        'ir.sequence', "Reclamo Sequence", required=True,
+        domain=[
+            ('company', 'in',
+                [Eval('context', {}).get('company', -1), None]),
+            ('code', '=', 'corseg.reclamo'),
+        ]))
 
 
     @classmethod
@@ -62,7 +69,8 @@ class Configuration(
         pool = Pool()
         if field in {'pago_seq', 'movimiento_seq',
                 'liq_cia_seq', 'liq_vendedor_seq',
-                'ajuste_comision_cia_seq', 'ajuste_comision_vendedor_seq'}:
+                'ajuste_comision_cia_seq', 'ajuste_comision_vendedor_seq',
+                'reclamo_seq'}:
             return pool.get('corseg.configuration.sequences')
         return super(Configuration, cls).multivalue_model(field)
 
@@ -111,4 +119,11 @@ class ConfigurationSequences(ModelSQL, CompanyValueMixin):
             ('company', 'in',
                 [Eval('context', {}).get('company', -1), None]),
             ('code', '=', 'corseg.comision.ajuste.vendedor'),
+        ])
+    reclamo_seq = fields.Many2One(
+        'ir.sequence', "Reclamo Sequence", 
+        domain=[
+            ('company', 'in',
+                [Eval('context', {}).get('company', -1), None]),
+            ('code', '=', 'corseg.reclamo'),
         ])

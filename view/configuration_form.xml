@@ -16,4 +16,7 @@ this repository contains the full copyright notices and license terms. -->
     <field name="ajuste_comision_cia_seq"/>
     <label name="ajuste_comision_vendedor_seq"/>
     <field name="ajuste_comision_vendedor_seq"/>
+    <separator string="Reclamos" id="reclamo" colspan="4" />
+    <label name="reclamo_seq"/>
+    <field name="reclamo_seq"/>
 </form>

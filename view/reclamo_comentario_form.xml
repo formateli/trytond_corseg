@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<!-- This file is part of trytond-corseg module. The COPYRIGHT file at the top level of
+this repository contains the full copyright notices and license terms. -->
+<form>
+    <label name="reclamo"/>
+    <field name="reclamo" colspan="3"/>
+    <label name="fecha"/>
+    <field name="fecha"/>
+    <label name="create_uid"/>
+    <field name="create_uid"/>
+    <newline />
+    <field name="comentario" colspan="4"/>
+</form>

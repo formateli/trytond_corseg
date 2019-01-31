@@ -1,0 +1,255 @@
+<?xml version="1.0"?>
+<!-- This file is part of trytond-corseg module. 
+The COPYRIGHT file at the top level of this repository 
+contains the full copyright notices and license terms. -->
+<tryton>
+    <data>
+        <!-- Reclamo Documento -->
+        <record model="ir.ui.view" id="reclamo_documento_view_form">
+            <field name="model">corseg.poliza.reclamo.documento</field>
+            <field name="type">form</field>
+            <field name="name">reclamo_documento_form</field>
+        </record>
+        <record model="ir.ui.view" id="reclamo_documento_view_tree">
+            <field name="model">corseg.poliza.reclamo.documento</field>
+            <field name="type">tree</field>
+            <field name="name">reclamo_documento_tree</field>
+        </record>
+        <record model="ir.model.access" id="access_reclamo_documento">
+            <field name="model" search="[('model', '=', 'corseg.poliza.reclamo.documento')]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_delete" eval="False"/>
+        </record>
+        <record model="ir.model.access" id="access_reclamo_documento_admin">
+            <field name="model" search="[('model', '=', 'corseg.poliza.reclamo.documento')]"/>
+            <field name="group" ref="corseg.group_corseg_admin"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_delete" eval="True"/>
+        </record>
+
+        <!-- Reclamo Comentario -->
+        <record model="ir.ui.view" id="reclamo_comentario_view_form">
+            <field name="model">corseg.poliza.reclamo.comentario</field>
+            <field name="type">form</field>
+            <field name="name">reclamo_comentario_form</field>
+        </record>
+        <record model="ir.ui.view" id="reclamo_comentario_view_tree">
+            <field name="model">corseg.poliza.reclamo.comentario</field>
+            <field name="type">tree</field>
+            <field name="name">reclamo_comentario_tree</field>
+        </record>
+        <record model="ir.model.access" id="access_reclamo_comentario">
+            <field name="model" search="[('model', '=', 'corseg.poliza.reclamo.comentario')]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_delete" eval="False"/>
+        </record>
+        <record model="ir.model.access" id="access_reclamo_comentario_admin">
+            <field name="model" search="[('model', '=', 'corseg.poliza.reclamo.comentario')]"/>
+            <field name="group" ref="corseg.group_corseg_admin"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_delete" eval="True"/>
+        </record>
+
+        <!-- Reclamo -->
+        <record model="ir.ui.view" id="reclamo_view_form">
+            <field name="model">corseg.poliza.reclamo</field>
+            <field name="type">form</field>
+            <field name="name">reclamo_form</field>
+        </record>
+        <record model="ir.ui.view" id="reclamo_view_tree">
+            <field name="model">corseg.poliza.reclamo</field>
+            <field name="type">tree</field>
+            <field name="name">reclamo_tree</field>
+        </record>
+        <record model="ir.action.act_window" id="act_reclamo_form">
+            <field name="name">Reclamos</field>
+            <field name="res_model">corseg.poliza.reclamo</field>
+        </record>
+        <record model="ir.action.act_window.view" id="act_reclamo_form_view1">
+            <field name="sequence" eval="10"/>
+            <field name="view" ref="reclamo_view_tree"/>
+            <field name="act_window" ref="act_reclamo_form"/>
+        </record>
+        <record model="ir.action.act_window.view" id="act_reclamo_form_view2">
+            <field name="sequence" eval="20"/>
+            <field name="view" ref="reclamo_view_form"/>
+            <field name="act_window" ref="act_reclamo_form"/>
+        </record>
+
+        <record model="ir.action.act_window.domain"
+                id="act_reclamo_form_domain_borrador">
+            <field name="name">Borradores</field>
+            <field name="sequence" eval="10"/>
+            <field name="domain" eval="[('state', '=', 'borrador')]" pyson="1"/>
+            <field name="count" eval="True"/>
+            <field name="act_window" ref="act_reclamo_form"/>
+        </record>
+        <record model="ir.action.act_window.domain"
+                id="act_reclamo_form_domain_incompleto">
+            <field name="name">Incompletos</field>
+            <field name="sequence" eval="20"/>
+            <field name="domain" eval="[('state', '=', 'incompleto')]" pyson="1"/>
+            <field name="count" eval="True"/>
+            <field name="act_window" ref="act_reclamo_form"/>
+        </record>
+        <record model="ir.action.act_window.domain"
+                id="act_reclamo_form_domain_recibido">
+            <field name="name">Recibidos</field>
+            <field name="sequence" eval="30"/>
+            <field name="domain" eval="[('state', '=', 'recibido')]" pyson="1"/>
+            <field name="count" eval="True"/>
+            <field name="act_window" ref="act_reclamo_form"/>
+        </record>
+        <record model="ir.action.act_window.domain"
+                id="act_reclamo_form_domain_aprobado">
+            <field name="name">Aprobados</field>
+            <field name="sequence" eval="40"/>
+            <field name="domain" eval="[('state', '=', 'aprobado')]" pyson="1"/>
+            <field name="count" eval="True"/>
+            <field name="act_window" ref="act_reclamo_form"/>
+        </record>
+        <record model="ir.action.act_window.domain"
+                id="act_reclamo_form_domain_rechazado">
+            <field name="name">Rechazados</field>
+            <field name="sequence" eval="50"/>
+            <field name="domain" eval="[('state', '=', 'rechazado')]" pyson="1"/>
+            <field name="count" eval="True"/>
+            <field name="act_window" ref="act_reclamo_form"/>
+        </record>
+        <record model="ir.action.act_window.domain"
+                id="act_reclamo_form_domain_reconsiderado">
+            <field name="name">Reconsiderados</field>
+            <field name="sequence" eval="60"/>
+            <field name="domain" eval="[('state', '=', 'reconsiderado')]" pyson="1"/>
+            <field name="count" eval="True"/>
+            <field name="act_window" ref="act_reclamo_form"/>
+        </record>
+        <record model="ir.action.act_window.domain"
+                id="act_reclamo_form_domain_finiquito">
+            <field name="name">Finiquitados</field>
+            <field name="sequence" eval="70"/>
+            <field name="domain" eval="[('state', '=', 'finiquito')]" pyson="1"/>
+            <field name="count" eval="True"/>
+            <field name="act_window" ref="act_reclamo_form"/>
+        </record>
+        <record model="ir.action.act_window.domain"
+                id="act_reclamo_form_domain_cancelado">
+            <field name="name">Cancelados</field>
+            <field name="sequence" eval="80"/>
+            <field name="domain" eval="[('state', '=', 'cancelado')]" pyson="1"/>
+            <field name="count" eval="True"/>
+            <field name="act_window" ref="act_reclamo_form"/>
+        </record>
+        <record model="ir.action.act_window.domain"
+                id="act_reclamo_form_domain_all">
+            <field name="name">Todos</field>
+            <field name="sequence" eval="9999"/>
+            <field name="domain"></field>
+            <field name="act_window" ref="act_reclamo_form"/>
+        </record>
+
+        <menuitem parent="menu_corseg_poliza" sequence="60"
+            action="act_reclamo_form" id="menu_reclamo_tree"/>
+
+        <record model="ir.model.access" id="access_reclamo">
+            <field name="model" search="[('model', '=', 'corseg.poliza.reclamo')]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_delete" eval="False"/>
+        </record>
+        <record model="ir.model.access" id="access_reclamo_admin">
+            <field name="model" search="[('model', '=', 'corseg.poliza.reclamo')]"/>
+            <field name="group" ref="group_corseg_admin"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_delete" eval="True"/>
+        </record>
+
+        <record model="ir.model.button" id="reclamo_cancel_button">
+            <field name="name">cancelar</field>
+            <field name="model"
+                search="[('model', '=', 'corseg.poliza.reclamo')]"/>
+        </record>
+        <record model="ir.model.button-res.group"
+                id="reclamo_cancel_button_group_corseg_admin">
+            <field name="button" ref="reclamo_cancel_button"/>
+            <field name="group" ref="group_corseg_admin"/>
+        </record>
+
+        <record model="ir.model.button" id="reclamo_incompleto_button">
+            <field name="name">incompleto</field>
+            <field name="model"
+                search="[('model', '=', 'corseg.poliza.reclamo')]"/>
+        </record>
+        <record model="ir.model.button-res.group"
+                id="reclamo_incompleto_button_group_corseg_admin">
+            <field name="button" ref="reclamo_incompleto_button"/>
+            <field name="group" ref="group_corseg_admin"/>
+        </record>
+
+        <record model="ir.model.button" id="reclamo_recibir_button">
+            <field name="name">recibir</field>
+            <field name="model"
+                search="[('model', '=', 'corseg.poliza.reclamo')]"/>
+        </record>
+        <record model="ir.model.button-res.group"
+                id="reclamo_recibir_button_group_corseg_admin">
+            <field name="button" ref="reclamo_recibir_button"/>
+            <field name="group" ref="group_corseg_admin"/>
+        </record>
+
+        <record model="ir.model.button" id="reclamo_aprobar_button">
+            <field name="name">aprobar</field>
+            <field name="model"
+                search="[('model', '=', 'corseg.poliza.reclamo')]"/>
+        </record>
+        <record model="ir.model.button-res.group"
+                id="reclamo_aprobar_button_group_corseg_admin">
+            <field name="button" ref="reclamo_aprobar_button"/>
+            <field name="group" ref="group_corseg_admin"/>
+        </record>
+
+        <record model="ir.model.button" id="reclamo_rechazar_button">
+            <field name="name">rechazar</field>
+            <field name="model"
+                search="[('model', '=', 'corseg.poliza.reclamo')]"/>
+        </record>
+        <record model="ir.model.button-res.group"
+                id="reclamo_rechazar_button_group_corseg_admin">
+            <field name="button" ref="reclamo_rechazar_button"/>
+            <field name="group" ref="group_corseg_admin"/>
+        </record>
+
+        <record model="ir.model.button" id="reclamo_reconsiderar_button">
+            <field name="name">reconsiderar</field>
+            <field name="model"
+                search="[('model', '=', 'corseg.poliza.reclamo')]"/>
+        </record>
+        <record model="ir.model.button-res.group"
+                id="reclamo_reconsiderar_button_group_corseg_admin">
+            <field name="button" ref="reclamo_reconsiderar_button"/>
+            <field name="group" ref="group_corseg_admin"/>
+        </record>
+
+        <record model="ir.model.button" id="reclamo_finiquitar_button">
+            <field name="name">finiquitar</field>
+            <field name="model"
+                search="[('model', '=', 'corseg.poliza.reclamo')]"/>
+        </record>
+        <record model="ir.model.button-res.group"
+                id="reclamo_finiquitar_button_group_corseg_admin">
+            <field name="button" ref="reclamo_finiquitar_button"/>
+            <field name="group" ref="group_corseg_admin"/>
+        </record>
+    </data>
+</tryton>

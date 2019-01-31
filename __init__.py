@@ -10,6 +10,7 @@ from .vehiculo import *
 from .movimiento import *
 from .pago import *
 from .liquidacion import *
+from .reclamo import *
 
 
 def register():
@@ -60,4 +61,7 @@ def register():
         LiquidacionVendedor,
         LiquidacionPagoCia,
         LiquidacionPagoVendedor,
+        Reclamo,
+        ReclamoComentario,
+        ReclamoDocumento,
         module='corseg', type_='model')
