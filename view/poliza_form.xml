@@ -72,6 +72,9 @@ this repository contains the full copyright notices and license terms. -->
         <page string="Pagos" id="pagos">
             <field name="pagos" colspan="4"/>
         </page>
+        <page string="Reclamos" id="reclamos">
+            <field name="reclamos" colspan="4"/>
+        </page>
         <page string="Comisiones" id="comisiones">
             <field name="comision_cia" colspan="2"/>
             <field name="comision_vendedor" colspan="2"/>

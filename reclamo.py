@@ -42,7 +42,7 @@ class Reclamo(Workflow, ModelSQL, ModelView):
             ('company', '=', Eval('company')),
             If(
                 In(Eval('state'), ['borrador']),
-                [('state', '!=', 'cancelado')],
+                [('state', 'not in', 'borrador', 'cancelado')],
                 [('state', '!=', '')]
             )
         ],

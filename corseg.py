@@ -312,6 +312,12 @@ class Poliza(ModelSQL, ModelView):
             'invisible': Equal(Eval('state'), 'new'),
             },
         depends=['state'])
+    reclamos = fields.One2Many('corseg.poliza.reclamo',
+        'poliza', 'Reclamos', readonly=True,
+        states={
+            'invisible': Equal(Eval('state'), 'new'),
+            },
+        depends=['state'])
     comentarios = fields.One2Many('corseg.poliza.comentario',
         'poliza', 'Comentarios')
     documentos = fields.One2Many('corseg.poliza.documento',
