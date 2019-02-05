@@ -55,6 +55,28 @@ class Reclamo(Workflow, ModelSQL, ModelView):
         'get_contratante', searcher='search_contratante')
     renovacion = fields.Integer('Renovacion', required=True,
         states={'readonly': True})
+    certificado = fields.Many2One('corseg.poliza.certificado', 'Certificado',
+        required=True,
+        domain=[
+            ('poliza', '=', Eval('poliza')),
+            If(
+                In(Eval('state'), ['borrador']),
+                [('state', '=', 'incluido')],
+                [('state', '!=', '')]
+            )
+        ],
+        states=_STATES, depends=['poliza', 'state'])
+    extension = fields.Many2One('corseg.poliza.certificado.extension',
+        'Extendido', ondelete='RESTRICT',
+        domain=[
+            ('certificado', '=', Eval('certificado')),
+            If(
+                In(Eval('state'), ['borrador']),
+                [('state', '=', 'incluido')],
+                [('state', '!=', '')]
+            )
+        ],
+        states=_STATES, depends=['certificado', 'state'])
     fecha = fields.Date('Fecha', required=True,
         states={
             'readonly': Not(In(Eval('state'), ['borrador', 'procesado'])),
@@ -69,7 +91,7 @@ class Reclamo(Workflow, ModelSQL, ModelView):
     fecha_finiquito = fields.Date('Fecha Finiquito',
         states={
             'required': In(Eval('state'), ['finiquito',]),
-            'readonly': Not(In(Eval('state'), ['finiquito',])),
+            'readonly': In(Eval('state'), ['finiquito',]),
             'invisible': Not(In(Eval('state'), ['aprobado', 'finiquito',])),
         }, depends=['state'])
     referencia = fields.Char('Referencia')
@@ -79,9 +101,13 @@ class Reclamo(Workflow, ModelSQL, ModelView):
     deducible = fields.Numeric('Deducible', required=True,
         digits=(16, Eval('currency_digits', 2)),
         states=_STATES, depends=['currency_digits'])
-    monto_aprobado = fields.Numeric('Monto Aprobado', required=True,
+    monto_aprobado = fields.Numeric('Monto Aprobado',
         digits=(16, Eval('currency_digits', 2)),
-        states=_STATES, depends=['currency_digits'])
+        states={
+            'required': In(Eval('state'), ['aprobado', 'finiquito',]),
+            'readonly': In(Eval('state'), ['finiquito',]),
+            'invisible': In(Eval('state'), ['borrador',]),
+        }, depends=['currency_digits'])
     descripcion = fields.Text('Descripcion', size=None,
         states={
             'readonly': Not(In(Eval('state'), ['borrador', 'procesado'])),
@@ -142,8 +168,10 @@ class Reclamo(Workflow, ModelSQL, ModelView):
                 ('borrador', 'recibido'),
                 ('incompleto', 'recibido'),
                 ('incompleto', 'cancelado'),
+                ('cancelado', 'borrador'),
                 ('recibido', 'aprobado'),
                 ('recibido', 'rechazado'),
+                ('recibido', 'cancelado'),
                 ('rechazado', 'reconsiderado'),
                 ('reconsiderado', 'rechazado'),
                 ('reconsiderado', 'aprobado'),
@@ -153,7 +181,7 @@ class Reclamo(Workflow, ModelSQL, ModelView):
 
         cls._buttons.update({
             'cancelar': {
-                'invisible': Not(In(Eval('state'), ['incompleto',])),
+                'invisible': Not(In(Eval('state'), ['incompleto', 'recibido'])),
                 },
             'incompleto': {
                 'invisible': Not(In(Eval('state'), ['borrador'])),
@@ -172,6 +200,11 @@ class Reclamo(Workflow, ModelSQL, ModelView):
                 },
             'finiquitar': {
                 'invisible': Not(In(Eval('state'), ['aprobado',])),
+                },
+            'borrador': {
+                'invisible': ~Eval('state').in_(['cancelado']),
+                'icon': If(Eval('state') == 'cancelado',
+                    'tryton-clear', 'tryton-go-previous'),
                 },
             })
 
@@ -200,6 +233,11 @@ class Reclamo(Workflow, ModelSQL, ModelView):
             return company.currency.digits
         return 2
 
+    def get_currency_digits(self, name=None):
+        if self.poliza:
+            self.poliza.currency_digits
+        return self.default_currency_digits()
+
     def get_rec_name(self, name):
         if self.number:
             return self.number
@@ -217,6 +255,22 @@ class Reclamo(Workflow, ModelSQL, ModelView):
         if self.poliza and self.poliza.contratante:
             return self.poliza.contratante.id
 
+    @fields.depends('poliza')
+    def on_change_poliza(self):
+        self.cia = None
+        self.contratante = None
+        self.renovacion = None
+        self.certificado = None
+        self.extension = None
+        if self.poliza:
+            self.cia = self.poliza.cia
+            self.contratante = self.poliza.contratante
+            self.renovacion = self.poliza.renovacion
+
+    @fields.depends('certificado')
+    def on_change_certificado(self):
+        self.extension = None
+
     @classmethod
     def search_cia(cls, name, clause):
         return [('poliza.cia',) + tuple(clause[1:])]
@@ -224,6 +278,98 @@ class Reclamo(Workflow, ModelSQL, ModelView):
     @classmethod
     def search_contratante(cls, name, clause):
         return [('poliza.contratante',) + tuple(clause[1:])]
+
+    @classmethod
+    def set_number(cls, reclamos):
+        pool = Pool()
+        Sequence = pool.get('ir.sequence')
+        Config = pool.get('corseg.configuration')
+        config = Config(1)
+        for reclamo in reclamos:
+            if reclamo.number:
+                continue
+            reclamo.number = Sequence.get_id(config.reclamo_seq.id)
+        cls.save(reclamos)
+
+    @classmethod
+    def create(cls, vlist):
+        vlist = [x.copy() for x in vlist]
+        for values in vlist:
+            if values.get('made_by') is None:
+                values['made_by'] = Transaction().user
+                values['made_date'] = get_current_date()
+        reclamos = super(Reclamo, cls).create(vlist)
+        return reclamos
+
+    @classmethod
+    def delete(cls, reclamos):
+        for reclamo in reclamos:
+            if reclamo.state not in ['borrador',]:
+                cls.raise_user_error('delete_cancel', (reclamo.rec_name,))
+        super(Reclamo, cls).delete(reclamos)
+
+    @classmethod
+    @ModelView.button
+    @Workflow.transition('borrador')
+    def borrador(cls, reclamos):
+        pass
+
+    @classmethod
+    @ModelView.button
+    @Workflow.transition('recibido')
+    def recibir(cls, reclamos):
+        for reclamo in reclamos:
+            set_auditoria(reclamo, 'recibido')
+            reclamo.save()
+
+    @classmethod
+    @ModelView.button
+    @Workflow.transition('incompleto')
+    def incompleto(cls, reclamos):
+        for reclamo in reclamos:
+            set_auditoria(reclamo, 'incompleto')
+            reclamo.save()
+
+    @classmethod
+    @ModelView.button
+    @Workflow.transition('aprobado')
+    def aprobar(cls, reclamos):
+        for reclamo in reclamos:
+            set_auditoria(reclamo, 'aprobado')
+            reclamo.save()
+
+    @classmethod
+    @ModelView.button
+    @Workflow.transition('rechazado')
+    def rechazar(cls, reclamos):
+        for reclamo in reclamos:
+            set_auditoria(reclamo, 'rechazado')
+            reclamo.save()
+
+    @classmethod
+    @ModelView.button
+    @Workflow.transition('reconsiderado')
+    def reconsiderar(cls, reclamos):
+        for reclamo in reclamos:
+            set_auditoria(reclamo, 'reconsiderado')
+            reclamo.save()
+
+    @classmethod
+    @ModelView.button
+    @Workflow.transition('cancelado')
+    def cancelar(cls, reclamos):
+        print('CANCELAR')
+        for reclamo in reclamos:
+            set_auditoria(reclamo, 'canceled')
+            reclamo.save()
+
+    @classmethod
+    @ModelView.button
+    @Workflow.transition('finiquito')
+    def finiquitar(cls, reclamos):
+        for reclamo in reclamos:
+            set_auditoria(reclamo, 'finiquito')
+            reclamo.save()
 
 
 class ReclamoComentario(ModelSQL, ModelView):

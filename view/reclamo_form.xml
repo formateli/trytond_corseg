@@ -21,6 +21,11 @@ this repository contains the full copyright notices and license terms. -->
         <field name="contratante"/>
         <label name="renovacion"/>
         <field name="renovacion"/>
+        <label name="certificado"/>
+        <field name="certificado"/>
+        <label name="extension"/>
+        <field name="extension"/>
+        <newline/>
         <label name="monto_reclamado"/>
         <field name="monto_reclamado"/>
         <label name="deducible"/>
@@ -78,19 +83,20 @@ this repository contains the full copyright notices and license terms. -->
             <field name="canceled_date"/>
         </page>
     </notebook>
-    <group col="9" colspan="4" id="buttons" yfill="1">
+    <group col="10" colspan="4" id="buttons" yfill="1">
         <label name="state"/>
         <field name="state"/>
+        <button name="borrador" string="Borrador"/>
         <button name="recibir" string="Recibir"
             icon="tryton-go-next"/>
         <button name="incompleto" string="Incompleto"
             icon="tryton-go-next"/>
         <button name="aprobar" string="Aprobar"
-            icon="tryton-ok"/>
+            icon="tryton-go-next"/>
         <button name="rechazar" string="Rechazar"
             icon="tryton-cancel"/>
         <button name="reconsiderar" string="Reconsiderar"
-            icon="tryton-ok"/>
+            icon="tryton-go-next"/>
         <button name="finiquitar" string="Finiquitar"
             icon="tryton-ok"/>
         <button name="cancelar" string="Cancelar"
