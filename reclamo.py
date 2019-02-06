@@ -42,7 +42,7 @@ class Reclamo(Workflow, ModelSQL, ModelView):
             ('company', '=', Eval('company')),
             If(
                 In(Eval('state'), ['borrador']),
-                [('state', 'not in', 'borrador', 'cancelado')],
+                [('state', 'not in', ['borrador', 'cancelado'])],
                 [('state', '!=', '')]
             )
         ],
@@ -152,14 +152,8 @@ class Reclamo(Workflow, ModelSQL, ModelView):
             ]
 
         cls._error_messages.update({
-                'delete_cancel': ('El registro "%s" debe estar '
-                    'cancelado antes de eliminarse.'),
-                'poliza_state': ('La poliza asociada al registro "%s" debe estar '
-                    'en estado "Nuevo".'),
-                'not_lineas': ('La Cotizacion "%s" no registra '
-                    'ninguna linea.'),
-                'not_seleccion': ('La Cotizacion "%s" debe tener '
-                    'al menos una linea seleccionada.'),
+                'delete_cancel': ('El registro "%s" debe estar en '
+                    'borrador antes de eliminarse.'),
                 })
 
         cls._transitions |= set(
@@ -321,6 +315,7 @@ class Reclamo(Workflow, ModelSQL, ModelView):
         for reclamo in reclamos:
             set_auditoria(reclamo, 'recibido')
             reclamo.save()
+        cls.set_number(reclamos)
 
     @classmethod
     @ModelView.button
@@ -329,6 +324,7 @@ class Reclamo(Workflow, ModelSQL, ModelView):
         for reclamo in reclamos:
             set_auditoria(reclamo, 'incompleto')
             reclamo.save()
+        cls.set_number(reclamos)
 
     @classmethod
     @ModelView.button
@@ -358,7 +354,6 @@ class Reclamo(Workflow, ModelSQL, ModelView):
     @ModelView.button
     @Workflow.transition('cancelado')
     def cancelar(cls, reclamos):
-        print('CANCELAR')
         for reclamo in reclamos:
             set_auditoria(reclamo, 'canceled')
             reclamo.save()
