@@ -33,6 +33,7 @@ class CorsegTestCase(ModuleTestCase):
         ComisionAjusteCia = pool.get('corseg.comision.ajuste.cia')
         ComisionAjusteCiaCompensacion = pool.get('corseg.comision.ajuste.cia.compensacion')
         ComisionAjusteVendedor = pool.get('corseg.comision.ajuste.vendedor')
+        Reclamo = pool.get('corseg.poliza.reclamo')
 
         company = create_company()
         with set_company(company):
@@ -653,7 +654,9 @@ class CorsegTestCase(ModuleTestCase):
                 ajuste_comision_cia_seq=self._get_sequence('Comision Ajuste Cia',
                     'corseg.comision.ajuste.cia', 'AJC-', company),
                 ajuste_comision_vendedor_seq = self._get_sequence('Comision Ajuste Vendedor',
-                    'corseg.comision.ajuste.vendedor', 'AJV-', company)
+                    'corseg.comision.ajuste.vendedor', 'AJV-', company),
+                reclamo_seq = self._get_sequence('Reclamo',
+                    'corseg.reclamo', 'REC-', company),
             )
         config.save()
 

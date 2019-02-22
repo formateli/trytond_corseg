@@ -471,8 +471,7 @@ class Renovacion(ModelSQL, ModelView):
     prima = fields.Numeric('Prima',
         digits=(16, Eval('_parent_currency_digits', 2)), readonly=True)
     total = fields.Function(fields.Numeric('Total',
-            digits=(16, Eval('currency_digits', 2)),
-            depends=['currency_digits']),
+            digits=(16, Eval('_parent_currency_digits', 2))),
         'get_total')
 
     @classmethod

@@ -16,7 +16,8 @@ this repository contains the full copyright notices and license terms. -->
     <field name="poliza_state"/>
     <label name="numero"/>
     <field name="numero"/>
-    <newline/>
+    <label name="renovacion"/>
+    <field name="renovacion"/>
     <label name="descripcion"/>
     <field name="descripcion" colspan="3"/>
     <label name="tipo"/>
@@ -30,7 +31,7 @@ this repository contains the full copyright notices and license terms. -->
     <notebook colspan="4">
         <page string="Datos" id="datos" col="6">
             <label name="contratante"/>
-            <field name="contratante"/>
+            <field name="contratante" colspan="2"/>
             <newline />
             <separator string="Emision" colspan="6" id="emision"/>
             <label name="f_emision"/>

@@ -4,7 +4,7 @@
 from trytond.pool import Pool, PoolMeta
 from trytond.transaction import Transaction
 from trytond.model import Workflow, ModelView, ModelSQL, fields
-from trytond.pyson import Eval, If, Not, In, Bool, Or, Equal
+from trytond.pyson import Eval, If, Not, In, Bool, And, Or, Equal
 from .tools import auditoria_field, get_current_date, set_auditoria
 
 __all__ = [
@@ -243,9 +243,48 @@ class Movimiento(Workflow, ModelSQL, ModelView):
         states={
             'readonly': Not(In(Eval('state'), ['borrador',])),
         }, depends=['company', 'state'])
-    renovacion = fields.Integer('Renovacion', readonly=True)
+
+
+    renovacion = fields.Integer('Renovacion',
+        states={
+            'readonly': Not(In(Eval('state'), ['borrador',])),
+            'invisible': If(
+                Not(In(Eval('state'), ['borrador',])),
+                False,
+                If(
+                    Or(
+                        In(Eval('tipo'), [None,]),
+                        And(
+                            Not(In(Eval('tipo'), [None,])),
+                            In(Eval('tipo_endoso'), ['iniciacion', 'renovacion'])
+                        ),
+                    ),
+                    True,
+                    False
+                ),
+            ),
+        }, depends=['company', 'state', 'tipo', 'tipo_endoso'])
+
+
+#    renovacion = fields.Integer('Renovacion',
+#        states={
+#            'readonly': Not(In(Eval('state'), ['borrador',])),
+#            'invisible': Or(
+#                    And(
+#                        Not(In(Eval('state'), ['borrador',])),
+#                        Not(In(Eval('tipo'), [None,])),
+#                    ),
+#                    Or(
+#                        In(Eval('tipo'), [None,]),
+#                        And(
+#                            Not(In(Eval('tipo'), [None,])),
+#                            In(Eval('tipo_endoso'), ['iniciacion', 'renovacion'])
+#                        ),
+#                    ),
+#                ),
+#        }, depends=['company', 'state', 'tipo', 'tipo_endoso'])
     renovacion_actual = fields.Function(
-            fields.Integer('Renovacion'),
+            fields.Integer('Renovacion Actual'),
             'on_change_with_renovacion_actual'
         )
     renovacion_eliminar = fields.Integer('Renovaciona a Eliminar',
@@ -438,6 +477,10 @@ class Movimiento(Workflow, ModelSQL, ModelView):
                     'de la poliza "%s" porque tienes movimientos asociados.'),
                 'renovacion_eliminar_no_existe': ('La renovacion "%s" '
                     'de la poliza "%s" no existe.'),
+                'renovacion_inicio_renovacion': ('No puede asignarse manualmente una renovacion '
+                    'a un tipo de movimiento "Iniciacion" o "Renovacion".'),
+                'renovacion_difiere': ('La renovacion "%s" a aplicar en el movimiento '
+                    'no coincide con la renovacion actual "%s".'),
                 })
         cls._transitions |= set(
             (
@@ -485,10 +528,11 @@ class Movimiento(Workflow, ModelSQL, ModelView):
         if self.poliza:
             return self.poliza.renovacion
 
-    @fields.depends('tipo', 'tipo_endoso')
+    @fields.depends('tipo', 'tipo_endoso', 'renovacion')
     def on_change_tipo(self):
         self.tipo_endoso = None
         self.renovacion_eliminar = None
+        self.renovacion = None
 
     @fields.depends('tipo', 'tipo_endoso', 'f_desde', 'f_hasta')
     def on_change_f_desde(self):
@@ -500,11 +544,12 @@ class Movimiento(Workflow, ModelSQL, ModelView):
                     self.f_hasta = \
                         self.f_desde.replace(year=self.f_desde.year + 1)
 
-    @fields.depends('poliza', 'currency_digits', 'poliza_state')
+    @fields.depends('poliza')
     def on_change_poliza(self):
         self.poliza_state = None
         self.poliza_contratante = None
         self.currency_digits = 2
+        self.renovacion = None
         if self.poliza:
             self.currency_digits = \
                 self.poliza.currency_digits
@@ -820,12 +865,31 @@ class Movimiento(Workflow, ModelSQL, ModelView):
         fields_vehiculo = cls._get_vehiculo_fields()
         for mov in movs:
             pl = mov.poliza
-            if mov.tipo_endoso == 'iniciacion':
-                renovacion_no = 0
-            elif mov.tipo_endoso == 'renovacion':
-                renovacion_no = pl.renovacion + 1
+
+            if mov.tipo_endoso in ['iniciacion', 'renovacion']:
+                if mov.renovacion is not None:
+                    cls.raise_user_error(
+                        'renovacion_inicio_renovacion',)
+                else:
+                    if mov.tipo_endoso == 'iniciacion':
+                        renovacion_no = 0
+                    elif mov.tipo_endoso == 'renovacion':
+                        renovacion_no = pl.renovacion + 1
             else:
-                renovacion_no = pl.renovacion
+                if mov.renovacion is None:
+                    renovacion_no = pl.renovacion
+                else:
+                    if mov.renovacion < 0 or mov.renovacion > pl.renovacion:
+                        cls.raise_user_error(
+                            'renovacion_eliminar_no_existe',
+                            (mov.renovacion, mov.poliza.rec_name))
+                    elif mov.renovacion != pl.renovacion:
+                        cls.raise_user_warning(
+                            str(mov.id),
+                            'renovacion_difiere',
+                            (mov.renovacion, pl.renovacion))
+                    else:
+                        renovacion_no = pl.renovacion
 
             ajustar_prima = False
             if mov.tipo_endoso not in ['iniciacion', 'renovacion']:

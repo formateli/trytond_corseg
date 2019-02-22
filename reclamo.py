@@ -110,7 +110,7 @@ class Reclamo(Workflow, ModelSQL, ModelView):
         }, depends=['currency_digits'])
     descripcion = fields.Text('Descripcion', size=None,
         states={
-            'readonly': Not(In(Eval('state'), ['borrador', 'procesado'])),
+            'readonly': In(Eval('state'), ['finiquito', 'aprobado', 'cancelado']),
         }, depends=['state'])
     comentarios = fields.One2Many('corseg.poliza.reclamo.comentario',
         'reclamo', 'Comentarios')
