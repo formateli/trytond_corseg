@@ -18,4 +18,8 @@ this repository contains the full copyright notices and license terms. -->
     <field name="prima"/>
     <label name="total"/>
     <field name="total"/>
+    <label name="pagos"/>
+    <field name="pagos"/>
+    <label name="saldo"/>
+    <field name="saldo"/>
 </form>

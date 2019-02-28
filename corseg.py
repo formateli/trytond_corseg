@@ -470,9 +470,15 @@ class Renovacion(ModelSQL, ModelView):
         digits=(16, Eval('_parent_currency_digits', 2)), readonly=True)
     prima = fields.Numeric('Prima',
         digits=(16, Eval('_parent_currency_digits', 2)), readonly=True)
+    pagos = fields.Function(fields.Numeric('Pagos',
+            digits=(16, Eval('_parent_currency_digits', 2))),
+        'get_pagos')
     total = fields.Function(fields.Numeric('Total',
             digits=(16, Eval('_parent_currency_digits', 2))),
         'get_total')
+    saldo = fields.Function(fields.Numeric('Saldo',
+            digits=(16, Eval('_parent_currency_digits', 2))),
+        'get_saldo')
 
     @classmethod
     def __setup__(cls):
@@ -504,6 +510,26 @@ class Renovacion(ModelSQL, ModelView):
         if self.prima:
             result += self.prima
         return result
+
+    def get_pagos(self, name):
+        pool = Pool()
+        Pago = pool.get('corseg.poliza.pago')
+        result = Decimal('0.0')
+        print(self.poliza)
+        print(self.prima)
+        print(self.renovacion)
+        if self.poliza and self.prima is not None \
+                and self.renovacion is not None:
+            pagos = Pago.search([
+                    ('poliza', '=', self.poliza.id),
+                    ('renovacion', '=', self.renovacion)
+                ])
+            for pago in pagos:
+                result += pago.monto
+        return result
+
+    def get_saldo(self, name):
+        return self.total - self.pagos
 
     @classmethod
     def validate(cls, renovaciones):

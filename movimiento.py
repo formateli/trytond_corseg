@@ -445,6 +445,7 @@ class Movimiento(Workflow, ModelSQL, ModelView):
     def __setup__(cls):
         super(Movimiento, cls).__setup__()
         cls._order = [
+                ('renovacion', 'DESC'),
                 ('number', 'DESC'),
                 ('fecha', 'DESC'),
             ]
@@ -885,9 +886,10 @@ class Movimiento(Workflow, ModelSQL, ModelView):
                             (mov.renovacion, mov.poliza.rec_name))
                     elif mov.renovacion != pl.renovacion:
                         cls.raise_user_warning(
-                            str(mov.id),
+                            'movdifiere' + str(mov.id),
                             'renovacion_difiere',
                             (mov.renovacion, pl.renovacion))
+                        renovacion_no = mov.renovacion
                     else:
                         renovacion_no = pl.renovacion
 

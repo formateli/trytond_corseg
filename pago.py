@@ -202,6 +202,7 @@ class Pago(Workflow, ModelSQL, ModelView):
                 'comision_vendedor_mayor': ('El monto de la Comision Vendedor '
                     'no debe ser mayor al monto de la Comision Cia. Pago "%s".'),
                 'renovacion_no_valida': ('Renovacion no valida. Pago "%s".'),
+                'pago_verificar_fecha': ('Existe un pago ("%s") registrado con la misma fecha.'),
                 })
         cls._transitions |= set(
             (
@@ -505,6 +506,21 @@ class Pago(Workflow, ModelSQL, ModelView):
                 cls.raise_user_error('renovacion_no_valida', (pago.rec_name,))
 
     @classmethod
+    def _verificar_pago_fecha(cls, pago):
+        Pago = Pool().get('corseg.poliza.pago')
+        pagos = Pago.search([
+                ('poliza', '=', pago.poliza.id),
+                ('fecha', '=', pago.fecha),
+                ('id', '!=', pago.id),
+            ])
+
+        if pagos:
+            cls.raise_user_warning(
+                'pagofecha-' + str(pago.id),
+                'pago_verificar_fecha',
+                (pagos[0].number,))
+
+    @classmethod
     @ModelView.button
     @Workflow.transition('borrador')
     def borrador(cls, movs):
@@ -525,6 +541,7 @@ class Pago(Workflow, ModelSQL, ModelView):
     def confirmar(cls, pagos):
         cls.validar_renovacion(pagos)
         for pago in pagos:
+            cls._verificar_pago_fecha(pago)
             if pago.sustituir:
                 if pago.pago_sustituir.state != 'confirmado':
                     cls.raise_user_error(

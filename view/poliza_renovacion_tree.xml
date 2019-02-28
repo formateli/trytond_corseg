@@ -10,4 +10,6 @@ this repository contains the full copyright notices and license terms. -->
     <field name="suma_asegurada"/>
     <field name="prima"/>
     <field name="total"/>
+    <field name="pagos"/>
+    <field name="saldo"/>
 </tree>
