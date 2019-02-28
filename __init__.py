@@ -11,6 +11,7 @@ from .movimiento import *
 from .pago import *
 from .liquidacion import *
 from .reclamo import *
+from .party import *
 
 
 def register():
@@ -64,4 +65,5 @@ def register():
         Reclamo,
         ReclamoComentario,
         ReclamoDocumento,
+        Party,
         module='corseg', type_='model')
