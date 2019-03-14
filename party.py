@@ -25,9 +25,9 @@ class Party:
         pool = Pool()
         Poliza = pool.get('corseg.poliza')
         if self.id:
-            polizas = Poliza.search([
-                ('contratante', '=', self.id),
-            ])
+            polizas = Poliza.search_read([
+                    ('contratante', '=', self.id),
+                ], fields_names=['id'])
             if polizas:
                 return True
 
@@ -35,7 +35,7 @@ class Party:
     def search_is_contratante(cls, name, clause):
         pool = Pool()
         Poliza = pool.get('corseg.poliza')
-        Party = pool.get('corseg.poliza')
+        Party = pool.get('party.party')
         result = []
         v = clause[2]
         parties = Party.search_read([], fields_names=['id'])

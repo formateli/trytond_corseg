@@ -63,7 +63,7 @@ class Pago(Workflow, ModelSQL, ModelView):
             If(
                 In(Eval('state'), ['confirmado']),
                 [('state', '!=', '')],
-                [('state', '!=', 'cancelado')]
+                [('state', 'not in', ['new',])]
             )
         ],
         states=_STATES, depends=['company', 'state'])
@@ -195,14 +195,13 @@ class Pago(Workflow, ModelSQL, ModelView):
                     'debe tener un estado de "Confirmado".'),
                 'pago_cero': ('El monto del Pago "%s" '
                     'debe ser diferente a cero.'),
-                'comision_menor_cero': ('El monto de la Comision %s '
-                    'no de ser menor que cero. Pago "%s"'),
                 'comision_cia_mayor': ('El monto de la Comision Cia '
                     'no debe ser mayor al monto del Pago "%s".'),
                 'comision_vendedor_mayor': ('El monto de la Comision Vendedor '
                     'no debe ser mayor al monto de la Comision Cia. Pago "%s".'),
                 'renovacion_no_valida': ('Renovacion no valida. Pago "%s".'),
-                'pago_verificar_fecha': ('Existe un pago ("%s") registrado con la misma fecha.'),
+                'pago_verificar_fecha': ('Existe un pago ("%s" estado: "%s") ' 
+                    'registrado con la misma fecha.'),
                 })
         cls._transitions |= set(
             (
@@ -474,12 +473,6 @@ class Pago(Workflow, ModelSQL, ModelView):
             if pago.monto == 0:
                 cls.raise_user_error(
                     'pago_cero', (pago.rec_name,))
-            #if pago.comision_cia < 0:
-            #    cls.raise_user_error(
-            #        'comision_menor_cero', ('Cia', pago.rec_name,))
-            #if pago.comision_vendedor < 0:
-            #    cls.raise_user_error(
-            #        'comision_menor_cero', ('Vendedor', pago.rec_name,))
             #if pago.comision_cia > pago.monto:
             #    cls.raise_user_error(
             #        'comision_cia_mayor', (pago.rec_name,))
@@ -513,12 +506,13 @@ class Pago(Workflow, ModelSQL, ModelView):
                 ('fecha', '=', pago.fecha),
                 ('id', '!=', pago.id),
             ])
-
+        print(pago.id)
+        print(pagos)
         if pagos:
             cls.raise_user_warning(
                 'pagofecha-' + str(pago.id),
                 'pago_verificar_fecha',
-                (pagos[0].number,))
+                (pagos[0].rec_name, pagos[0].state))
 
     @classmethod
     @ModelView.button
