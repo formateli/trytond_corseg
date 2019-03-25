@@ -2,11 +2,6 @@
 #this repository contains the full copyright notices and license terms.
 from trytond.transaction import Transaction
 from trytond.pool import Pool
-from email.header import Header
-from email.utils import formataddr, getaddresses
-from trytond.report import get_email
-from trytond.sendmail import sendmail_transactional, SMTPDataManager
-from trytond.config import config
 from trytond.model import Workflow, ModelSQL, ModelView, fields
 from trytond.pyson import Eval, If, Bool, Not, In, And
 from trytond.modules.corseg.tools import \
@@ -277,74 +272,6 @@ class Reclamo(Workflow, ModelSQL, ModelView):
     @classmethod
     def search_contratante(cls, name, clause):
         return [('poliza.contratante',) + tuple(clause[1:])]
-
-    @classmethod
-    def run_seguimiento(cls):
-        pool = Pool()
-        Date = pool.get('ir.date')
-        fecha = Date.today()
-
-        datamanager = SMTPDataManager()
-        Transaction().join(datamanager)
-
-        cls._send_email(datamanager, fecha)
-
-    @classmethod
-    def _send_email(cls, datamanager, fecha):
-        pool = Pool()
-        Configuration = pool.get('ir.configuration')
-        ReportEmailSimple =  pool.get('corseg_pandv.report_email_simple')
-        Lang = pool.get('ir.lang')
-
-        reporte = ReportEmailSimple.search([
-                ('code', '=', 'reclamo_seguimiento'),
-            ])
-
-        if not reporte:
-            return
-        reporte = reporte[0]
-
-        from_ = formataddr(
-            ('P&V Corredores de Seguros',
-            config.get('email', 'from')))
-
-        to = []
-        cc = []
-        for usuario in reporte.usuarios:
-            if usuario.send_email and \
-                    usuario.user.email:
-                name = str(Header(usuario.user.name))
-                addr = formataddr(
-                    (name, usuario.user.email))
-                if len(to) > 0:
-                    cc.append(addr)
-                else:
-                    to.append(addr)
-
-        bcc = []
-        languages = set()
-        lang, = Lang.search([
-                ('code', '=', Configuration.get_language()),
-                ], limit=1)
-        languages.add(lang)
-
-        msg = cls._email(from_, to, cc, bcc, languages, reporte, {'fecha': fecha})
-        to_addrs = [e for _, e in getaddresses(to + cc + bcc)]
-        if to_addrs:
-            sendmail_transactional(
-                from_, to_addrs, msg, datamanager=datamanager)
-
-    @classmethod
-    def _email(cls, from_, to, cc, bcc, languages, reporte, data):
-        # TODO order languages to get default as last one for title
-        msg, title = reporte.get_email(reporte.templates[0].template, languages, data)
-        msg['From'] = from_
-        msg['To'] = ', '.join(to)
-        msg['Cc'] = ', '.join(cc)
-        msg['Bcc'] = ', '.join(bcc)
-        msg['Subject'] = Header(title, 'utf-8')
-        msg['Auto-Submitted'] = 'auto-generated'
-        return msg
 
     @classmethod
     def set_number(cls, reclamos):
