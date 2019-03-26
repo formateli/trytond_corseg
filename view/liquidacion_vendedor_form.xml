@@ -43,7 +43,7 @@ this repository contains the full copyright notices and license terms. -->
             <field name="canceled_date"/>
         </page>
     </notebook>
-    <group col="6" colspan="4" id="buttons" yfill="1">
+    <group col="7" colspan="4" id="buttons" yfill="1">
         <label name="state"/>
         <field name="state"/>
         <button name="cancelar" string="Cancelado"
@@ -53,5 +53,6 @@ this repository contains the full copyright notices and license terms. -->
             icon="tryton-ok"/>
         <button name="confirmar" string="Confirmar"
             icon="tryton-go-next"/>
+        <button name="volver_procesar" string="Volver a Procesar"/>
     </group>
 </form>

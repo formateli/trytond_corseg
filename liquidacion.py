@@ -110,6 +110,10 @@ class LiquidacionBase(Workflow, ModelSQL, ModelView):
                 'icon': If(Eval('state') == 'cancelado',
                     'tryton-clear', 'tryton-go-previous'),
                 },
+            'volver_procesar': {
+                'invisible': Not(In(Eval('state'), ['confirmado'])),
+                'icon': 'tryton-go-previous',
+                },
             })
 
     @staticmethod
@@ -485,6 +489,20 @@ class LiquidacionVendedor(LiquidacionBase):
             set_auditoria(liq, 'canceled')
             liq.save()
         cls.store_cache(liqs)
+
+    @classmethod
+    @ModelView.button
+    def volver_procesar(cls, liqs):
+        for liq in liqs:
+            for pago in liq.pagos:
+                for ajuste in pago.ajustes_comision_vendedor:
+                    ajuste.state = 'procesado'
+                    ajuste.save()
+                pago.liq_vendedor = None
+                pago.state = 'liq_cia'
+                pago.save()
+            liq.state = 'procesado'
+            liq.save()
 
 
 class LiquidacionPagoCia(ModelSQL):

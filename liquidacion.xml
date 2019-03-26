@@ -476,5 +476,16 @@ contains the full copyright notices and license terms. -->
             <field name="button" ref="liquidacion_vendedor_borrador_button"/>
             <field name="group" ref="group_corseg_admin"/>
         </record>
+
+        <record model="ir.model.button" id="liquidacion_vendedor_volver_procesar_button">
+            <field name="name">volver_procesar</field>
+            <field name="model"
+                search="[('model', '=', 'corseg.liquidacion.vendedor')]"/>
+        </record>
+        <record model="ir.model.button-res.group"
+            id="liquidacion_vendedor_volver_procesar_button_group_corseg_admin">
+            <field name="button" ref="liquidacion_vendedor_volver_procesar_button"/>
+            <field name="group" ref="group_corseg_admin"/>
+        </record>
     </data>
 </tryton>
