@@ -429,9 +429,7 @@ class Poliza(ModelSQL, ModelView):
             for pago in self.pagos:
                 if pago.renovacion != self.renovacion:
                     continue
-                if pago.state not in \
-                        ['borrador', 'procesado',
-                        'sustituido', 'cancelado']:
+                if pago.state not in pago.valid_states():
                     res += pago.monto
         return res
 
@@ -515,14 +513,12 @@ class Renovacion(ModelSQL, ModelView):
         pool = Pool()
         Pago = pool.get('corseg.poliza.pago')
         result = Decimal('0.0')
-        print(self.poliza)
-        print(self.prima)
-        print(self.renovacion)
         if self.poliza and self.prima is not None \
                 and self.renovacion is not None:
             pagos = Pago.search([
                     ('poliza', '=', self.poliza.id),
-                    ('renovacion', '=', self.renovacion)
+                    ('renovacion', '=', self.renovacion),
+                    ('state', 'not in', Pago.valid_states()),
                 ])
             for pago in pagos:
                 result += pago.monto
@@ -584,7 +580,8 @@ class Renovacion(ModelSQL, ModelView):
             result += reno.total
             pagos = Pago.search([
                     ('poliza', '=', poliza.id),
-                    ('renovacion', '=', reno.renovacion)
+                    ('renovacion', '=', reno.renovacion),
+                    ('state', 'not in', Pago.valid_states()),
                 ])
             for pago in pagos:
                 result -= pago.monto

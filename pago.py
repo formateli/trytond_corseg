@@ -444,6 +444,16 @@ class Pago(Workflow, ModelSQL, ModelView):
     def search_contratante(cls, name, clause):
         return [('poliza.contratante',) + tuple(clause[1:])]
 
+    @staticmethod
+    def valid_states():
+        states = [
+            'borrador',
+            'procesado',
+            'sustituido',
+            'cancelado'
+        ]
+        return states
+
     @classmethod
     def set_number(cls, pagos):
         pool = Pool()
