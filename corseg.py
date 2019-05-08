@@ -322,6 +322,9 @@ class Poliza(ModelSQL, ModelView):
         'poliza', 'Comentarios')
     documentos = fields.One2Many('corseg.poliza.documento',
         'poliza', 'Documentos')
+    vencida = fields.Function(
+            fields.Boolean('Vencida'),
+            'get_vencida')
     state = fields.Selection([
             ('new', 'Nuevo'),
             ('vigente', 'Vigente'),
@@ -371,6 +374,17 @@ class Poliza(ModelSQL, ModelView):
             company = Company(company)
             return company.currency.digits
         return 2
+
+    def get_vencida(self, name):
+        pool = Pool()
+        Date = pool.get('ir.date')
+        if self.state != 'vigente':
+            return False
+        if not self.f_fin:
+            return False
+        if self.f_fin < Date.today():
+            return True
+        return False
 
     def get_rec_name(self, name):
         return self.cia.rec_name + ' / ' + self.numero
