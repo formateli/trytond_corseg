@@ -380,9 +380,9 @@ class Poliza(ModelSQL, ModelView):
         Date = pool.get('ir.date')
         if self.state != 'vigente':
             return False
-        if not self.f_fin:
+        if not self.f_hasta:
             return False
-        if self.f_fin < Date.today():
+        if self.f_hasta < Date.today():
             return True
         return False
 
