@@ -609,7 +609,6 @@ class Vendedor(ModelSQL, ModelView):
     party = fields.Many2One('party.party', 'Party', required=True,
             ondelete='CASCADE')
     alias = fields.Char('Alias')
-    # TODO liquidaciones
     active = fields.Boolean('Activo')
 
     @staticmethod
