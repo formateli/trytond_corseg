@@ -73,7 +73,6 @@ class Certificado(ModelSQL, ModelView):
         states={
             'readonly': Not(In(Eval('state'), ['new',])),
         })
-
     fecha_inclusion = fields.Function(fields.Date('Incluido'),
         'get_fecha_inclusion')
     fecha_exclusion = fields.Function(fields.Date('Excluido'),
