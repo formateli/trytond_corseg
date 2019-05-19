@@ -5,15 +5,19 @@
 Modulo corseg
 =============
 
-corseg es un modulo basico que define diferentes caracteristicas del modelo de negocios del corretaje de seguros.
+corseg es un modulo basico que define diferentes caracteristicas del modelo de
+negocios del corretaje de seguros.
 
     - Compañias de seguros
     - Ramos
     - Polizas
-    - Emisiones
     - Certificados
-    - Asegurados
-    - Beneficiarios / Dependientes (Extendidos)
+        - Asegurados
+        - Beneficiarios / Dependientes (Extendidos)
+    - Coticaziones.
+    - Pagos
+    - Reclamos
+    - Etc.
 
 License
 -------
