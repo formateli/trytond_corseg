@@ -290,6 +290,36 @@ contains the full copyright notices and license terms. -->
         <menuitem name="Polizas" parent="menu_corseg"
             id="menu_corseg_poliza" sequence="30"/>
 
+        <!-- Contratantes -->
+
+        <record model="ir.action.act_window" id="act_contratante_form">
+            <field name="name">Contratantes</field>
+            <field name="res_model">party.party</field>
+        </record>
+        <record model="ir.action.act_window.view" id="act_contratante_form_view1">
+            <field name="sequence" eval="10"/>
+            <field name="view" ref="party.party_view_tree"/>
+            <field name="act_window" ref="act_contratante_form"/>
+        </record>
+        <record model="ir.action.act_window.view" id="act_contratante_form_view2">
+            <field name="sequence" eval="20"/>
+            <field name="view" ref="party.party_view_form"/>
+            <field name="act_window" ref="act_contratante_form"/>
+        </record>
+
+        <record model="ir.action.act_window.domain"
+                id="act_contratante_form_domain_all">
+            <field name="name">Contratantes</field>
+            <field name="sequence" eval="10"/>
+            <field name="domain" eval="[('is_contratante', '=', True)]" pyson="1"/>
+            <field name="count" eval="True"/>
+            <field name="act_window" ref="act_contratante_form"/>
+        </record>
+
+        <menuitem parent="menu_corseg_poliza" sequence="25"
+            action="act_contratante_form" id="menu_contratante_tree"/>
+
+
         <!-- Poliza -->
         <record model="ir.ui.view" id="poliza_view_form">
             <field name="model">corseg.poliza</field>

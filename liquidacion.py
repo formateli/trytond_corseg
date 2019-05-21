@@ -244,8 +244,8 @@ class LiquidacionCia(LiquidacionBase):
         res = Decimal('0.0')
         if self.monto_pagado:
             res = self.monto_pagado
-            if self.total:
-                res -= self.total
+        if self.total:
+            res -= self.total
         return res
 
     @classmethod

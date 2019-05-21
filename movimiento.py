@@ -82,7 +82,6 @@ class Certificado(ModelSQL, ModelView):
             'readonly': True,
             'invisible': Not(In(Eval('state'), ['excluido', 'eliminado'])),
         }, depends=['state'])
-
     descripcion = fields.Text('Descripcion', size=None)
     extendidos = fields.One2Many(
         'corseg.poliza.certificado.extension',

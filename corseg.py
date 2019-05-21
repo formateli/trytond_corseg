@@ -101,7 +101,7 @@ class CiaProducto(ModelSQL, ModelView, CompanyMultiValueMixin):
 class GrupoPoliza(ModelSQL, ModelView):
     'Grupo de Polizas'
     __name__ = 'corseg.poliza.grupo'
-    company = fields.Many2One('company.company', 'Company', required=True,
+    company = fields.Many2One('company.company', 'Empresa', required=True,
         states={
             'readonly': True,
         },
@@ -110,9 +110,9 @@ class GrupoPoliza(ModelSQL, ModelView):
                 Eval('context', {}).get('company', -1)),
         ], select=True)
     name = fields.Char('Nombre', required=True)
-    parent = fields.Many2One('corseg.poliza.grupo', 'Parent', select=True)
+    parent = fields.Many2One('corseg.poliza.grupo', 'Padre', select=True)
     childs = fields.One2Many('corseg.poliza.grupo',
-        'parent', 'Children', readonly=True)
+        'parent', 'Hijos', readonly=True)
     polizas = fields.One2Many('corseg.poliza',
         'grupo', 'Polizas', readonly=True)
     description = fields.Char('Descripcion', size=None)
@@ -217,7 +217,7 @@ class Poliza(ModelSQL, ModelView):
             depends=['company']
         )
     cia = fields.Many2One('corseg.cia',
-        'Compania de Seguros', required=True,
+        'Cia de Seguros', required=True,
         states={
             'readonly': Not(In(Eval('state'), ['new'])),
             },
