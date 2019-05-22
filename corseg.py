@@ -467,6 +467,31 @@ class Poliza(ModelSQL, ModelView):
     def search_ramo(cls, name, clause):
         return [('cia_producto.ramo',) + tuple(clause[1:])]
 
+    @classmethod
+    def write(cls, *args):
+        super(Poliza, cls).write(*args)
+        pool = Pool()
+        Party = pool.get('party.party')
+        actions = iter(args)
+        args = []
+        parties = []
+        for polizas, values in zip(actions, actions):
+            for poliza in polizas:
+                if poliza.contratante:
+                    parties.append(poliza.contratante)
+        Party.set_is_contratante(parties)
+
+    @classmethod
+    def delete(cls, polizas):
+        super(Poliza, cls).delete(polizas)
+        pool = Pool()
+        Party = pool.get('party.party')
+        parties = []
+        for poliza in polizas:
+            if poliza.contratante:
+                parties.append(poliza.contratante)
+        Party.set_is_contratante(parties)
+
 
 class Renovacion(ModelSQL, ModelView):
     'Poliza Renovacion'
