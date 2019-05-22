@@ -19,14 +19,6 @@ class Party:
             'invisible': Not(Bool(Eval('is_contratante'))),
         }, depends=['is_contratante'])
 
-    @classmethod
-    def __register__(cls, module_name):
-        super(Party, cls).__register__(module_name)
-
-        Partys = Pool().get('party.party')
-        parties = Partys.search([])
-        Partys.set_is_contratante(parties)
-
     def _get_is_contratante(self):
         pool = Pool()
         Poliza = pool.get('corseg.poliza')
@@ -42,26 +34,6 @@ class Party:
         for party in parties:
             party.is_contratante = party._get_is_contratante()
             party.save()
-
-#    @classmethod
-#    def search_is_contratante(cls, name, clause):
-#        pool = Pool()
-#        Poliza = pool.get('corseg.poliza')
-#        Party = pool.get('party.party')
-#        result = []
-#        v = clause[2]
-#        parties = Party.search_read([], fields_names=['id'])
-#        for party in parties:
-#            polizas = Poliza.search_read([
-#                ('contratante', '=', party['id']),
-#            ], fields_names=['id'])
-
-#            if v and polizas:
-#                result.append(party['id'])
-#            elif not v and not polizas:
-#                result.append(party['id'])
-
-#        return ['id', 'in', result]
 
 
 class PartyReplace:
