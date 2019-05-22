@@ -5,7 +5,7 @@ from trytond.model import fields
 from trytond.pool import PoolMeta, Pool
 from trytond.pyson import Eval, Not, Bool
 
-__all__ = ['Party']
+__all__ = ['Party', 'PartyReplace']
 
 
 class Party:
@@ -48,5 +48,22 @@ class Party:
                 result.append(party['id'])
             elif not v and not polizas:
                 result.append(party['id'])
-        
+
         return ['id', 'in', result]
+
+
+class PartyReplace:
+    __metaclass__ = PoolMeta
+    __name__ = 'party.replace'
+
+    @classmethod
+    def fields_to_replace(cls):
+        return super(PartyReplace, cls).fields_to_replace() + [
+                ('corseg.cia', 'party'),
+                ('corseg.poliza', 'contratante'),
+                ('corseg.vendedor', 'party'),
+                ('corseg.poliza.certificado', 'asegurado'),
+                ('corseg.poliza.certificado.extension', 'extendido'),
+                ('corseg.poliza.movimiento', 'contratante'),
+                ('corseg.poliza.certificado.modificacion', 'asegurado'),
+            ]

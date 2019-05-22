@@ -67,3 +67,6 @@ def register():
         ReclamoDocumento,
         Party,
         module='corseg', type_='model')
+    Pool.register(
+        PartyReplace,
+        module='corseg', type_='wizard')
