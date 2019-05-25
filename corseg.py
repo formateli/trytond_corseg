@@ -248,11 +248,11 @@ class Poliza(ModelSQL, ModelView):
     renovacion = fields.Function(fields.Integer('Renovacion actual'),
         'get_renovacion_dato')
     f_emision = fields.Function(fields.Date('Emitida el'),
-        'get_renovacion_dato')
+        'get_renovacion_dato', searcher='search_fecha')
     f_desde = fields.Function(fields.Date('Desde:'),
-        'get_renovacion_dato')
+        'get_renovacion_dato', searcher='search_fecha')
     f_hasta = fields.Function(fields.Date('Hasta:'),
-        'get_renovacion_dato')
+        'get_renovacion_dato', searcher='search_fecha')
     suma_asegurada = fields.Function(fields.Numeric('Suma Asegurada',
             digits=(16, Eval('currency_digits', 2)),
             depends=['currency_digits']),
@@ -466,6 +466,18 @@ class Poliza(ModelSQL, ModelView):
     @classmethod
     def search_ramo(cls, name, clause):
         return [('cia_producto.ramo',) + tuple(clause[1:])]
+
+    @classmethod
+    def search_fecha(cls, name, clause):
+        pool = Pool()
+        Renovacion = pool.get('corseg.poliza.renovacion')
+        res = []
+        domain= [(name, clause[1], clause[2])]
+        renovaciones = Renovacion.search(domain)
+        for renovacion in renovaciones:
+            if renovacion.renovacion == renovacion.poliza.renovacion:
+                res.append(renovacion.poliza.id)
+        return [('id', 'in', res)]
 
     @classmethod
     def write(cls, *args):
