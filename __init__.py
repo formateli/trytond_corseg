@@ -3,70 +3,70 @@
 # contains the full copyright notices and license terms.
 
 from trytond.pool import Pool
-from .configuration import *
-from .corseg import *
-from .comision import *
-from .vehiculo import *
-from .movimiento import *
-from .pago import *
-from .liquidacion import *
-from .reclamo import *
-from .party import *
+from . import configuration
+from . import corseg
+from . import comision
+from . import vehiculo
+from . import movimiento
+from . import pago
+from . import liquidacion
+from . import reclamo
+from . import party
 
 
 def register():
     Pool.register(
-        Configuration,
-        ConfigurationSequences,
-        PartyCorseg,
-        Certificado,
-        CertificadoInclusion,
-        CertificadoExclusion,
-        CertificadoModificacion,
-        Extension,
-        ExtendidoInclusion,
-        ExtendidoExclusion,
-        CiaProducto,
-        CiaSeguros,
-        TipoComision,
-        Comision,
-        ComisionLinea,
-        ComisionVendedor,
-        ComisionVendedorLinea,
-        ComisionPolizaCia,
-        ComisionPolizaVendedor,
-        ComisionMovimientoCia,
-        ComisionMovimientoVendedor,
-        CiaProductoComisiones,
-        ComisionAjusteCia,
-        ComisionAjusteCiaCompensacion,
-        ComisionAjusteVendedor,
-        GrupoPoliza,
-        Movimiento,
-        ComentarioPoliza,
-        OrigenPoliza,
-        PolizaDocumento,
-        Poliza,
-        Renovacion,
-        Ramo,
-        VehiculoMarca,
-        VehiculoModelo,
-        VehiculoTipo,
-        Vehiculo,
-        VehiculoModificacion,
-        Vendedor,
-        FormaPago,
-        FrecuenciaPago,
-        Pago,
-        LiquidacionCia,
-        LiquidacionVendedor,
-        LiquidacionPagoCia,
-        LiquidacionPagoVendedor,
-        Reclamo,
-        ReclamoComentario,
-        ReclamoDocumento,
-        Party,
+        configuration.Configuration,
+        configuration.ConfigurationSequences,
+        corseg.CiaProducto,
+        corseg.CiaSeguros,
+        corseg.ComentarioPoliza,
+        corseg.OrigenPoliza,
+        corseg.PolizaDocumento,
+        corseg.Poliza,
+        corseg.Renovacion,
+        corseg.Ramo,
+        corseg.GrupoPoliza,
+        corseg.Vendedor,
+        comision.TipoComision,
+        comision.Comision,
+        comision.ComisionLinea,
+        comision.ComisionVendedor,
+        comision.ComisionVendedorLinea,
+        comision.ComisionPolizaCia,
+        comision.ComisionPolizaVendedor,
+        comision.ComisionMovimientoCia,
+        comision.ComisionMovimientoVendedor,
+        comision.CiaProductoComisiones,
+        comision.ComisionAjusteCia,
+        comision.ComisionAjusteCiaCompensacion,
+        comision.ComisionAjusteVendedor,
+        movimiento.PartyCorseg,
+        movimiento.Certificado,
+        movimiento.CertificadoInclusion,
+        movimiento.CertificadoExclusion,
+        movimiento.CertificadoModificacion,
+        movimiento.Extension,
+        movimiento.ExtendidoInclusion,
+        movimiento.ExtendidoExclusion,
+        movimiento.Movimiento,
+        vehiculo.VehiculoMarca,
+        vehiculo.VehiculoModelo,
+        vehiculo.VehiculoTipo,
+        vehiculo.Vehiculo,
+        vehiculo.VehiculoModificacion,
+        pago.FormaPago,
+        pago.FrecuenciaPago,
+        pago.Pago,
+        liquidacion.LiquidacionCia,
+        liquidacion.LiquidacionVendedor,
+        liquidacion.LiquidacionPagoCia,
+        liquidacion.LiquidacionPagoVendedor,
+        reclamo.Reclamo,
+        reclamo.ReclamoComentario,
+        reclamo.ReclamoDocumento,
+        party.Party,
         module='corseg', type_='model')
     Pool.register(
-        PartyReplace,
+        party.PartyReplace,
         module='corseg', type_='wizard')

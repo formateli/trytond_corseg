@@ -29,8 +29,7 @@ _STATES={
 _DEPENDS=['tipo_endoso', 'state']
 
 
-class PartyCorseg:
-    __metaclass__ = PoolMeta
+class PartyCorseg(metaclass=PoolMeta):
     __name__ = 'party.party'
     asegurado_certs = fields.One2Many(
         'corseg.poliza.certificado',
@@ -323,7 +322,7 @@ class Movimiento(Workflow, ModelSQL, ModelView):
         ], 'Tipo Endoso',
         states={
             'invisible': Not(In(Eval('tipo'), ['endoso'])),
-            'requires': In(Eval('tipo'), ['endoso']),
+            'required': In(Eval('tipo'), ['endoso']),
             'readonly': Not(In(Eval('state'), ['borrador'])),
         }, depends=['tipo', 'state']
     )

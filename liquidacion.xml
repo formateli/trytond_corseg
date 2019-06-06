@@ -132,7 +132,33 @@ contains the full copyright notices and license terms. -->
         </record>
 
 
+        <!-- Compensacion -->
+
+        <record model="ir.ui.view" id="comision_compensacion_view_form">
+            <field name="model">corseg.comision.ajuste.cia.compensacion</field>
+            <field name="type">form</field>
+            <field name="name">comision_compensacion_form</field>
+        </record>
+        <record model="ir.ui.view" id="comision_compensacion_view_tree">
+            <field name="model">corseg.comision.ajuste.cia.compensacion</field>
+            <field name="type">tree</field>
+            <field name="name">comision_compensacion_tree</field>
+        </record>
+
+        <record model="ir.ui.view" id="comision_compensacion_dada_view_form">
+            <field name="model">corseg.comision.ajuste.cia.compensacion</field>
+            <field name="type">form</field>
+            <field name="name">comision_compensacion_dada_form</field>
+        </record>
+        <record model="ir.ui.view" id="comision_compensacion_dada_view_tree">
+            <field name="model">corseg.comision.ajuste.cia.compensacion</field>
+            <field name="type">tree</field>
+            <field name="name">comision_compensacion_dada_tree</field>
+        </record>
+
+
         <!-- Ajuste Comision Vendedor -->
+
         <record model="ir.ui.view" id="comision_ajuste_vendedor_view_form">
             <field name="model">corseg.comision.ajuste.vendedor</field>
             <field name="type">form</field>

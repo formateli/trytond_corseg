@@ -486,12 +486,12 @@ class ComisionAjusteCiaCompensacion(ModelSQL, ModelView):
     __name__ = 'corseg.comision.ajuste.cia.compensacion'
 
     ajuste = fields.Many2One('corseg.comision.ajuste.cia',
-        'Ajuste', ondelete='CASCADE', select=True, required=True)
+        'Ajuste', ondelete='CASCADE', select=True, required=True, readonly=True)
     ajuste_compensa = fields.Many2One('corseg.comision.ajuste.cia',
-        'Compensado por', required=True)
+        'Compensado por', required=True, readonly=True)
     monto = fields.Numeric('Monto', required=True,
-            digits=(16, Eval('_parent_currency_digits', 2))
-
+            digits=(16, Eval('_parent_currency_digits', 2)),
+            readonly=True
         )
 
 

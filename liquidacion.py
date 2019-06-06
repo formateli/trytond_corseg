@@ -201,7 +201,7 @@ class LiquidacionCia(LiquidacionBase):
     'Liquidacion Comisiones Cia de Seguros'
     __name__ = 'corseg.liquidacion.cia'
     cia = fields.Many2One(
-        'corseg.cia', 'Compania de Seguros', required=True,
+        'corseg.cia', 'Cia de Seguros', required=True,
         states={
             'readonly': Not(In(Eval('state'), ['borrador',])),
         }, depends=['state'])
