@@ -1,0 +1,85 @@
+<?xml version="1.0"?>
+<!-- This file is part of Tryton.  The COPYRIGHT file at the top level of
+this repository contains the full copyright notices and license terms. -->
+<tryton>
+    <data group="1">
+        <record model="ir.message" id="msg_delete_borrador_corseg">
+            <field name="text">El documento %(doc_name)s "%(doc_number)s" debe estar en estado "%(state)s" para poder ser eliminado.</field>
+        </record>
+        <record model="ir.message" id="msg_fecha_emision_mayor">
+            <field name="text">La fecha de emision de la poliza "%(poliza)s" no puede ser mayor a la fecha de inicio de la vigencia. Renovacion: "%(renovacion)s".</field>
+        </record>
+        <record model="ir.message" id="msg_fecha_hasta_menor">
+            <field name="text">La fecha de finalizacion de la vigencia de la poliza "%(poliza)s" no puede ser menor que la fecha de inicio de la misma. Renovacion: "%(renovacion)s".</field>
+        </record>
+        <record model="ir.message" id="msg_dias_diff_emision">
+            <field name="text">La fecha de emision tiene mas de "%(dias)s" de diferencia con respecto a la fecha de inicio de la vigencia de la poliza "%(poliza)s" no puede ser menor que la fecha de inicio de la misma. Renovacion: "%(renovacion)s".</field>
+        </record>
+        <record model="ir.message" id="msg_dias_diff_vigencia">
+            <field name="text">La diferencia entre el inicio y la finalizacion de la vigencia de la poliza "%(poliza)s" es mayor a "%(dias)s" dias. Renovacion: "%(renovacion)s".</field>
+        </record>
+        <record model="ir.message" id="msg_fecha_renovacion_desde_menor">
+            <field name="text">La fecha de inicio de la vigencia  de la poliza "%(poliza)s" no debe ser menor a la fecha de finalizacion de la vigencia anterior. Renovacion: "%(renovacion)s".</field>
+        </record>
+        <record model="ir.message" id="msg_ajuste_state_liquidacion">
+            <field name="text">El Estado del Ajuste "%(ajuste)s" no es valido.</field>
+        </record>
+        <record model="ir.message" id="msg_pago_estado_liquidacion">
+            <field name="text">El Estado del Pago "%(pago)s" debe ser "%(state)s".</field>
+        </record>
+        <record model="ir.message" id="msg_diff_no_cero_liquidacion">
+            <field name="text">La diferencia debe ser igual a cero. Liquidacion: "%(liquidacion)s".</field>
+        </record>
+        <record model="ir.message" id="msg_certificado_delete_state">
+            <field name="text">El Certificado "%(certificado)s" debe ser "%(state)s" para poder eliminarse.</field>
+        </record>
+        <record model="ir.message" id="msg_certificado_inclusiones">
+            <field name="text">El Certificado "%(certificado)s" forma parte de un Movimiento.</field>
+        </record>
+        <record model="ir.message" id="msg_certificado_inclusion_exclusion">
+            <field name="text">El %(doc_name)s "%(doc_number)s" debe estar "%(doc_number)s" antes de la %(accion)s.</field>
+        </record>
+        <record model="ir.message" id="msg_poliza_inicia_movimiento">
+            <field name="text">El primer movimiento para la poliza "%(poliza)s" debe ser un endoso de tipo "Iniciacion".</field>
+        </record>
+        <record model="ir.message" id="msg_poliza_un_inicia_movimiento">
+            <field name="text">Solo debe existir un movimiento de "Iniciacion" de tipo endoso para la poliza "%(poliza)s"</field>
+        </record>
+        <record model="ir.message" id="msg_poliza_reactiva_movimiento">
+            <field name="text">La "%(poliza)s" debe estar "Cancelada" para poder ser reactivada.</field>
+        </record>
+        <record model="ir.message" id="msg_poliza_reactiva_otro_movimiento">
+            <field name="text">La "%(poliza)s" debe ser "Reactivada" para poder modificarla.</field>
+        </record>
+        <record model="ir.message" id="msg_certificado_poliza_movimiento">
+            <field name="text">El certificado "%(certificado)s" debe pertenecer a la misma poliza del movimiento.</field>
+        </record>
+        <record model="ir.message" id="msg_extension_certificado_nuevo_movimiento">
+            <field name="text">El estado del extendido "%(extendido)s" debe ser "Nuevo" para los certificados nuevos.</field>
+        </record>
+        <record model="ir.message" id="msg_eliminar_renovacion_movimiento">
+            <field name="text">No puede eliminarse la renovacion "%(renovacion)s" de la poliza "%(poliza)s" porque tienes %(doc_name)s asociados.</field>
+        </record>
+        <record model="ir.message" id="msg_eliminar_renovacion_no_existe_movimiento">
+            <field name="text">No puede eliminarse la renovacion "%(renovacion)s" porque esta no existe para la poliza "%(poliza)s"</field>
+        </record>
+        <record model="ir.message" id="msg_renovacion_inicio_movimiento">
+            <field name="text">No puede asignarse manualmente una renovacion a un tipo de movimiento "Iniciacion" o "Renovacion".</field>
+        </record>
+        <record model="ir.message" id="msg_renovacion_difiere_movimiento">
+            <field name="text">La renovacion "%(renovacion1)s" a aplicar en el movimiento no coincide con la renovacion actual "%(renovacion2)s"</field>
+        </record>
+        <record model="ir.message" id="msg_pago_confirmado_pago">
+            <field name="text">El Pago a sustiruir en el Pago "%(pago)s" debe tener un estado "Confirmado".</field>
+        </record>
+        <record model="ir.message" id="msg_pago_cero_pago">
+            <field name="text">El monto del Pago "%(pago)s" debe ser diferente a cero.</field>
+        </record>
+        <record model="ir.message" id="msg_renovacion_no_valida_pago">
+            <field name="text">Renovacion no valida. Pago "%(pago)s".</field>
+        </record>
+        <record model="ir.message" id="msg_pago_verificar_fecha_pago">
+            <field name="text">Existe un pago ("%(pago)s" estado: "%(state)s") registrado con la misma fecha.</field>
+        </record>
+    </data>
+</tryton>
