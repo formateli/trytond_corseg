@@ -21,7 +21,8 @@ this repository contains the full copyright notices and license terms. -->
     <notebook colspan="4">
         <page string="Compensaciones" id="compensaciones">
             <field name="compensaciones_recibidas" colspan="2"/>
-            <field name="compensaciones_dadas" colspan="2"/>
+            <field name="compensaciones_dadas" colspan="2"
+                view_ids="corseg.comision_compensacion_dada_view_tree,corseg.comision_compensacion_dada_view_form"/>
         </page>
         <page string="Comentarios" id="comentario">
             <field name="comentario" colspan="4"/>

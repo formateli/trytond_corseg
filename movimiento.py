@@ -5,6 +5,8 @@ from trytond.pool import Pool, PoolMeta
 from trytond.transaction import Transaction
 from trytond.model import Workflow, ModelView, ModelSQL, fields
 from trytond.pyson import Eval, If, Not, In, Bool, And, Or, Equal
+from trytond.i18n import gettext
+from trytond.exceptions import UserError, UserWarning
 from .tools import auditoria_field, get_current_date, set_auditoria
 
 __all__ = [
@@ -29,8 +31,7 @@ _STATES={
 _DEPENDS=['tipo_endoso', 'state']
 
 
-class PartyCorseg:
-    __metaclass__ = PoolMeta
+class PartyCorseg(metaclass=PoolMeta):
     __name__ = 'party.party'
     asegurado_certs = fields.One2Many(
         'corseg.poliza.certificado',
@@ -107,15 +108,6 @@ class Certificado(ModelSQL, ModelView):
     def __setup__(cls):
         super(Certificado, cls).__setup__()
 
-        cls._error_messages.update({
-                'delete_new': ('El Certificado "%s" debe ser '
-                    '"Nuevo" para poder eliminarse.'),
-                'delete_excluido': ('El Certificado "%s" debe estar '
-                    '"Excluido" para poder eliminarse.'),
-                'inclusiones': ('El Certificado "%s" forma '
-                    'parte de un movimiento.'),
-                })
-
         cls._buttons.update({
             'eliminar': {
                 'invisible': Not(In(Eval('state'), ['excluido'])),
@@ -172,12 +164,19 @@ class Certificado(ModelSQL, ModelView):
             'poliza.certificado-inclusion-poliza.movimiento')
         for cert in certs:
             if cert.state != 'new':
-                cls.raise_user_error('delete_new', (cert.rec_name,))
+                raise UserError(
+                    gettext('corseg.msg_certificado_delete_state',
+                        certificado=cert.rec_name,
+                        state='Nuevo'
+                        ))
             incls = Inclusion.search([
                     ('certificado', '=', cert.id)
                 ])
             if incls:
-                cls.raise_user_error('inclusiones', (cert.rec_name,))
+                raise UserError(
+                    gettext('corseg.msg_certificado_inclusiones',
+                        certificado=cert.rec_name,
+                        ))
         super(Certificado, cls).delete(certs)
 
     @classmethod
@@ -187,7 +186,11 @@ class Certificado(ModelSQL, ModelView):
         Date = pool.get('ir.date')
         for cert in certs:
             if cert.state != 'excluido':
-                cls.raise_user_error('delete_excluido', (cert.rec_name,))
+                raise UserError(
+                    gettext('corseg.msg_certificado_delete_state',
+                        certificado=cert.rec_name,
+                        state='Excluido'
+                        ))
             cert.fecha_eliminacion = Date.today()
             cert.state = 'eliminado'
             cert.save()
@@ -241,8 +244,6 @@ class Movimiento(Workflow, ModelSQL, ModelView):
         states={
             'readonly': Not(In(Eval('state'), ['borrador',])),
         }, depends=['company', 'state'])
-
-
     renovacion = fields.Integer('Renovacion',
         states={
             'readonly': Not(In(Eval('state'), ['borrador',])),
@@ -262,25 +263,6 @@ class Movimiento(Workflow, ModelSQL, ModelView):
                 ),
             ),
         }, depends=['company', 'state', 'tipo', 'tipo_endoso'])
-
-
-#    renovacion = fields.Integer('Renovacion',
-#        states={
-#            'readonly': Not(In(Eval('state'), ['borrador',])),
-#            'invisible': Or(
-#                    And(
-#                        Not(In(Eval('state'), ['borrador',])),
-#                        Not(In(Eval('tipo'), [None,])),
-#                    ),
-#                    Or(
-#                        In(Eval('tipo'), [None,]),
-#                        And(
-#                            Not(In(Eval('tipo'), [None,])),
-#                            In(Eval('tipo_endoso'), ['iniciacion', 'renovacion'])
-#                        ),
-#                    ),
-#                ),
-#        }, depends=['company', 'state', 'tipo', 'tipo_endoso'])
     renovacion_actual = fields.Function(
             fields.Integer('Renovacion Actual'),
             'on_change_with_renovacion_actual'
@@ -323,7 +305,7 @@ class Movimiento(Workflow, ModelSQL, ModelView):
         ], 'Tipo Endoso',
         states={
             'invisible': Not(In(Eval('tipo'), ['endoso'])),
-            'requires': In(Eval('tipo'), ['endoso']),
+            'required': In(Eval('tipo'), ['endoso']),
             'readonly': Not(In(Eval('state'), ['borrador'])),
         }, depends=['tipo', 'state']
     )
@@ -447,40 +429,7 @@ class Movimiento(Workflow, ModelSQL, ModelView):
                 ('number', 'DESC'),
                 ('fecha', 'DESC'),
             ]
-        cls._error_messages.update({
-                'delete_cancel': ('El movimiento "%s" debe estar '
-                    'cancelado antes de eliminarse.'),
-                'poliza_inicia': ('El primer movimiento para la poliza "%s" debe '
-                    'ser un endoso de tipo Iniciacion.'),
-                'poliza_un_inicia': ('Solo debe existir un movimiento de Iniciacion '
-                    'de tipo endoso para la poliza "%s"'),
-                'poliza_reactiva': ('La poliza "%s" debe estar "Cancelada" '
-                    'para poder ser reactivada.'),
-                'poliza_reactiva_otro': ('La poliza "%s" debe ser "Reactivada" '
-                    'para poder modificarla.'),
-                'certificado_incluido': ('El certificado "%s" debe tener estado de '
-                    '"Excluido" antes de la inclusion.'),
-                'certificado_excluido': ('El certificado "%s" debe tener estado de '
-                    '"Incluido" antes de la exclusion.'),
-                'certificado_poliza': ('El certificado "%s" debe pertenecer a la '
-                    'misma poliza del movimiento.'),
-                'extension_certificado_nuevo': ('El estado del extendido "%s" debe '
-                    'debe ser "Nuevo" para los certificados nuevos.'),
-                'extendido_incluido': ('El extendido "%s" debe tener estado de '
-                    '"Nuevo" o "Excluido" antes de la inclusion.'),
-                'extendido_excluido': ('El extendido "%s" debe tener estado de '
-                    '"Incluido" antes de la exclusion.'),
-                'renovacion_eliminar_pagos': ('No puede eliminarse la renovacion "%s" '
-                    'de la poliza "%s" porque tienes pagos asociados.'),
-                'renovacion_eliminar_movimientos': ('No puede eliminarse la renovacion "%s" '
-                    'de la poliza "%s" porque tienes movimientos asociados.'),
-                'renovacion_eliminar_no_existe': ('La renovacion "%s" '
-                    'de la poliza "%s" no existe.'),
-                'renovacion_inicio_renovacion': ('No puede asignarse manualmente una renovacion '
-                    'a un tipo de movimiento "Iniciacion" o "Renovacion".'),
-                'renovacion_difiere': ('La renovacion "%s" a aplicar en el movimiento '
-                    'no coincide con la renovacion actual "%s".'),
-                })
+
         cls._transitions |= set(
             (
                 ('borrador', 'procesado'),
@@ -489,6 +438,7 @@ class Movimiento(Workflow, ModelSQL, ModelView):
                 ('cancelado', 'borrador'),
             )
         )
+
         cls._buttons.update({
             'cancelar': {
                 'invisible': Not(In(Eval('state'), ['procesado'])),
@@ -608,9 +558,12 @@ class Movimiento(Workflow, ModelSQL, ModelView):
         for ren in renovs:
             ren_to_update = ren.renovacion - 1
             if ren_to_update < 0:
-                cls.raise_user_error(
-                    'renovacion_eliminar_pagos',
-                    (mov.renovacion_eliminar, mov.poliza.rec_name))
+                raise UserError(
+                    gettext('corseg.msg_eliminar_renovacion_movimiento',
+                        renovacion=mov.renovacion_eliminar,
+                        poliza=mov.poliza.rec_name,
+                        doc_name='pagos'
+                    ))
 
             pagos = Pago.search([
                     ('poliza', '=', mov.poliza.id),
@@ -648,20 +601,13 @@ class Movimiento(Workflow, ModelSQL, ModelView):
             ])
 
         if not renovs:
-            cls.raise_user_error(
-                'renovacion_eliminar_no_existe',
-                (mov.renovacion_eliminar, mov.poliza.rec_name))
+            raise UserError(
+                gettext('corseg.msg_eliminar_renovacion_no_existe_movimiento',
+                    renovacion=mov.renovacion_eliminar,
+                    poliza=mov.poliza.rec_name
+                ))
 
         ren = renovs[0]
-
-        #pagos = Pago.search([
-        #        ('poliza', '=', mov.poliza.id),
-        #        ('renovacion', '=', ren.renovacion)
-        #    ])
-        #if pagos:
-        #    cls.raise_user_error(
-        #        'renovacion_eliminar_pagos',
-        #        (mov.renovacion_eliminar, mov.poliza.rec_name))
 
         movimientos = Movimiento.search([
                 ('poliza', '=', mov.poliza.id),
@@ -669,9 +615,12 @@ class Movimiento(Workflow, ModelSQL, ModelView):
                 ('state', '=', 'confirmado'),
             ])
         if len(movimientos) > 1:
-            cls.raise_user_error(
-                'renovacion_eliminar_movimientos',
-                (mov.renovacion_eliminar, mov.poliza.rec_name))
+            raise UserError(
+                gettext('corseg.msg_eliminar_renovacion_movimiento',
+                    renovacion=mov.renovacion_eliminar,
+                    poliza=mov.poliza.rec_name,
+                    doc_name='movimientos'
+                ))
 
         return ren
 
@@ -811,7 +760,12 @@ class Movimiento(Workflow, ModelSQL, ModelView):
     def delete(cls, movs):
         for mov in movs:
             if mov.state not in ['borrador', 'cancelado']:
-                cls.raise_user_error('delete_cancel', (mov.rec_name,))
+                raise UserError(
+                    gettext('corseg.msg_delete_borrador_corseg',
+                        doc_name='Movimiento',
+                        doc_number=mov.rec_name,
+                        state='Borrador o  Cancelado'
+                    ))
         super(Movimiento, cls).delete(movs)
 
     @classmethod
@@ -827,24 +781,28 @@ class Movimiento(Workflow, ModelSQL, ModelView):
         for mov in movs:
             if mov.poliza.state == 'new' and \
                     mov.tipo_endoso != 'iniciacion':
-                cls.raise_user_error(
-                    'poliza_inicia',
-                    (mov.poliza.rec_name,))
+                raise UserError(
+                    gettext('corseg.msg_poliza_inicia_movimiento',
+                        poliza=mov.poliza.rec_name
+                    ))
             if mov.poliza.state in ['vigente', 'cancelada'] and \
                     mov.tipo_endoso == 'iniciacion':
-                cls.raise_user_error(
-                    'poliza_un_inicia',
-                    (mov.poliza.rec_name,))
+                raise UserError(
+                    gettext('corseg.msg_poliza_un_inicia_movimiento',
+                        poliza=mov.poliza.rec_name
+                    ))
             if mov.poliza.state != 'cancelada' and \
                     mov.tipo_endoso == 'reactivacion':
-                cls.raise_user_error(
-                    'poliza_reactiva',
-                    (mov.poliza.rec_name,))
+                raise UserError(
+                    gettext('corseg.msg_poliza_reactiva_movimiento',
+                        poliza=mov.poliza.rec_name
+                    ))
             if mov.poliza.state == 'cancelada' and \
                     mov.tipo_endoso != 'reactivacion':
-                cls.raise_user_error(
-                    'poliza_reactiva_otro',
-                    (mov.poliza.rec_name,))
+                raise UserError(
+                    gettext('corseg.msg_poliza_reactiva_otro_movimiento',
+                        poliza=mov.poliza.rec_name
+                    ))
             if mov.tipo_endoso == 'iniciacion':
                 mov._set_default_inclusion()
             if mov.tipo == 'eliminar_renov':
@@ -867,8 +825,9 @@ class Movimiento(Workflow, ModelSQL, ModelView):
 
             if mov.tipo_endoso in ['iniciacion', 'renovacion']:
                 if mov.renovacion is not None:
-                    cls.raise_user_error(
-                        'renovacion_inicio_renovacion',)
+                    raise UserError(
+                        gettext('corseg.msg_renovacion_inicio_movimiento'
+                        ))
                 else:
                     if mov.tipo_endoso == 'iniciacion':
                         renovacion_no = 0
@@ -879,14 +838,16 @@ class Movimiento(Workflow, ModelSQL, ModelView):
                     renovacion_no = pl.renovacion
                 else:
                     if mov.renovacion < 0 or mov.renovacion > pl.renovacion:
-                        cls.raise_user_error(
-                            'renovacion_eliminar_no_existe',
-                            (mov.renovacion, mov.poliza.rec_name))
+                        raise UserError(
+                            gettext('corseg.msg_eliminar_renovacion_no_existe_movimiento',
+                                renovacion=mov.renovacion,
+                                poliza=mov.poliza.rec_name
+                            ))
                     elif mov.renovacion != pl.renovacion:
-                        cls.raise_user_warning(
-                            'movdifiere' + str(mov.id),
-                            'renovacion_difiere',
-                            (mov.renovacion, pl.renovacion))
+                        raise UserWarning('movdifiere' + str(mov.id),
+                            gettext('corseg.msg_renovacion_difiere_movimiento',
+                                renovacion1=mov.renovacion,
+                                renovacion2=pl.renovacion))
                         renovacion_no = mov.renovacion
                     else:
                         renovacion_no = pl.renovacion
@@ -913,19 +874,25 @@ class Movimiento(Workflow, ModelSQL, ModelView):
             for cert in mov.inclusiones:
                 if cert.state != 'new':
                     if cert.state != 'excluido':
-                        cls.raise_user_error(
-                            'certificado_excluido',
-                            (cert.rec_name,))
+                        raise UserError(
+                            gettext('corseg.msg_certificado_inclusion_exclusion',
+                                doc_name='Certificado',
+                                doc_number=cert.rec_name,
+                                state='Incluido',
+                                accion='exclusion'
+                            ))
                     if cert.poliza.id != pl.id:
-                        cls.raise_user_error(
-                            'certificado_poliza',
-                            (cert.rec_name,))
+                        raise UserError(
+                            gettext('corseg.msg_certificado_poliza_movimiento',
+                                certificado=cert.rec_name
+                            ))
                 else:
                     for ext in cert.extendidos:
                         if ext.state != 'new':
-                            cls.raise_user_error(
-                                'extension_certificado_nuevo',
-                                (ext.rec_name,))
+                            raise UserError(
+                                gettext('corseg.msg_extension_certificado_nuevo_movimiento',
+                                    extendido=ext.rec_name
+                                ))
                         ext.state = 'incluido'
                         ext.save()
                 cert.state = 'incluido'
@@ -934,13 +901,19 @@ class Movimiento(Workflow, ModelSQL, ModelView):
 
             for cert in mov.exclusiones:
                 if cert.state != 'incluido':
-                    cls.raise_user_error(
-                        'certificado_incluido',
-                        (cert.rec_name,))
+                    raise UserError(
+                        gettext('corseg.msg_certificado_inclusion_exclusion',
+                            doc_name='Certificado',
+                            doc_number=cert.rec_name,
+                            state='Nuevo o Excluido',
+                            accion='inclusion'
+                        ))
+
                 if cert.poliza.id != pl.id:
-                    cls.raise_user_error(
-                        'certificado_poliza',
-                        (cert.rec_name,))
+                    raise UserError(
+                        gettext('corseg.msg_certificado_poliza_movimiento',
+                            certificado=cert.rec_name
+                        ))
                 cert.state = 'excluido'
                 cert.poliza = pl
                 cert.save()
@@ -967,9 +940,13 @@ class Movimiento(Workflow, ModelSQL, ModelView):
 
                 for ext in mod.inclusiones:
                     if ext.state not in ['new', 'excluido']:
-                        cls.raise_user_error(
-                            'extendido_excluido',
-                            (ext.rec_name,))
+                        raise UserError(
+                            gettext('corseg.msg_certificado_inclusion_exclusion',
+                                doc_name='Extendido',
+                                doc_number=ext.rec_name,
+                                state='Nuevo o Excluido',
+                                accion='inclusion'
+                            ))
                     if ext.state == 'new':
                         ext.certificado = mod.certificado
                     ext.state = 'incluido'
@@ -977,9 +954,13 @@ class Movimiento(Workflow, ModelSQL, ModelView):
 
                 for ext in mod.exclusiones:
                     if ext.state not in ['incluido']:
-                        cls.raise_user_error(
-                            'extendido_incluido',
-                            (ext.rec_name,))
+                        raise UserError(
+                            gettext('corseg.msg_certificado_inclusion_exclusion',
+                                doc_name='Extendido',
+                                doc_number=ext.rec_name,
+                                state='Incluido',
+                                accion='exclusion'
+                            ))
                     ext.state = 'excluido'
                     ext.save()
 

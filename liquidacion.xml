@@ -132,7 +132,33 @@ contains the full copyright notices and license terms. -->
         </record>
 
 
+        <!-- Compensacion -->
+
+        <record model="ir.ui.view" id="comision_compensacion_view_form">
+            <field name="model">corseg.comision.ajuste.cia.compensacion</field>
+            <field name="type">form</field>
+            <field name="name">comision_compensacion_form</field>
+        </record>
+        <record model="ir.ui.view" id="comision_compensacion_view_tree">
+            <field name="model">corseg.comision.ajuste.cia.compensacion</field>
+            <field name="type">tree</field>
+            <field name="name">comision_compensacion_tree</field>
+        </record>
+
+        <record model="ir.ui.view" id="comision_compensacion_dada_view_form">
+            <field name="model">corseg.comision.ajuste.cia.compensacion</field>
+            <field name="type">form</field>
+            <field name="name">comision_compensacion_dada_form</field>
+        </record>
+        <record model="ir.ui.view" id="comision_compensacion_dada_view_tree">
+            <field name="model">corseg.comision.ajuste.cia.compensacion</field>
+            <field name="type">tree</field>
+            <field name="name">comision_compensacion_dada_tree</field>
+        </record>
+
+
         <!-- Ajuste Comision Vendedor -->
+
         <record model="ir.ui.view" id="comision_ajuste_vendedor_view_form">
             <field name="model">corseg.comision.ajuste.vendedor</field>
             <field name="type">form</field>
@@ -344,6 +370,17 @@ contains the full copyright notices and license terms. -->
         <record model="ir.model.button-res.group"
             id="liquidacion_cia_borrador_button_group_corseg_admin">
             <field name="button" ref="liquidacion_cia_borrador_button"/>
+            <field name="group" ref="group_corseg_admin"/>
+        </record>
+
+        <record model="ir.model.button" id="liquidacion_cia_volver_procesar_button">
+            <field name="name">volver_procesar</field>
+            <field name="model"
+                search="[('model', '=', 'corseg.liquidacion.cia')]"/>
+        </record>
+        <record model="ir.model.button-res.group"
+                id="liquidacion_cia_volver_procesar_button_group_corseg_admin">
+            <field name="button" ref="liquidacion_cia_volver_procesar_button"/>
             <field name="group" ref="group_corseg_admin"/>
         </record>
 

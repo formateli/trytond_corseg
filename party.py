@@ -8,8 +8,7 @@ from trytond.pyson import Eval, Not, Bool
 __all__ = ['Party', 'PartyReplace']
 
 
-class Party:
-    __metaclass__ = PoolMeta
+class Party(metaclass=PoolMeta):
     __name__ = 'party.party'
 
     is_contratante = fields.Boolean('Es Contratante', readonly=True)
@@ -36,8 +35,7 @@ class Party:
             party.save()
 
 
-class PartyReplace:
-    __metaclass__ = PoolMeta
+class PartyReplace(metaclass=PoolMeta):
     __name__ = 'party.replace'
 
     @classmethod

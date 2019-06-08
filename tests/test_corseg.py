@@ -5,6 +5,7 @@ import unittest
 import datetime
 from decimal import Decimal
 import trytond.tests.test_tryton
+from trytond.transaction import Transaction
 from trytond.pool import Pool
 from trytond.tests.test_tryton import ModuleTestCase, with_transaction
 from trytond.modules.company.tests import create_company, set_company
@@ -37,15 +38,16 @@ class CorsegTestCase(ModuleTestCase):
 
         company = create_company()
         with set_company(company):
-            self._set_config(company)
-            producto, vendedor, forma_pago, frecuencia_pago = \
-                self._get_varios()
-            self._movimientos(
-                producto, vendedor, forma_pago, frecuencia_pago)
-            self._pagos(
-                producto, vendedor, forma_pago, frecuencia_pago)
-            self._comisiones(
-                producto, vendedor, forma_pago, frecuencia_pago)
+            with Transaction().set_context(test=True):
+                self._set_config(company)
+                producto, vendedor, forma_pago, frecuencia_pago = \
+                    self._get_varios()
+                self._movimientos(
+                    producto, vendedor, forma_pago, frecuencia_pago)
+                self._pagos(
+                    producto, vendedor, forma_pago, frecuencia_pago)
+                self._comisiones(
+                    producto, vendedor, forma_pago, frecuencia_pago)
 
     def _comisiones(self, producto, vendedor, forma_pago, frecuencia_pago):
         pool = Pool()
@@ -444,7 +446,6 @@ class CorsegTestCase(ModuleTestCase):
     def _create_pago(self, poliza, vendedor, fecha, monto):
         pool = Pool()
         Pago = pool.get('corseg.poliza.pago')
-
         pago = Pago(
                 poliza=poliza,
                 fecha=fecha,

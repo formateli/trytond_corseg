@@ -5,6 +5,8 @@ from trytond.transaction import Transaction
 from trytond.pool import Pool
 from trytond.model import Workflow, ModelView, ModelSQL, fields
 from trytond.pyson import Eval, If, Not, In, Bool
+from trytond.i18n import gettext
+from trytond.exceptions import UserError, UserWarning
 from decimal import Decimal
 from .tools import auditoria_field, get_current_date, set_auditoria
 
@@ -188,21 +190,7 @@ class Pago(Workflow, ModelSQL, ModelView):
                 ('number', 'DESC'),
                 ('fecha', 'DESC'),
             ]
-        cls._error_messages.update({
-                'delete_cancel': ('El Pago "%s" debe ser '
-                    'cancelado antes de eliminarse.'),
-                'pago_confirmado': ('El Pago a sustiruir en el Pago "%s" '
-                    'debe tener un estado de "Confirmado".'),
-                'pago_cero': ('El monto del Pago "%s" '
-                    'debe ser diferente a cero.'),
-                'comision_cia_mayor': ('El monto de la Comision Cia '
-                    'no debe ser mayor al monto del Pago "%s".'),
-                'comision_vendedor_mayor': ('El monto de la Comision Vendedor '
-                    'no debe ser mayor al monto de la Comision Cia. Pago "%s".'),
-                'renovacion_no_valida': ('Renovacion no valida. Pago "%s".'),
-                'pago_verificar_fecha': ('Existe un pago ("%s" estado: "%s") ' 
-                    'registrado con la misma fecha.'),
-                })
+
         cls._transitions |= set(
             (
                 ('borrador', 'procesado'),
@@ -211,6 +199,7 @@ class Pago(Workflow, ModelSQL, ModelView):
                 ('cancelado', 'borrador'),
             )
         )
+
         cls._buttons.update({
             'cancelar': {
                 'invisible': Not(In(Eval('state'), ['procesado'])),
@@ -481,20 +470,21 @@ class Pago(Workflow, ModelSQL, ModelView):
         super(Pago, cls).validate(pagos)
         for pago in pagos:
             if pago.monto == 0:
-                cls.raise_user_error(
-                    'pago_cero', (pago.rec_name,))
-            #if pago.comision_cia > pago.monto:
-            #    cls.raise_user_error(
-            #        'comision_cia_mayor', (pago.rec_name,))
-            #if pago.comision_vendedor > pago.comision_cia:
-            #    cls.raise_user_error(
-            #        'comision_vendedor_mayor', (pago.rec_name,))
+                raise UserError(
+                    gettext('corseg.msg_pago_cero_pago',
+                        pago=pago.rec_name
+                    ))
 
     @classmethod
     def delete(cls, pagos):
         for pago in pagos:
             if pago.state not in ['borrador', 'cancelado']:
-                cls.raise_user_error('delete_cancel', (pago.rec_name,))
+                raise UserError(
+                    gettext('corseg.msg_delete_borrador_corseg',
+                        doc_name='Pago',
+                        doc_number=pago.rec_name,
+                        state='Borrador o  Cancelado'
+                    ))
         super(Pago, cls).delete(pagos)
 
     @classmethod
@@ -506,23 +496,26 @@ class Pago(Workflow, ModelSQL, ModelView):
                     ('renovacion', '=', pago.renovacion)
                 ])
             if not renovs:
-                cls.raise_user_error('renovacion_no_valida', (pago.rec_name,))
+                raise UserError(
+                    gettext('corseg.msg_renovacion_no_valida_pago',
+                        pago=pago.rec_name
+                    ))
 
     @classmethod
     def _verificar_pago_fecha(cls, pago):
+        if Transaction().context.get('test'):
+            return
         Pago = Pool().get('corseg.poliza.pago')
         pagos = Pago.search([
                 ('poliza', '=', pago.poliza.id),
                 ('fecha', '=', pago.fecha),
                 ('id', '!=', pago.id),
             ])
-        print(pago.id)
-        print(pagos)
         if pagos:
-            cls.raise_user_warning(
-                'pagofecha-' + str(pago.id),
-                'pago_verificar_fecha',
-                (pagos[0].rec_name, pagos[0].state))
+            raise UserWarning('pagofecha-' + str(pago.id),
+                gettext('corseg.msg_pago_verificar_fecha_pago',
+                    pago=pagos[0].rec_name,
+                    state=pagos[0].state))
 
     @classmethod
     @ModelView.button
@@ -548,8 +541,10 @@ class Pago(Workflow, ModelSQL, ModelView):
             cls._verificar_pago_fecha(pago)
             if pago.sustituir:
                 if pago.pago_sustituir.state != 'confirmado':
-                    cls.raise_user_error(
-                        'pago_confirmado', (pago.rec_name,))
+                    raise UserError(
+                        gettext('corseg.msg_pago_confirmado_pago',
+                            pago=pago.rec_name
+                        ))
                 pago.pago_sustituir.state = 'sustituido'
                 pago.pago_sustituir.sustituido_por = pago
                 pago.pago_sustituir.save()

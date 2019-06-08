@@ -3,6 +3,8 @@
 
 from trytond.transaction import Transaction
 from trytond.pool import Pool
+from trytond.i18n import gettext
+from trytond.exceptions import UserError
 from trytond.model import ModelView, ModelSQL, fields, Unique
 from trytond.pyson import Eval, If, Bool, Equal, Not, In
 from trytond.modules.company.model import CompanyMultiValueMixin
@@ -342,14 +344,6 @@ class Poliza(ModelSQL, ModelView):
                 'El numero de poliza ya existe para este producto'),
         ]
 
-        cls._error_messages.update({
-            'comision_renovacion_cero': ('El primer registro de la tabla de '
-                'comisiones dede ser para la renovacion zero. Poliza: "%s".'),
-            'comision_renovacion_menor': ('El valor de la renovacion del '
-                'registro de la tabla de comisiones debe ser mayor que '
-                'el anterior. Poliza: "%s".'),
-        })
-
     @staticmethod
     def default_company():
         return Transaction().context.get('company')
@@ -536,23 +530,23 @@ class Renovacion(ModelSQL, ModelView):
                 ('renovacion', 'DESC'),
             ]
 
-        cls._error_messages.update({
-            'fecha_emision_mayor': ('La fecha de emision de la poliza "%s" '
-                'no puede ser mayor a la fecha de inicio de la vigencia. '
-                'Renovacion: "%s".'),
-            'fecha_hasta_menor': ('La fecha de finalizacion de la vigencia '
-                'de la poliza "%s" no puede ser menor que la fecha de inicio '
-                'de la misma. Renovacion: "%s".'),
-            'dias_diff_emision': ('La fecha de emision tiene mas de "%s" dias '
-                'de diferencia con respecto a la fecha de inicio de la vigencia '
-                'de la poliza "%s". Renovacion: "%s".'),
-            'dias_diff_vigencia': ('La diferencia entre el inicio y '
-                'la finalizacion de la vigencia de la poliza "%s" es mayor '
-                'a "%s" dias. Renovacion: "%s".'),
-            'fecha_renovacion_desde_menor': ('La fecha de inicio de la vigencia '
-                'de la poliza "%s" no debe ser menor a la fecha de finalizacion de '
-                'la vigencia anterior. Renovacion: "%s".'),
-        })
+#        cls._error_messages.update({
+#            'fecha_emision_mayor': ('La fecha de emision de la poliza "%s" '
+#                'no puede ser mayor a la fecha de inicio de la vigencia. '
+#                'Renovacion: "%s".'),
+#            'fecha_hasta_menor': ('La fecha de finalizacion de la vigencia '
+#                'de la poliza "%s" no puede ser menor que la fecha de inicio '
+#                'de la misma. Renovacion: "%s".'),
+#            'dias_diff_emision': ('La fecha de emision tiene mas de "%s" dias '
+#                'de diferencia con respecto a la fecha de inicio de la vigencia '
+#                'de la poliza "%s". Renovacion: "%s".'),
+#            'dias_diff_vigencia': ('La diferencia entre el inicio y '
+#                'la finalizacion de la vigencia de la poliza "%s" es mayor '
+#                'a "%s" dias. Renovacion: "%s".'),
+#            'fecha_renovacion_desde_menor': ('La fecha de inicio de la vigencia '
+#                'de la poliza "%s" no debe ser menor a la fecha de finalizacion de '
+#                'la vigencia anterior. Renovacion: "%s".'),
+#        })
 
     def get_total(self, name):
         result = Decimal('0.0')
@@ -586,30 +580,39 @@ class Renovacion(ModelSQL, ModelView):
 
         for reno in renovaciones:
             if reno.f_emision > reno.f_desde:
-                cls.raise_user_error(
-                    'fecha_emision_mayor',
-                    (reno.poliza.rec_name, reno.renovacion))
+                raise UserError(
+                    gettext('corseg.msg_fecha_emision_mayor',
+                        poliza=purchase.rec_name,
+                        renovacion=reno.renovacion))
             if reno.f_hasta < reno.f_desde:
-                cls.raise_user_error(
-                    'fecha_hasta_menor',
-                    (reno.poliza.rec_name, reno.renovacion))
+                raise UserError(
+                    gettext('corseg.msg_fecha_hasta_menor',
+                        poliza=purchase.rec_name,
+                        renovacion=reno.renovacion))
+
             if (reno.f_desde - reno.f_emision).days > dias_diff_emision:
-                cls.raise_user_error(
-                    'dias_diff_emision',
-                    (dias_diff_emision, reno.poliza.rec_name, reno.renovacion))
+                raise UserError(
+                    gettext('corseg.msg_dias_diff_emision',
+                        dias=dias_diff_emision,
+                        poliza=purchase.rec_name,
+                        renovacion=reno.renovacion))
             if (reno.f_hasta - reno.f_desde).days > dias_diff_vigencia:
-                cls.raise_user_error(
-                    'dias_diff_vigencia',
-                    (reno.poliza.rec_name, dias_diff_vigencia, reno.renovacion))
+                raise UserError(
+                    gettext('corseg.msg_dias_diff_vigencia',
+                        dias=dias_diff_vigencia,
+                        poliza=purchase.rec_name,
+                        renovacion=reno.renovacion))
+
             if reno.renovacion > 0:
                 reno_anterior = Renovacion.search([
                         ('poliza', '=', reno.poliza.id),
                         ('renovacion', '=', reno.renovacion - 1),
                     ])[0]
                 if reno.f_desde < reno_anterior.f_hasta:
-                    cls.raise_user_error(
-                        'fecha_renovacion_desde_menor',
-                        (reno.poliza.rec_name, reno.renovacion))
+                    raise UserError(
+                        gettext('corseg.msg_fecha_renovacion_desde_menor',
+                            poliza=purchase.rec_name,
+                            renovacion=reno.renovacion))
 
     @classmethod
     def get_saldo_poliza_renovacion(cls, poliza, renovacion):

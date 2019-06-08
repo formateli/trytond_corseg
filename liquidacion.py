@@ -5,6 +5,8 @@ from trytond.transaction import Transaction
 from trytond.pool import Pool
 from trytond.model import Workflow, ModelView, ModelSQL, fields
 from trytond.pyson import Eval, Bool, If, Not, In
+from trytond.i18n import gettext
+from trytond.exceptions import UserError
 from decimal import Decimal
 from .tools import auditoria_field, get_current_date, set_auditoria
 
@@ -76,17 +78,7 @@ class LiquidacionBase(Workflow, ModelSQL, ModelView):
                 ('number', 'DESC'),
                 ('fecha', 'DESC'),
             ]
-        cls._error_messages.update({
-                'delete_cancel': ('La Liquidacion "%s" debe estar '
-                    'cancelada antes de eliminarse.'),
-                'ajuste_state': ('El Estado del Ajuste "%s" '
-                    'es invalido.'),
-                'pago_confirmado': ('El Estado del Pago "%s" '
-                    'debe ser "Confirmado".'),
-                'pago_liq_cia': ('El Estado del Pago "%s" '
-                    'debe ser "Liquidado por la Cia".'),
-                'diff_no_cero': ('La diferencia debe ser igual a cero.'),
-                })
+
         cls._transitions |= set(
             (
                 ('borrador', 'procesado'),
@@ -95,6 +87,7 @@ class LiquidacionBase(Workflow, ModelSQL, ModelView):
                 ('cancelado', 'borrador'),
             )
         )
+
         cls._buttons.update({
             'cancelar': {
                 'invisible': Not(In(Eval('state'), ['procesado'])),
@@ -185,8 +178,13 @@ class LiquidacionBase(Workflow, ModelSQL, ModelView):
     @classmethod
     def delete(cls, liqs):
         for liq in liqs:
-            if liq.state not in ['borrador', 'cancelado']:
-                cls.raise_user_error('delete_cancel', (liq.rec_name,))
+            if liq.state != 'borrador':
+                raise UserError(
+                    gettext('corseg.msg_delete_borrador_corseg',
+                        doc_name='Liquidacion',
+                        doc_number=liq.rec_name,
+                        state='Borrador'
+                    ))
         super(LiquidacionBase, cls).delete(liqs)
 
     @classmethod
@@ -201,7 +199,7 @@ class LiquidacionCia(LiquidacionBase):
     'Liquidacion Comisiones Cia de Seguros'
     __name__ = 'corseg.liquidacion.cia'
     cia = fields.Many2One(
-        'corseg.cia', 'Compania de Seguros', required=True,
+        'corseg.cia', 'Cia de Seguros', required=True,
         states={
             'readonly': Not(In(Eval('state'), ['borrador',])),
         }, depends=['state'])
@@ -289,8 +287,10 @@ class LiquidacionCia(LiquidacionBase):
 
         for ajuste in pago.ajustes_comision_cia:
             if ajuste.state != 'procesado':
-                cls.raise_user_error(
-                    'ajuste_state', (ajuste.rec_name,))
+                raise UserError(
+                    gettext('corseg.msg_ajuste_state_liquidacion',
+                        ajuste=ajuste.rec_name
+                    ))
             ajuste.state = 'pendiente'
             ajuste.save()
 
@@ -339,12 +339,18 @@ class LiquidacionCia(LiquidacionBase):
     def procesar(cls, liqs):
         for liq in liqs:
             if liq.diff != 0:
-                cls.raise_user_error('diff_no_cero')
+                raise UserError(
+                    gettext('corseg.msg_diff_no_cero_liquidacion',
+                        liquidacion=liq.rec_name
+                    ))
+
             for pago in liq.pagos:
                 for ajuste in pago.ajustes_comision_cia:
                     if ajuste.state != 'borrador': 
-                        cls.raise_user_error(
-                            'ajuste_state', (ajuste.rec_name,))
+                        raise UserError(
+                            gettext('corseg.msg_ajuste_state_liquidacion',
+                                ajuste=ajuste.rec_name
+                            ))
                     ajuste.state = 'procesado'
                     ajuste.save()
             set_auditoria(liq, 'processed')
@@ -357,11 +363,17 @@ class LiquidacionCia(LiquidacionBase):
     def confirmar(cls, liqs):
         for liq in liqs:
             if liq.diff != 0:
-                cls.raise_user_error('diff_no_cero')
+                raise UserError(
+                    gettext('corseg.msg_diff_no_cero_liquidacion',
+                        liquidacion=liq.rec_name
+                    ))
             for pago in liq.pagos:
                 if pago.state != 'confirmado':
-                    cls.raise_user_error(
-                        'pago_confirmado', (pago.rec_name,))
+                    raise UserError(
+                        gettext('corseg.msg_pago_estado_liquidacion',
+                            pago=pago.rec_name,
+                            state='Confirmado'
+                        ))
 
                 cls._update_ajustes(pago)
 
@@ -386,6 +398,11 @@ class LiquidacionCia(LiquidacionBase):
             set_auditoria(liq, 'canceled')
             liq.save()
         cls.store_cache(liqs)
+
+    @classmethod
+    @ModelView.button
+    def volver_procesar(cls, liqs):
+        pass
 
 
 class LiquidacionVendedor(LiquidacionBase):
@@ -444,9 +461,11 @@ class LiquidacionVendedor(LiquidacionBase):
         for liq in liqs:
             for pago in liq.pagos:
                 for ajuste in pago.ajustes_comision_vendedor:
-                    if ajuste.state != 'borrador': 
-                        cls.raise_user_error(
-                            'ajuste_state', (ajuste.rec_name,))
+                    if ajuste.state != 'borrador':
+                        raise UserError(
+                            gettext('corseg.msg_ajuste_state_liquidacion',
+                                ajuste=ajuste.rec_name
+                            ))
                     ajuste.state = 'procesado'
                     ajuste.save()
             set_auditoria(liq, 'processed')
@@ -460,14 +479,19 @@ class LiquidacionVendedor(LiquidacionBase):
         for liq in liqs:
             for pago in liq.pagos:
                 for ajuste in pago.ajustes_comision_vendedor:
-                    if ajuste.state != 'procesado': 
-                        cls.raise_user_error(
-                            'ajuste_state', (ajuste.rec_name,))
+                    if ajuste.state != 'procesado':
+                        raise UserError(
+                            gettext('corseg.msg_ajuste_state_liquidacion',
+                                ajuste=ajuste.rec_name
+                            ))
                     ajuste.state = 'confirmado'
                     ajuste.save()
                 if pago.state != 'liq_cia':
-                    cls.raise_user_error(
-                        'pago_liq_cia', (pago.rec_name,))
+                    raise UserError(
+                        gettext('corseg.msg_pago_estado_liquidacion',
+                            pago=pago.rec_name,
+                            state='Liquidado por la Cia'
+                        ))
                 pago.liq_vendedor = liq
                 pago.state = 'liq_vendedor'
                 pago.save()

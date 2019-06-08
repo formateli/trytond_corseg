@@ -6,6 +6,8 @@ from trytond.pool import Pool
 from trytond.model import Workflow, ModelView, ModelSQL, fields
 from trytond.pyson import Eval, If, Not, In, Or, Bool
 from trytond.modules.company.model import CompanyValueMixin
+from trytond.i18n import gettext
+from trytond.exceptions import UserError
 from decimal import Decimal
 from .tools import auditoria_field, get_current_date, set_auditoria
 
@@ -323,10 +325,6 @@ class ComisionAjusteCia(Workflow, ModelSQL, ModelView):
                 ('number', 'DESC'),
                 ('fecha', 'DESC'),
             ]
-        cls._error_messages.update({
-                'delete_borrador': ('El Ajuste "%s" debe estar '
-                    'en "Borrador" antes de eliminarse.'),
-                })
 
         cls._transitions |= set(
             (
@@ -469,7 +467,12 @@ class ComisionAjusteCia(Workflow, ModelSQL, ModelView):
     def delete(cls, ajustes):
         for ajuste in ajustes:
             if ajuste.state not in ['borrador',]:
-                cls.raise_user_error('delete_borrador', (ajuste.rec_name,))
+                raise UserError(
+                    gettext('corseg.msg_delete_borrador_corseg',
+                        doc_name='Ajuste',
+                        doc_number=ajuste.rec_name,
+                        state='Borrador'
+                        ))
         super(ComisionAjusteCia, cls).delete(ajustes)
 
     @classmethod
@@ -486,12 +489,12 @@ class ComisionAjusteCiaCompensacion(ModelSQL, ModelView):
     __name__ = 'corseg.comision.ajuste.cia.compensacion'
 
     ajuste = fields.Many2One('corseg.comision.ajuste.cia',
-        'Ajuste', ondelete='CASCADE', select=True, required=True)
+        'Ajuste', ondelete='CASCADE', select=True, required=True, readonly=True)
     ajuste_compensa = fields.Many2One('corseg.comision.ajuste.cia',
-        'Compensado por', required=True)
+        'Compensado por', required=True, readonly=True)
     monto = fields.Numeric('Monto', required=True,
-            digits=(16, Eval('_parent_currency_digits', 2))
-
+            digits=(16, Eval('_parent_currency_digits', 2)),
+            readonly=True
         )
 
 
@@ -560,10 +563,6 @@ class ComisionAjusteVendedor(Workflow, ModelSQL, ModelView):
                 ('fecha', 'DESC'),
                 ('number', 'DESC'),
             ]
-        cls._error_messages.update({
-                'delete_borrador': ('El Ajuste "%s" debe estar '
-                    'en "Borrador" antes de eliminarse.'),
-                })
 
     @staticmethod
     def default_company():
@@ -646,5 +645,10 @@ class ComisionAjusteVendedor(Workflow, ModelSQL, ModelView):
     def delete(cls, ajustes):
         for ajuste in ajustes:
             if ajuste.state not in ['borrador',]:
-                cls.raise_user_error('delete_borrador', (ajuste.rec_name,))
+                raise UserError(
+                    gettext('corseg.msg_delete_borrador_corseg',
+                        doc_name='Ajuste',
+                        doc_number=ajuste.rec_name,
+                        state='Borrador'
+                        ))
         super(ComisionAjusteVendedor, cls).delete(ajustes)

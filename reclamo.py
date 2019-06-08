@@ -4,6 +4,8 @@ from trytond.transaction import Transaction
 from trytond.pool import Pool
 from trytond.model import Workflow, ModelSQL, ModelView, fields
 from trytond.pyson import Eval, If, Bool, Not, In, And
+from trytond.i18n import gettext
+from trytond.exceptions import UserError
 from trytond.modules.corseg.tools import \
         auditoria_field, get_current_date, set_auditoria
 
@@ -151,11 +153,6 @@ class Reclamo(Workflow, ModelSQL, ModelView):
                 ('fecha', 'DESC'),
             ]
 
-        cls._error_messages.update({
-                'delete_cancel': ('El registro "%s" debe estar en '
-                    'borrador antes de eliminarse.'),
-                })
-
         cls._transitions |= set(
             (
                 ('borrador', 'incompleto'),
@@ -299,7 +296,12 @@ class Reclamo(Workflow, ModelSQL, ModelView):
     def delete(cls, reclamos):
         for reclamo in reclamos:
             if reclamo.state not in ['borrador',]:
-                cls.raise_user_error('delete_cancel', (reclamo.rec_name,))
+                raise UserError(
+                    gettext('corseg.msg_delete_borrador_corseg',
+                        doc_name='Reclamo',
+                        doc_number=reclamo.rec_name,
+                        state='Borrador'
+                    ))
         super(Reclamo, cls).delete(reclamos)
 
     @classmethod

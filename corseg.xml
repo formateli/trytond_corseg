@@ -35,7 +35,7 @@ contains the full copyright notices and license terms. -->
 
         <menuitem name="Configuracion" parent="menu_corseg"
             id="menu_corseg_configuration" sequence="10"
-            icon="tryton-preferences"/>
+            icon="tryton-settings"/>
         <record model="ir.ui.menu-res.group"
                 id="menu_corseg_configuration_group_corseg_admin">
             <field name="menu" ref="menu_corseg_configuration"/>
