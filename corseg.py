@@ -430,15 +430,16 @@ class Poliza(ModelSQL, ModelView):
         # Obtenemos el saldo de la renovacion anterior,
         # El cual deberia ser cero, sin embargo hay casos
         # donde se paga de mas, por lo que el saldo es negativo
+        renovacion = self.renovacion
         res = -Renovacion.get_saldo_poliza_renovacion(
-            self, None if self.renovacion is None else self.renovacion - 1)
+            self, None if renovacion is None else renovacion - 1)
 
-        if self.pagos:
-            for pago in self.pagos:
-                if pago.renovacion != self.renovacion:
-                    continue
-                if pago.state not in pago.valid_states():
-                    res += pago.monto
+        for pago in self.pagos:
+            if pago.renovacion != renovacion:
+                continue
+            if pago.state not in pago.valid_states():
+                res += pago.monto
+
         return res
 
     def get_cuota(self, name):
@@ -453,8 +454,9 @@ class Poliza(ModelSQL, ModelView):
 
     def get_saldo(self, name):
         res = Decimal('0.0')
-        if self.total:
-            res = self.total - self.monto_pago
+        total = self.total
+        if total:
+            res = total - self.monto_pago
         return res
 
     @classmethod
@@ -529,24 +531,6 @@ class Renovacion(ModelSQL, ModelView):
         cls._order = [
                 ('renovacion', 'DESC'),
             ]
-
-#        cls._error_messages.update({
-#            'fecha_emision_mayor': ('La fecha de emision de la poliza "%s" '
-#                'no puede ser mayor a la fecha de inicio de la vigencia. '
-#                'Renovacion: "%s".'),
-#            'fecha_hasta_menor': ('La fecha de finalizacion de la vigencia '
-#                'de la poliza "%s" no puede ser menor que la fecha de inicio '
-#                'de la misma. Renovacion: "%s".'),
-#            'dias_diff_emision': ('La fecha de emision tiene mas de "%s" dias '
-#                'de diferencia con respecto a la fecha de inicio de la vigencia '
-#                'de la poliza "%s". Renovacion: "%s".'),
-#            'dias_diff_vigencia': ('La diferencia entre el inicio y '
-#                'la finalizacion de la vigencia de la poliza "%s" es mayor '
-#                'a "%s" dias. Renovacion: "%s".'),
-#            'fecha_renovacion_desde_menor': ('La fecha de inicio de la vigencia '
-#                'de la poliza "%s" no debe ser menor a la fecha de finalizacion de '
-#                'la vigencia anterior. Renovacion: "%s".'),
-#        })
 
     def get_total(self, name):
         result = Decimal('0.0')
