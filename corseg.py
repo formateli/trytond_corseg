@@ -566,25 +566,25 @@ class Renovacion(ModelSQL, ModelView):
             if reno.f_emision > reno.f_desde:
                 raise UserError(
                     gettext('corseg.msg_fecha_emision_mayor',
-                        poliza=purchase.rec_name,
+                        poliza=reno.poliza.rec_name,
                         renovacion=reno.renovacion))
             if reno.f_hasta < reno.f_desde:
                 raise UserError(
                     gettext('corseg.msg_fecha_hasta_menor',
-                        poliza=purchase.rec_name,
+                        poliza=reno.poliza.rec_name,
                         renovacion=reno.renovacion))
 
             if (reno.f_desde - reno.f_emision).days > dias_diff_emision:
                 raise UserError(
                     gettext('corseg.msg_dias_diff_emision',
                         dias=dias_diff_emision,
-                        poliza=purchase.rec_name,
+                        poliza=reno.poliza.rec_name,
                         renovacion=reno.renovacion))
             if (reno.f_hasta - reno.f_desde).days > dias_diff_vigencia:
                 raise UserError(
                     gettext('corseg.msg_dias_diff_vigencia',
                         dias=dias_diff_vigencia,
-                        poliza=purchase.rec_name,
+                        poliza=reno.poliza.rec_name,
                         renovacion=reno.renovacion))
 
             if reno.renovacion > 0:
@@ -595,7 +595,7 @@ class Renovacion(ModelSQL, ModelView):
                 if reno.f_desde < reno_anterior.f_hasta:
                     raise UserError(
                         gettext('corseg.msg_fecha_renovacion_desde_menor',
-                            poliza=purchase.rec_name,
+                            poliza=reno.poliza.rec_name,
                             renovacion=reno.renovacion))
 
     @classmethod
