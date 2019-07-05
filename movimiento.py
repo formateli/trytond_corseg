@@ -815,7 +815,9 @@ class Movimiento(Workflow, ModelSQL, ModelView):
     @Workflow.transition('confirmado')
     def confirmar(cls, movs):
         pool = Pool()
+        Warning = pool.get('res.user.warning')
         Vehiculo = pool.get('corseg.vehiculo')
+
         fields = cls._get_poliza_fields()
         fields_renovacion = cls._get_renovacion_fields()
         fields_cert = cls._get_cert_fields()
@@ -844,10 +846,12 @@ class Movimiento(Workflow, ModelSQL, ModelView):
                                 poliza=mov.poliza.rec_name
                             ))
                     elif mov.renovacion != pl.renovacion:
-                        raise UserWarning('movdifiere' + str(mov.id),
-                            gettext('corseg.msg_renovacion_difiere_movimiento',
-                                renovacion1=mov.renovacion,
-                                renovacion2=pl.renovacion))
+                        msg_id = 'movdifiere' + str(mov.id)
+                        if Warning.check(msg_id):
+                            raise UserWarning(msg_id,
+                                gettext('corseg.msg_renovacion_difiere_movimiento',
+                                    renovacion1=mov.renovacion,
+                                    renovacion2=pl.renovacion))
                         renovacion_no = mov.renovacion
                     else:
                         renovacion_no = pl.renovacion

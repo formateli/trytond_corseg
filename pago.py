@@ -503,6 +503,8 @@ class Pago(Workflow, ModelSQL, ModelView):
 
     @classmethod
     def _verificar_pago_fecha(cls, pago):
+        Warning = Pool().get('res.user.warning')
+
         if Transaction().context.get('test'):
             return
         Pago = Pool().get('corseg.poliza.pago')
@@ -512,10 +514,12 @@ class Pago(Workflow, ModelSQL, ModelView):
                 ('id', '!=', pago.id),
             ])
         if pagos:
-            raise UserWarning('pagofecha-' + str(pago.id),
-                gettext('corseg.msg_pago_verificar_fecha_pago',
-                    pago=pagos[0].rec_name,
-                    state=pagos[0].state))
+            msg_id = 'pagofecha-' + str(pago.id)
+            if Warning.check(msg_id):
+                raise UserWarning(msg_id,
+                    gettext('corseg.msg_pago_verificar_fecha_pago',
+                        pago=pagos[0].rec_name,
+                        state=pagos[0].state))
 
     @classmethod
     @ModelView.button
